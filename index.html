@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <link rel="icon" href="icon-192.png">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>Ultimate Grader V2.4 (Offline)</title>
+  <title>Ultimate Grader V2.5 (Offline)</title>
   <style>
     :root {
       --bg: #f0f2f5;
@@ -659,8 +659,8 @@
 
 <!-- Top Navigation Tabs to Switch Apps -->
 <div class="app-nav">
-  <button class="nav-tab active" id="tab-hw-btn" onclick="switchAppMode('homework')">📚 Homework</button>
-  <button class="nav-tab" id="tab-att-btn" onclick="switchAppMode('attendance')">📋 Attendance</button>
+  <button class="nav-tab active" id="tab-att-btn" onclick="switchAppMode('attendance')">📋 Attendance</button>
+  <button class="nav-tab" id="tab-hw-btn" onclick="switchAppMode('homework')">📚 Homework</button>
   <button class="nav-tab" id="tab-reading-btn" onclick="switchAppMode('reading')">📖 Reading</button>
   <button class="nav-tab" id="tab-ls-btn" onclick="switchAppMode('lis_spe')">🎙️ Lis & Spe</button>
   <button class="nav-tab" id="tab-writing-btn" onclick="switchAppMode('writing')">✍️ Writing</button>
@@ -2060,7 +2060,7 @@ const Offline = (function () {
     SHOW_LS_SUBTABS = Object.assign({}, v.showLsSubtabs);
     keypadProfiles = v.keypadProfiles;
     window.__variantLabel = v.label;
-    document.title = 'Ultimate Grader ' + v.label + ' V2.4 (Offline)';
+    document.title = 'Ultimate Grader ' + v.label + ' V2.5 (Offline)';
     document.documentElement.style.setProperty('--reading-cols', v.reading.cols.length);
 
     // First sub-tab for Lis & Spe that is turned on
@@ -2073,8 +2073,8 @@ const Offline = (function () {
 
     // Show / hide the main tabs
     const tabButtons = {
-      homework: 'tab-hw-btn',
       attendance: 'tab-att-btn',
+      homework: 'tab-hw-btn',
       reading: 'tab-reading-btn',
       lis_spe: 'tab-ls-btn',
       writing: 'tab-writing-btn'
@@ -2110,7 +2110,7 @@ const Offline = (function () {
   const signs = ['0', '1/4', '1/2', '3/4'];
   let currentWeights = {}; 
 
-  let currentMode = 'homework'; // 'homework', 'attendance', 'reading', 'lis_spe', 'writing'
+  let currentMode = 'attendance'; // 'homework', 'attendance', 'reading', 'lis_spe', 'writing'
   let currentLsSubTab = 'eval'; // 'eval', 'describing', 'dwork'
   
   let hwCache = null;
@@ -2134,13 +2134,10 @@ const Offline = (function () {
     applyVariant(detectVariant(Offline.status().fileName));
     hwCache = null; attCache = null; readingCache = null; lsCache = null; writingCache = null;
     isMasterViewActive = false;
-    const first = window.__firstEnabledTab || 'homework';
-    if (!SHOW_TABS[currentMode]) {
-      currentMode = '';            // force a clean switch
-      switchAppMode(first);
-    } else {
-      switchAppMode(currentMode);
-    }
+    // Every time a file is opened the app starts on Attendance (or the first tab that is turned on)
+    const first = SHOW_TABS.attendance ? 'attendance' : (window.__firstEnabledTab || 'homework');
+    currentMode = '';              // force a clean switch
+    switchAppMode(first);
   }
 
   function switchAppMode(mode) {
@@ -3213,6 +3210,51 @@ const Offline = (function () {
   if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
     window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
   }
+</script>
+<script>
+  // ============================================================================
+  //  BACK GESTURE GUARD
+  //  Swiping back (or the Back button) no longer closes the app by accident:
+  //   - an open keypad is closed first, then the Master View is left,
+  //   - otherwise a message appears and you must swipe back a second time (within 2.5 s) to close the app.
+  // ============================================================================
+  (function () {
+    let armed = false, lastBack = 0, toastTimer = null;
+    const toast = document.createElement('div');
+    toast.style.cssText = 'position:fixed;left:50%;bottom:70px;transform:translateX(-50%);background:rgba(17,24,39,0.92);color:#fff;padding:10px 18px;border-radius:22px;font-size:14px;font-weight:bold;z-index:99999;opacity:0;pointer-events:none;transition:opacity .25s;max-width:90%;text-align:center;';
+    document.body.appendChild(toast);
+    function showToast(msg) {
+      toast.textContent = msg; toast.style.opacity = '1';
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () { toast.style.opacity = '0'; }, 2300);
+    }
+    function pushGuard() { try { history.pushState({ graderGuard: true }, ''); } catch (e) {} }
+
+    // The guard is added after your first tap (browsers ignore history entries a page adds before any tap)
+    function arm() {
+      if (armed) return;
+      armed = true;
+      pushGuard();
+      ['pointerup', 'click', 'keydown', 'touchend'].forEach(function (ev) { window.removeEventListener(ev, arm, true); });
+    }
+    ['pointerup', 'click', 'keydown', 'touchend'].forEach(function (ev) { window.addEventListener(ev, arm, true); });
+
+    window.addEventListener('popstate', function () {
+      if (!armed) return;
+      const modal = document.getElementById('keypad-modal');
+      if (modal && getComputedStyle(modal).display !== 'none') { closeModal(); pushGuard(); return; }
+      if (typeof isMasterViewActive !== 'undefined' && isMasterViewActive) { toggleMasterView(); pushGuard(); return; }
+      const now = Date.now();
+      if (now - lastBack < 2500) {            // second swipe: really leave
+        armed = false;
+        history.back();
+        return;
+      }
+      lastBack = now;
+      showToast('Swipe back again to close the app');
+      pushGuard();
+    });
+  })();
 </script>
 </body>
 </html>
