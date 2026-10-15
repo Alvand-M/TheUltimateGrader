@@ -1259,7 +1259,8 @@ const Offline = (function () {
               l:   { score: getVal(sheet, i, lCol),   marks: getNote(sheet, i, lCol) },
               s:   { score: getVal(sheet, i, sCol),   marks: getNote(sheet, i, sCol) },
               dec: { score: getVal(sheet, i, decCol), marks: getNote(sheet, i, decCol) },
-              dw:  { score: getVal(sheet, i, dwCol),  marks: getNote(sheet, i, dwCol) }
+              dw:  { score: getVal(sheet, i, dwCol),  marks: getNote(sheet, i, dwCol) },
+              conv: { score: getVal(sheet, i, convBaseCol() + round), marks: getNote(sheet, i, convBaseCol() + round) }
             };
           });
           students.push({ row: i, name: name, allSessions: map });
@@ -1277,6 +1278,7 @@ const Offline = (function () {
       else if (subIndex === 1) colNum = 3 + (round - 1) * 2 + 1;
       else if (subIndex === 2) colNum = 15 + (round - 1) + 1;
       else if (subIndex === 3) colNum = 22 + (round - 1) + 1;
+      else if (subIndex === 4) colNum = convBaseCol() + round;
       else throw new Error('Unknown column type');
       setVal(sheet, data.row, colNum, (data.score !== '' && data.score !== undefined) ? data.score : '');
       setNote(sheet, data.row, colNum, data.marks);
@@ -1695,7 +1697,9 @@ const Offline = (function () {
       showTabs: { homework: true, attendance: true, reading: true, lis_spe: true, writing: true },
 
       // Sub-tabs inside the Lis & Spe tab
-      showLsSubtabs: { eval: true, describing: true, dwork: true },
+      showLsSubtabs: { eval: true, describing: true, dwork: true, conversation: true },
+      // Excel column of Conversation: round N is column (convBase + N)  (reach AD, race W, others P)
+      convBase: 29,
 
       // Keypads: what each homework button is worth
       keypadProfiles: {
@@ -1761,7 +1765,9 @@ const Offline = (function () {
 
       showTabs: { homework: true, attendance: true, reading: true, lis_spe: true, writing: true },
 
-      showLsSubtabs: { eval: true, describing: true, dwork: false },
+      showLsSubtabs: { eval: true, describing: true, dwork: false, conversation: true },
+      // Excel column of Conversation: round N is column (convBase + N)  (reach AD, race W, others P)
+      convBase: 22,
 
       keypadProfiles: {
         standard: {   // Light Blue Sessions
@@ -1819,7 +1825,9 @@ const Offline = (function () {
 
       showTabs: { homework: true, attendance: true, reading: true, lis_spe: true, writing: true },
 
-      showLsSubtabs: { eval: true, describing: false, dwork: false },
+      showLsSubtabs: { eval: true, describing: false, dwork: false, conversation: true },
+      // Excel column of Conversation: round N is column (convBase + N)  (reach AD, race W, others P)
+      convBase: 15,
 
       keypadProfiles: {
         standard: {
@@ -1880,7 +1888,9 @@ const Offline = (function () {
 
       showTabs: { homework: true, attendance: true, reading: true, lis_spe: true, writing: true },
 
-      showLsSubtabs: { eval: true, describing: false, dwork: false },
+      showLsSubtabs: { eval: true, describing: false, dwork: false, conversation: true },
+      // Excel column of Conversation: round N is column (convBase + N)  (reach AD, race W, others P)
+      convBase: 15,
 
       keypadProfiles: {
         standard: {
@@ -1936,7 +1946,9 @@ const Offline = (function () {
 
       showTabs: { homework: true, attendance: true, reading: true, lis_spe: true, writing: true },
 
-      showLsSubtabs: { eval: true, describing: false, dwork: false },
+      showLsSubtabs: { eval: true, describing: false, dwork: false, conversation: true },
+      // Excel column of Conversation: round N is column (convBase + N)  (reach AD, race W, others P)
+      convBase: 15,
 
       keypadProfiles: {
         standard: {
@@ -2000,6 +2012,7 @@ const Offline = (function () {
 
   function readingCfg() { return VARIANTS[activeVariantKey].reading; }
   function writingCfg() { return VARIANTS[activeVariantKey].writing; }
+  function convBaseCol() { return VARIANTS[activeVariantKey].convBase; }
 
   // Makes a name easy to compare: "01_ILI_Start_Run1_2_Grade.xlsx" -> " 01 ili start run 1 2 grade xlsx "
   function normalizeName(s) {
@@ -2064,7 +2077,7 @@ const Offline = (function () {
     document.documentElement.style.setProperty('--reading-cols', v.reading.cols.length);
 
     // First sub-tab for Lis & Spe that is turned on
-    const firstSub = ['eval', 'describing', 'dwork'].find(k => SHOW_LS_SUBTABS[k]);
+    const firstSub = ['eval', 'describing', 'dwork', 'conversation'].find(k => SHOW_LS_SUBTABS[k]);
     if (firstSub) {
       if (!SHOW_LS_SUBTABS[currentLsSubTab]) currentLsSubTab = firstSub;
     } else {
@@ -2111,7 +2124,7 @@ const Offline = (function () {
   let currentWeights = {}; 
 
   let currentMode = 'attendance'; // 'homework', 'attendance', 'reading', 'lis_spe', 'writing'
-  let currentLsSubTab = 'eval'; // 'eval', 'describing', 'dwork'
+  let currentLsSubTab = 'eval'; // 'eval', 'describing', 'dwork', 'conversation'
   
   let hwCache = null;
   let attCache = null;
@@ -2195,7 +2208,8 @@ const Offline = (function () {
     const subTabList = [
       { key: 'eval', label: 'L / S Eval' },
       { key: 'describing', label: 'Describing' },
-      { key: 'dwork', label: 'D-Work' }
+      { key: 'dwork', label: 'D-Work' },
+      { key: 'conversation', label: 'Conversation' }
     ];
     let buttonsHtml = '';
     subTabList.forEach(t => {
@@ -2342,12 +2356,20 @@ const Offline = (function () {
             <div>Dec (LS-E ${appState.activeSession})</div>
           </div>
         `;
-      } else {
+      } else if (currentLsSubTab === 'dwork') {
         container.innerHTML = `
           <div class="roster-header-ls-1">
             <div></div>
             <div>Student Name</div>
             <div>D-W (LS-E ${appState.activeSession})</div>
+          </div>
+        `;
+      } else {
+        container.innerHTML = `
+          <div class="roster-header-ls-1">
+            <div></div>
+            <div>Student Name</div>
+            <div>Conv (Round ${appState.activeSession})</div>
           </div>
         `;
       }
@@ -2432,7 +2454,7 @@ const Offline = (function () {
         `;
       } else if (currentMode === 'lis_spe') {
         let activeS = appState.activeSession;
-        let sessObj = (student.allSessions && student.allSessions[activeS]) ? student.allSessions[activeS] : { l: {score:""}, s: {score:""}, dec: {score:""}, dw: {score:""} };
+        let sessObj = (student.allSessions && student.allSessions[activeS]) ? student.allSessions[activeS] : { l: {score:""}, s: {score:""}, dec: {score:""}, dw: {score:""}, conv: {score:""} };
         
         if (currentLsSubTab === 'eval') {
           let lVal = (sessObj.l && sessObj.l.score !== "") ? sessObj.l.score : "—";
@@ -2454,13 +2476,22 @@ const Offline = (function () {
               <div class="score-badge active-score" onclick="openKeypad(${index}, ${activeS}, 2)">${decVal}</div>
             </div>
           `;
-        } else {
+        } else if (currentLsSubTab === 'dwork') {
           let dwVal = (sessObj.dw && sessObj.dw.score !== "") ? sessObj.dw.score : "—";
           html += `
             <div class="student-row-ls-1">
               <div class="row-number">${index + 1}</div>
               <div class="student-name">${student.name}</div>
               <div class="score-badge active-score" onclick="openKeypad(${index}, ${activeS}, 3)">${dwVal}</div>
+            </div>
+          `;
+        } else {
+          let cvVal = (sessObj.conv && sessObj.conv.score !== "" && sessObj.conv.score !== undefined) ? sessObj.conv.score : "—";
+          html += `
+            <div class="student-row-ls-1">
+              <div class="row-number">${index + 1}</div>
+              <div class="student-name">${student.name}</div>
+              <div class="score-badge active-score" onclick="openKeypad(${index}, ${activeS}, 4)">${cvVal}</div>
             </div>
           `;
         }
@@ -2600,6 +2631,24 @@ const Offline = (function () {
             let decVal = (sessObj.dec && sessObj.dec.score !== "" && sessObj.dec.score !== undefined) ? sessObj.dec.score : "—";
             
             html += `<td><div class="master-cell" onclick="openKeypad(${index}, ${sNum}, 2)">${decVal}</div></td>`;
+          });
+          html += `</tr>`;
+        });
+      } else if (currentLsSubTab === 'conversation') {
+        html += `<tr><th class="sticky-col-1"></th><th class="sticky-col-2">Student Name</th>`;
+        appState.sessionList.forEach(sNum => {
+          let activeClass = (sNum === appState.activeSession) ? 'current-sess-th' : '';
+          html += `<th class="${activeClass}" onclick="selectSessionFromMaster(${sNum})" style="cursor:pointer;">Conv ${sNum} 🔍</th>`;
+        });
+        html += `</tr></thead><tbody>`;
+        
+        appState.students.forEach((student, index) => {
+          html += `<tr><td class="sticky-col-1">${index + 1}</td><td class="sticky-col-2">${student.name}</td>`;
+          appState.sessionList.forEach(sNum => {
+            let sessObj = (student.allSessions && student.allSessions[sNum]) ? student.allSessions[sNum] : { conv: {score:""} };
+            let cvVal = (sessObj.conv && sessObj.conv.score !== "" && sessObj.conv.score !== undefined) ? sessObj.conv.score : "—";
+            
+            html += `<td><div class="master-cell" onclick="openKeypad(${index}, ${sNum}, 4)">${cvVal}</div></td>`;
           });
           html += `</tr>`;
         });
@@ -2756,10 +2805,10 @@ const Offline = (function () {
         subData = (sessObj && sessObj[subKey]) ? sessObj[subKey] : { score: "", marks: {} };
         
       } else if (currentMode === 'lis_spe') {
-        let subNames = { describing: 'Describing (Dec)', dwork: 'D-Work (D-W)' };
-        let subKeyName = currentLsSubTab === 'describing' ? 'describing' : 'dwork';
-        titleSuffix = student.name + " - " + subNames[subKeyName] + " (LS-E " + sessionNum + ")";
-        let subKey = currentLsSubTab === 'describing' ? 'dec' : 'dw';
+        let subNames = { describing: 'Describing (Dec)', dwork: 'D-Work (D-W)', conversation: 'Conversation (Conv)' };
+        let subKeyName = currentLsSubTab;
+        titleSuffix = student.name + " - " + subNames[subKeyName] + (subKeyName === 'conversation' ? " (Round " : " (LS-E ") + sessionNum + ")";
+        let subKey = { describing: 'dec', dwork: 'dw', conversation: 'conv' }[currentLsSubTab];
         subData = (sessObj && sessObj[subKey]) ? sessObj[subKey] : { score: "", marks: {} };
         
       } else if (currentMode === 'writing') {
@@ -3130,7 +3179,7 @@ const Offline = (function () {
       let finalScore = calculateEvalScore();
       if (!student.allSessions[activeModalSession]) student.allSessions[activeModalSession] = {};
       
-      let subKey = currentEvalSubCell === 2 ? 'dec' : 'dw';
+      let subKey = { 2: 'dec', 3: 'dw', 4: 'conv' }[currentEvalSubCell];
       student.allSessions[activeModalSession][subKey] = {
         score: finalScore,
         marks: JSON.parse(JSON.stringify(currentModalMarks))
