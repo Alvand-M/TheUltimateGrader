@@ -420,6 +420,28 @@
       padding-bottom: 10px;
     }
     .modal-header h3 { margin: 0; font-size: 18px; }
+    /* ---- Numpad ---- */
+    .np-modal { z-index: 1100; align-items: flex-end; }
+    .np-box { background: #fff; width: 100%; max-width: 420px; border-radius: 18px 18px 14px 14px; padding: 14px 14px 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.25); touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+    .np-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+    .np-title { font-size: 18px; font-weight: 800; }
+    .np-sub { font-size: 13px; color: #6b7280; font-weight: 600; margin-top: 2px; }
+    .np-screen { display: flex; align-items: baseline; justify-content: space-between; background: #f3f4f6; border: 2px solid var(--border); border-radius: 12px; padding: 8px 14px; margin-bottom: 10px; min-height: 52px; }
+    .np-display { font-size: 38px; font-weight: 800; letter-spacing: 1px; }
+    .np-display.np-untouched { color: #2563eb; }
+    .np-display.np-over { color: #dc2626; }
+    .np-max { font-size: 12px; color: #9ca3af; font-weight: 700; }
+    .np-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .np-grid button { height: 66px; font-size: 28px; font-weight: 700; border: 2px solid var(--border); border-radius: 14px; background: #fff; cursor: pointer; }
+    .np-grid button:active { background: #dbeafe; }
+    .np-grid .np-fn { background: #f3f4f6; }
+    .np-enter { width: 100%; margin-top: 10px; height: 62px; font-size: 22px; font-weight: 800; border: none; border-radius: 14px; background: #16a34a; color: #fff; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; }
+    .np-enter small { font-size: 12px; font-weight: 600; opacity: 0.9; }
+    .np-enter:active { background: #15803d; }
+    .np-row { display: flex; gap: 8px; margin-top: 8px; }
+    .np-row button { flex: 1; height: 50px; font-size: 16px; font-weight: 700; border: none; border-radius: 12px; cursor: pointer; }
+    .np-clear { background: #fef2f2; color: #991b1b; }
+    .np-save { background: #2563eb; color: #fff; }
     .close-btn { background: none; border: none; font-size: 26px; cursor: pointer; color: #4b5563; }
     
     .absent-toggle-container { margin-bottom: 15px; }
@@ -638,7 +660,7 @@
 <div id="start-overlay">
   <div class="start-card">
     <h1>📘 Ultimate Grader</h1>
-    <p>Pick your Excel grade sheet (the file name tells the app if it is Reach, Race, Run3/4, Run1/2, or Start) and everything you enter is saved straight into that file.</p>
+    <p>Offline version. Pick your Excel grade sheet (the file name tells the app if it is Reach or Race) and everything you enter is saved straight into that file.</p>
     <button class="big-btn" id="start-open-btn">📂 Open Excel file</button>
     <button class="big-btn secondary" id="start-reopen-btn" style="display:none;"></button>
     <input type="file" id="start-file-input" accept=".xlsx" style="display:none;">
@@ -691,6 +713,28 @@
   <div id="master-container">
     <div class="master-hint" id="master-hint-text">💡 Tap any session header below to switch active session:</div>
     <div class="table-wrapper" id="master-table-content">Loading master table...</div>
+  </div>
+</div>
+
+<!-- Numpad Modal (reusable numeric keypad) -->
+<div id="numpad-modal" class="modal np-modal">
+  <div class="np-box">
+    <div class="np-head">
+      <div><div id="np-title" class="np-title"></div><div id="np-sub" class="np-sub"></div></div>
+      <button class="close-btn" onclick="NumPad.close()">×</button>
+    </div>
+    <div class="np-screen"><span id="np-display" class="np-display"></span><span id="np-max" class="np-max"></span></div>
+    <div class="np-grid">
+      <button onclick="NumPad.press('1')">1</button><button onclick="NumPad.press('2')">2</button><button onclick="NumPad.press('3')">3</button>
+      <button onclick="NumPad.press('4')">4</button><button onclick="NumPad.press('5')">5</button><button onclick="NumPad.press('6')">6</button>
+      <button onclick="NumPad.press('7')">7</button><button onclick="NumPad.press('8')">8</button><button onclick="NumPad.press('9')">9</button>
+      <button class="np-fn" onclick="NumPad.press('.')">.</button><button onclick="NumPad.press('0')">0</button><button class="np-fn" onclick="NumPad.back()">⌫</button>
+    </div>
+    <button id="np-enter" class="np-enter" onclick="NumPad.enter()">Enter ↵</button>
+    <div class="np-row">
+      <button class="np-clear" onclick="NumPad.clear()">Clear</button>
+      <button class="np-save" onclick="NumPad.save()">Save &amp; Close</button>
+    </div>
   </div>
 </div>
 
@@ -1316,15 +1360,30 @@ const Offline = (function () {
             const colNum = 2 + round;
             map[round] = { score: getVal(sheet, i, colNum), marks: getNote(sheet, i, colNum) };
           });
-          students.push({ row: i, name: name, allSessions: map });
+          const nh = {};
+          sessionList.forEach(round => {
+            const nhCol = 9 + round;                      // N&H round n = column 9 + n (J = 10 ... O = 15)
+            nh[round] = { score: getVal(sheet, i, nhCol), marks: getNote(sheet, i, nhCol) };
+          });
+          const dict = {};
+          for (let n = 1; n <= numTabCfg().count; n++) dict[n] = getVal(sheet, i, numTabCfg().col0 + n);   // numpad tab n = column col0 + n
+          students.push({ row: i, name: name, allSessions: map, dict: dict, nh: nh });
         }
       }
       return { students, sessionList, activeSession: parseInt(activeSessionNum, 10) };
     },
 
+    updateWritingDictation(data) {
+      const sheet = needSheet('Writing');
+      const colNum = numTabCfg().col0 + parseInt(data.n, 10);
+      setVal(sheet, data.row, colNum, (data.score !== '' && data.score !== undefined) ? data.score : '');
+      changed();
+      return { success: true };
+    },
+
     updateWritingCell(data) {
       const sheet = needSheet('Writing');
-      const colNum = 2 + parseInt(data.sessionNum, 10);
+      const colNum = (data.nh ? 9 : 2) + parseInt(data.sessionNum, 10);
       setVal(sheet, data.row, colNum, (data.score !== '' && data.score !== undefined) ? data.score : '');
       setNote(sheet, data.row, colNum, data.marks);
       changed();
@@ -1691,7 +1750,7 @@ const Offline = (function () {
 
       reading: { cols: ['r', 'rc', 'sum'], stride: 4 },
 
-      writing: { short: 'S&Q', title: 'Sentence & Question Making', appTitle: '✍️ Writing Evaluations' },
+      writing: { short: 'S&Q', title: 'Sentence & Question Making', appTitle: '✍️ Writing Evaluations', nh: true, numTab: { label: 'Composition', short: 'Comp', count: 6, col0: 16 } }, // Compositions 1-6 = Excel Q to V
 
       // Main tabs: true = shown, false = hidden  (only change the word true/false)
       showTabs: { homework: true, attendance: true, reading: true, lis_spe: true, writing: true },
@@ -1761,7 +1820,7 @@ const Offline = (function () {
 
       reading: { cols: ['r', 'rc', 'sum'], stride: 4 },
 
-      writing: { short: 'S&Q', title: 'Sentence & Question Making', appTitle: '✍️ Writing Evaluations' },
+      writing: { short: 'S&Q', title: 'Sentence & Question Making', appTitle: '✍️ Writing Evaluations', nh: true, numTab: { label: 'Dictation', short: 'Dict', count: 6, col0: 16 } }, // Dictation 1-6 = Excel Q to V
 
       showTabs: { homework: true, attendance: true, reading: true, lis_spe: true, writing: true },
 
@@ -1821,7 +1880,7 @@ const Offline = (function () {
       reading: { cols: ['r'], stride: 1 },
 
       // Writing tab labels
-      writing: { short: 'N&H', title: 'Neatness & Handwriting', appTitle: '✍️ Notebook Neatness & Handwriting' },
+      writing: { short: 'N&H', title: 'Neatness & Handwriting', appTitle: '✍️ Notebook Neatness & Handwriting', numTab: { label: 'Dictation', short: 'Dict', count: 14, col0: 9 } }, // numpad tab: Dictation 1-14 = Excel J to W (col0 + n)
 
       showTabs: { homework: true, attendance: true, reading: true, lis_spe: true, writing: true },
 
@@ -1884,7 +1943,7 @@ const Offline = (function () {
       reading: { cols: ['r'], stride: 1 },
 
       // Writing tab labels
-      writing: { short: 'N&H', title: 'Neatness & Handwriting', appTitle: '✍️ Notebook Neatness & Handwriting' },
+      writing: { short: 'N&H', title: 'Neatness & Handwriting', appTitle: '✍️ Notebook Neatness & Handwriting', numTab: { label: 'Dictation', short: 'Dict', count: 14, col0: 9 } }, // numpad tab: Dictation 1-14 = Excel J to W (col0 + n)
 
       showTabs: { homework: true, attendance: true, reading: true, lis_spe: true, writing: true },
 
@@ -1942,7 +2001,7 @@ const Offline = (function () {
       reading: { cols: ['r', 'rc'], stride: 3 },
 
       // Writing tab labels
-      writing: { short: 'S&Q', title: 'Sentence & Question Making', appTitle: '✍️ Writing Evaluations' },
+      writing: { short: 'S&Q', title: 'Sentence & Question Making', appTitle: '✍️ Writing Evaluations', nh: true, numTab: { label: 'Dictation', short: 'Dict', count: 6, col0: 16 } }, // Dictation 1-6 = Excel Q to V
 
       showTabs: { homework: true, attendance: true, reading: true, lis_spe: true, writing: true },
 
@@ -2012,6 +2071,7 @@ const Offline = (function () {
 
   function readingCfg() { return VARIANTS[activeVariantKey].reading; }
   function writingCfg() { return VARIANTS[activeVariantKey].writing; }
+  function numTabCfg() { return writingCfg().numTab || { label: 'Dictation', short: 'Dict', count: 0, col0: 9 }; }
   function convBaseCol() { return VARIANTS[activeVariantKey].convBase; }
 
   // Makes a name easy to compare: "01_ILI_Start_Run1_2_Grade.xlsx" -> " 01 ili start run 1 2 grade xlsx "
@@ -2076,6 +2136,9 @@ const Offline = (function () {
     document.title = 'Ultimate Grader ' + v.label + ' V2.5 (Offline)';
     document.documentElement.style.setProperty('--reading-cols', v.reading.cols.length);
 
+    currentDictNo = 1;
+    if ((currentWrSubTab === 'dictation' && !v.writing.numTab) || (currentWrSubTab === 'nh' && !v.writing.nh)) currentWrSubTab = 'main';
+
     // First sub-tab for Lis & Spe that is turned on
     const firstSub = ['eval', 'describing', 'dwork', 'conversation'].find(k => SHOW_LS_SUBTABS[k]);
     if (firstSub) {
@@ -2124,6 +2187,8 @@ const Offline = (function () {
   let currentWeights = {}; 
 
   let currentMode = 'attendance'; // 'homework', 'attendance', 'reading', 'lis_spe', 'writing'
+  let currentWrSubTab = 'main';   // Writing sub-tabs: 'main' (N&H / S&Q) or 'dictation'
+  let currentDictNo = 1;          // which dictation (1-14) the quick view shows
   let currentLsSubTab = 'eval'; // 'eval', 'describing', 'dwork', 'conversation'
   
   let hwCache = null;
@@ -2201,6 +2266,14 @@ const Offline = (function () {
 
   function renderSubTabsBar() {
     let barEl = document.getElementById('ls-subtabs-bar');
+    if (currentMode === 'writing' && (writingCfg().numTab || writingCfg().nh)) {
+      const wTabs = [{ key: 'main', label: writingCfg().short }];
+      if (writingCfg().nh) wTabs.push({ key: 'nh', label: 'N&H' });
+      if (writingCfg().numTab) wTabs.push({ key: 'dictation', label: writingCfg().numTab.label });
+      barEl.innerHTML = `<div class="sub-tabs-container">` + wTabs.map(t =>
+        `<button class="sub-tab-btn ${currentWrSubTab === t.key ? 'active-sub' : ''}" onclick="switchWrSubTab('${t.key}')">${t.label}</button>`).join('') + `</div>`;
+      return;
+    }
     if (currentMode !== 'lis_spe') {
       barEl.innerHTML = '';
       return;
@@ -2217,6 +2290,11 @@ const Offline = (function () {
       buttonsHtml += `<button class="sub-tab-btn ${currentLsSubTab === t.key ? 'active-sub' : ''}" onclick="switchLsSubTab('${t.key}')">${t.label}</button>`;
     });
     barEl.innerHTML = `<div class="sub-tabs-container">${buttonsHtml}</div>`;
+  }
+
+  function switchWrSubTab(k) {
+    currentWrSubTab = k;
+    renderViews();
   }
 
   function switchLsSubTab(subTab) {
@@ -2373,6 +2451,22 @@ const Offline = (function () {
           </div>
         `;
       }
+    } else if (currentMode === 'writing' && currentWrSubTab === 'dictation') {
+      container.innerHTML = `
+        <div class="roster-header-single">
+          <div></div>
+          <div>Student Name</div>
+          <div>${numTabCfg().short} ${currentDictNo}</div>
+        </div>
+      `;
+    } else if (currentMode === 'writing' && currentWrSubTab === 'nh') {
+      container.innerHTML = `
+        <div class="roster-header-single">
+          <div></div>
+          <div>Student Name</div>
+          <div>N&H (Round ${appState.activeSession})</div>
+        </div>
+      `;
     } else {
       // Writing Quick View Header (1 column for Sentence & Question Making)
       container.innerHTML = `
@@ -2495,10 +2589,20 @@ const Offline = (function () {
             </div>
           `;
         }
+      } else if (currentMode === 'writing' && currentWrSubTab === 'dictation') {
+        let dv = (student.dict && student.dict[currentDictNo] !== "" && student.dict[currentDictNo] !== undefined) ? student.dict[currentDictNo] : "—";
+        html += `
+          <div class="student-row-single">
+            <div class="row-number">${index + 1}</div>
+            <div class="student-name">${student.name}</div>
+            <div class="score-badge active-score" onclick="openDictPad(${index}, ${currentDictNo})">${dv}</div>
+          </div>
+        `;
       } else {
-        // Writing Quick View Row
+        // Writing Quick View Row  (S&Q / N&H main tab, or the extra N&H tab)
         let activeS = appState.activeSession;
-        let sessObj = (student.allSessions && student.allSessions[activeS]) ? student.allSessions[activeS] : { score: "" };
+        let wSrc = (currentWrSubTab === 'nh') ? student.nh : student.allSessions;
+        let sessObj = (wSrc && wSrc[activeS]) ? wSrc[activeS] : { score: "" };
         let val = (sessObj.score !== "" && sessObj.score !== undefined) ? sessObj.score : "—";
         html += `
           <div class="student-row-single">
@@ -2671,19 +2775,36 @@ const Offline = (function () {
           html += `</tr>`;
         });
       }
+    } else if (currentMode === 'writing' && currentWrSubTab === 'dictation') {
+      html += `<tr><th class="sticky-col-1"></th><th class="sticky-col-2">Student Name</th>`;
+      for (let n = 1; n <= numTabCfg().count; n++) {
+        let activeClass = (n === currentDictNo) ? 'current-sess-th' : '';
+        html += `<th class="${activeClass}" onclick="selectDictFromMaster(${n})" style="cursor:pointer;">${numTabCfg().short} ${n} 🔍</th>`;
+      }
+      html += `</tr></thead><tbody>`;
+      appState.students.forEach((student, index) => {
+        html += `<tr><td class="sticky-col-1">${index + 1}</td><td class="sticky-col-2">${student.name}</td>`;
+        for (let n = 1; n <= numTabCfg().count; n++) {
+          let dv = (student.dict && student.dict[n] !== "" && student.dict[n] !== undefined) ? student.dict[n] : "—";
+          html += `<td><div class="master-cell" onclick="openDictPad(${index}, ${n})">${dv}</div></td>`;
+        }
+        html += `</tr>`;
+      });
     } else {
-      // Writing Master View
+      // Writing Master View  (S&Q / N&H main tab, or the extra N&H tab)
+      const wShort = (currentWrSubTab === 'nh') ? 'N&H' : writingCfg().short;
       html += `<tr><th class="sticky-col-1"></th><th class="sticky-col-2">Student Name</th>`;
       appState.sessionList.forEach(sNum => {
         let activeClass = (sNum === appState.activeSession) ? 'current-sess-th' : '';
-        html += `<th class="${activeClass}" onclick="selectSessionFromMaster(${sNum})" style="cursor:pointer;">${writingCfg().short} ${sNum} 🔍</th>`;
+        html += `<th class="${activeClass}" onclick="selectSessionFromMaster(${sNum})" style="cursor:pointer;">${wShort} ${sNum} 🔍</th>`;
       });
       html += `</tr></thead><tbody>`;
       
       appState.students.forEach((student, index) => {
         html += `<tr><td class="sticky-col-1">${index + 1}</td><td class="sticky-col-2">${student.name}</td>`;
         appState.sessionList.forEach(sNum => {
-          let sessObj = (student.allSessions && student.allSessions[sNum]) ? student.allSessions[sNum] : { score: "" };
+          let wSrc = (currentWrSubTab === 'nh') ? student.nh : student.allSessions;
+          let sessObj = (wSrc && wSrc[sNum]) ? wSrc[sNum] : { score: "" };
           let val = (sessObj.score !== "" && sessObj.score !== undefined) ? sessObj.score : "—";
           html += `<td><div class="master-cell" onclick="openKeypad(${index}, ${sNum}, 0)">${val}</div></td>`;
         });
@@ -2708,6 +2829,116 @@ const Offline = (function () {
       .withFailureHandler(err => alert("Error saving session colour: " + err.message))
       .setSessionDone({ sessionNum: s, done: nowDone });
   }
+
+  function selectDictFromMaster(n) { currentDictNo = n; toggleMasterView(); renderViews(); }
+
+  // Opens the numpad for one student's dictation score; Enter moves down to the next student
+  function openDictPad(index, n) {
+    const appState = getCurrentAppData();
+    const student = appState.students[index];
+    if (!student) return;
+    if (!student.dict) student.dict = {};
+    currentDictNo = n;
+    const hasNext = index + 1 < appState.students.length;
+    NumPad.open({
+      title: student.name,
+      subtitle: numTabCfg().label + ' ' + n + '  ·  ' + (index + 1) + ' / ' + appState.students.length,
+      max: 100,
+      value: (student.dict[n] === undefined) ? '' : student.dict[n],
+      nextName: hasNext ? appState.students[index + 1].name : null,
+      onCommit: function (v) {
+        student.dict[n] = v;
+        renderViews();
+        google.script.run
+          .withSuccessHandler(() => {})
+          .withFailureHandler(err => alert("Error saving " + numTabCfg().label.toLowerCase() + ": " + err.message))
+          .updateWritingDictation({ row: student.row, n: n, score: v });
+      },
+      onNext: function () { openDictPad(index + 1, n); }
+    });
+  }
+
+  // ==========================================================================
+  //  NumPad  -  reusable touch numpad.  NumPad.open({ title, subtitle, max, value, nextName, onCommit(value), onNext })
+  //  Use it from any tab: build the config, call NumPad.open(cfg).  onCommit gets a number or '' (cleared).
+  // ==========================================================================
+  const NumPad = (function () {
+    let cfg = null, buf = '', touched = false;
+    const $ = id => document.getElementById(id);
+
+    function paint(flash) {
+      const shown = $('np-display');
+      shown.textContent = buf === '' ? (touched ? '' : '—') : buf;
+      shown.classList.toggle('np-untouched', !touched && buf !== '');
+      shown.classList.toggle('np-over', !!flash);
+      if (flash) setTimeout(() => shown.classList.remove('np-over'), 350);
+      $('np-max').textContent = 'max ' + cfg.max;
+      $('np-enter').innerHTML = cfg.nextName ? 'Enter ↵ <small>next: ' + cfg.nextName.replace(/</g, '&lt;') + '</small>' : 'Enter ↵ <small>last student</small>';
+    }
+    function open(c) {
+      cfg = c;
+      buf = (c.value === '' || c.value === undefined || c.value === null) ? '' : String(c.value);
+      touched = false;
+      $('np-title').textContent = c.title;
+      $('np-sub').textContent = c.subtitle || '';
+      $('numpad-modal').style.display = 'flex';
+      paint(false);
+    }
+    function press(k) {
+      if (!cfg) return;
+      if (!touched) { buf = ''; touched = true; }           // first key replaces the old score
+      if (k === '.') {
+        if (buf.indexOf('.') !== -1) return;
+        buf = (buf === '' ? '0' : buf) + '.';
+        return paint(false);
+      }
+      let cand = (buf === '0') ? k : buf + k;
+      const dot = cand.indexOf('.');
+      if (dot !== -1 && cand.length - dot > 3) return;     // max 2 decimals
+      if (parseFloat(cand) > cfg.max) return paint(true);  // over the cap: refuse + flash
+      buf = cand;
+      paint(false);
+    }
+    function back() {
+      if (!cfg) return;
+      touched = true;
+      buf = buf.slice(0, -1);
+      paint(false);
+    }
+    function clear() {
+      if (!cfg) return;
+      touched = true;
+      buf = '';
+      paint(false);
+    }
+    function value() {
+      if (!touched) return (cfg.value === undefined || cfg.value === null) ? '' : cfg.value;  // untouched = keep old score
+      if (buf === '' || buf === '.') return '';
+      return Number(buf);
+    }
+    function close() { $('numpad-modal').style.display = 'none'; cfg = null; }
+    function enter() {
+      if (!cfg) return;
+      const c = cfg;
+      c.onCommit(value());
+      if (c.nextName && c.onNext) c.onNext(); else close();
+    }
+    function save() {
+      if (!cfg) return;
+      const c = cfg;
+      c.onCommit(value());
+      close();
+    }
+    function isOpen() { return !!cfg; }
+    window.addEventListener('keydown', function (e) {       // desktop keyboard support
+      if (!cfg) return;
+      if (/^[0-9.]$/.test(e.key)) { press(e.key); e.preventDefault(); }
+      else if (e.key === 'Backspace') { back(); e.preventDefault(); }
+      else if (e.key === 'Enter') { enter(); e.preventDefault(); }
+      else if (e.key === 'Escape') { close(); e.preventDefault(); }
+    });
+    return { open: open, press: press, back: back, clear: clear, enter: enter, save: save, close: close, isOpen: isOpen };
+  })();
 
   function selectSessionFromMaster(sNum) {
     const appState = getCurrentAppData();
@@ -2812,8 +3043,13 @@ const Offline = (function () {
         subData = (sessObj && sessObj[subKey]) ? sessObj[subKey] : { score: "", marks: {} };
         
       } else if (currentMode === 'writing') {
-        titleSuffix = student.name + " - " + writingCfg().title + " (Round " + sessionNum + ")";
-        subData = sessObj ? sessObj : { score: "", marks: {} };
+        if (currentWrSubTab === 'nh') {
+          titleSuffix = student.name + " - Neatness & Handwriting (Round " + sessionNum + ")";
+          subData = (student.nh && student.nh[sessionNum]) ? student.nh[sessionNum] : { score: "", marks: {} };
+        } else {
+          titleSuffix = student.name + " - " + writingCfg().title + " (Round " + sessionNum + ")";
+          subData = sessObj ? sessObj : { score: "", marks: {} };
+        }
       }
       
       currentModalMarks = JSON.parse(JSON.stringify(subData.marks || {}));
@@ -3202,9 +3438,15 @@ const Offline = (function () {
     } else if (currentMode === 'writing') {
       // Writing Save
       let finalScore = calculateEvalScore();
-      if (!student.allSessions[activeModalSession]) student.allSessions[activeModalSession] = {};
-      student.allSessions[activeModalSession].score = finalScore;
-      student.allSessions[activeModalSession].marks = JSON.parse(JSON.stringify(currentModalMarks));
+      const isNH = (currentWrSubTab === 'nh');
+      if (isNH) {
+        if (!student.nh) student.nh = {};
+        student.nh[activeModalSession] = { score: finalScore, marks: JSON.parse(JSON.stringify(currentModalMarks)) };
+      } else {
+        if (!student.allSessions[activeModalSession]) student.allSessions[activeModalSession] = {};
+        student.allSessions[activeModalSession].score = finalScore;
+        student.allSessions[activeModalSession].marks = JSON.parse(JSON.stringify(currentModalMarks));
+      }
       
       renderViews();
       closeModal();
@@ -3216,7 +3458,8 @@ const Offline = (function () {
           row: student.row,
           score: finalScore,
           marks: currentModalMarks,
-          sessionNum: activeModalSession
+          sessionNum: activeModalSession,
+          nh: isNH
         });
     }
   }
@@ -3290,6 +3533,7 @@ const Offline = (function () {
 
     window.addEventListener('popstate', function () {
       if (!armed) return;
+      if (typeof NumPad !== 'undefined' && NumPad.isOpen()) { NumPad.close(); pushGuard(); return; }
       const modal = document.getElementById('keypad-modal');
       if (modal && getComputedStyle(modal).display !== 'none') { closeModal(); pushGuard(); return; }
       if (typeof isMasterViewActive !== 'undefined' && isMasterViewActive) { toggleMasterView(); pushGuard(); return; }
