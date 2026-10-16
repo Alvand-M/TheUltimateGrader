@@ -1779,11 +1779,139 @@ const Offline = (function () {
     });
     $('file-save-btn').addEventListener('click', function () { Offline.saveNow(); });
 
-    // Share the file (with all the latest changes) through the phone's share sheet -> Google Drive
+    // ---- Share / upload the file (with all the latest changes) to Google Drive ----
+    // The app works fully offline. Internet is needed ONLY at the moment you tap Share.
     const ENABLE_SHARE_BUTTON = true;       // set to false to hide the Share button
     if (!ENABLE_SHARE_BUTTON) $('file-share-btn').style.display = 'none';
+
+    // Paste your Google OAuth Client ID here (looks like 123456-abc.apps.googleusercontent.com).
+    // While it is empty, the button falls back to the phone's share sheet.
+    const GOOGLE_CLIENT_ID = '150983617944-ps0i817s5d7ncapnrnd10qmpa8hnguve.apps.googleusercontent.com';
+    const DRIVE_FOLDER_NAME = 'Ultimate Grader';   // created once in your My Drive
+    const DRIVE = { token: null, expires: 0, gis: null };
+
+    // Google's sign-in script is loaded only when online, never required to open the app
+    function loadGis() {
+      if (window.google && google.accounts && google.accounts.oauth2) return Promise.resolve();
+      if (DRIVE.gis) return DRIVE.gis;
+      DRIVE.gis = new Promise(function (resolve, reject) {
+        const s = document.createElement('script');
+        s.src = 'https://accounts.google.com/gsi/client';
+        s.async = true;
+        s.onload = function () { resolve(); };
+        s.onerror = function () { DRIVE.gis = null; s.remove(); reject(new Error('Could not reach Google. Check your internet connection and try again.')); };
+        document.head.appendChild(s);
+      });
+      return DRIVE.gis;
+    }
+    function preloadGis() { if (GOOGLE_CLIENT_ID && navigator.onLine) loadGis().catch(function () {}); }
+    preloadGis();
+    window.addEventListener('online', preloadGis);
+
+    function getDriveToken() {
+      return new Promise(function (resolve, reject) {
+        if (DRIVE.token && Date.now() < DRIVE.expires - 60000) { resolve(DRIVE.token); return; }
+        google.accounts.oauth2.initTokenClient({
+          client_id: GOOGLE_CLIENT_ID,
+          scope: 'https://www.googleapis.com/auth/drive.file',   // only files this app creates
+          callback: function (resp) {
+            if (resp.error) { reject(new Error(resp.error_description || resp.error)); return; }
+            DRIVE.token = resp.access_token;
+            DRIVE.expires = Date.now() + (Number(resp.expires_in) || 3600) * 1000;
+            resolve(DRIVE.token);
+          },
+          error_callback: function (err) {
+            const t = err && err.type;
+            reject(new Error(t === 'popup_closed' ? 'Sign-in was cancelled.'
+              : t === 'popup_failed_to_open' ? 'The sign-in window was blocked. Please tap Share again.'
+              : 'Google sign-in failed' + (t ? ' (' + t + ')' : '') + '.'));
+          }
+        }).requestAccessToken({});
+      });
+    }
+
+    async function driveFetch(token, url, opts) {
+      opts = opts || {};
+      const headers = Object.assign({ Authorization: 'Bearer ' + token }, opts.headers || {});
+      const r = await fetch(url, Object.assign({}, opts, { headers: headers }));
+      if (!r.ok) {
+        let m = '';
+        try { m = (await r.json()).error.message; } catch (_) {}
+        const e = new Error(m || ('Google Drive error ' + r.status));
+        e.status = r.status;
+        throw e;
+      }
+      return r.json();
+    }
+
+    async function ensureDriveFolder(token) {
+      let id = null;
+      try { id = localStorage.getItem('ug_drive_folder'); } catch (_) {}
+      if (id) {
+        try {
+          const f = await driveFetch(token, 'https://www.googleapis.com/drive/v3/files/' + id + '?fields=id,trashed');
+          if (!f.trashed) return id;
+        } catch (_) {}
+      }
+      const q = encodeURIComponent("mimeType='application/vnd.google-apps.folder' and name='" + DRIVE_FOLDER_NAME + "' and trashed=false");
+      const list = await driveFetch(token, 'https://www.googleapis.com/drive/v3/files?q=' + q + '&fields=files(id)&pageSize=1');
+      if (list.files && list.files.length) {
+        id = list.files[0].id;
+      } else {
+        const made = await driveFetch(token, 'https://www.googleapis.com/drive/v3/files?fields=id', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: DRIVE_FOLDER_NAME, mimeType: 'application/vnd.google-apps.folder' })
+        });
+        id = made.id;
+      }
+      try { localStorage.setItem('ug_drive_folder', id); } catch (_) {}
+      return id;
+    }
+
+    async function uploadToDrive(token, file) {
+      const folderId = await ensureDriveFolder(token);
+      const d = new Date(), p2 = function (n) { return (n < 10 ? '0' : '') + n; };
+      const stamp = d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate()) + '_' + p2(d.getHours()) + p2(d.getMinutes());
+      const name = file.name.replace(/\.xlsx$/i, '') + '_' + stamp + '.xlsx';
+      const type = file.type || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+      const boundary = 'ug' + Math.random().toString(36).slice(2);
+      const meta = JSON.stringify({ name: name, parents: [folderId], mimeType: type });
+      const body = new Blob([
+        '--' + boundary + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + meta + '\r\n--' + boundary + '\r\nContent-Type: ' + type + '\r\n\r\n',
+        file,
+        '\r\n--' + boundary + '--'
+      ]);
+      return driveFetch(token, 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name', {
+        method: 'POST', headers: { 'Content-Type': 'multipart/related; boundary=' + boundary }, body: body
+      });
+    }
+
     $('file-share-btn').addEventListener('click', async function () {
       const btn = this;
+      if (!GOOGLE_CLIENT_ID) { shareViaSheet(btn); return; }
+      if (!navigator.onLine) {
+        alert('You are offline. Connect to the internet to upload to Google Drive. Your work stays saved on this device.');
+        return;
+      }
+      const label = btn.textContent;
+      try {
+        btn.disabled = true; btn.textContent = '☁️ …';
+        await loadGis();
+        const token = await getDriveToken();            // Google sign-in window (first time, or after it expires)
+        btn.textContent = '☁️ Uploading…';
+        const file = Offline.getReadyShareFile() || await Offline.prepareShareFile();
+        const res = await uploadToDrive(token, file);
+        alert('Uploaded to Google Drive › ' + DRIVE_FOLDER_NAME + ' › ' + res.name);
+      } catch (e) {
+        if (e && e.status === 401) DRIVE.token = null;
+        alert('Could not upload to Google Drive: ' + ((e && e.message) || e));
+      } finally {
+        btn.disabled = false; btn.textContent = label;
+      }
+    });
+
+    // Share the file (with all the latest changes) through the phone's share sheet -> Google Drive
+    async function shareViaSheet(btn) {
       let file = Offline.getReadyShareFile();      // prepared in the background, so no waiting before the share sheet
       const wasReady = !!file;
       try {
@@ -1809,7 +1937,8 @@ const Offline = (function () {
       } finally {
         btn.disabled = false;
       }
-    });
+    }
+
 
     if (Offline.canAutoSave) {
       $('start-note').textContent = 'Changes are saved automatically into your file. Close the file in Excel while you use this app.';
