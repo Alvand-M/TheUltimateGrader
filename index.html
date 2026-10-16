@@ -677,7 +677,7 @@
   <span class="file-name" id="file-name"></span>
   <span class="file-state" id="file-state"></span>
   <button id="file-save-btn" class="primary" style="display:none;">💾 Save to Excel</button>
-  <button id="file-share-btn">☁️ Share to Drive</button>
+  <button id="file-share-btn">☁️ Share</button>
   <button id="file-switch-btn">📂 Open another file</button>
 </div>
 
@@ -1679,7 +1679,7 @@ const Offline = (function () {
     $('file-save-btn').addEventListener('click', function () { Offline.saveNow(); });
 
     // Share the file (with all the latest changes) through the phone's share sheet -> Google Drive
-    const ENABLE_SHARE_BUTTON = true;       // set to false to hide the Share to Drive button
+    const ENABLE_SHARE_BUTTON = true;       // set to false to hide the Share button
     if (!ENABLE_SHARE_BUTTON) $('file-share-btn').style.display = 'none';
     $('file-share-btn').addEventListener('click', async function () {
       const btn = this;
@@ -1701,7 +1701,7 @@ const Offline = (function () {
       } catch (e) {
         if (e && e.name === 'AbortError') return;                       // you closed the share sheet
         if (e && e.name === 'NotAllowedError' && !wasReady) {
-          alert('The file is ready now. Please tap Share to Drive once more.');
+          alert('The file is ready now. Please tap Share once more.');
         } else {
           alert('Could not share the file (' + ((e && e.name) || 'error') + '): ' + ((e && e.message) || e));
         }
