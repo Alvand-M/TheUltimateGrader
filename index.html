@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <link rel="icon" href="icon-192.png">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>Ultimate Grader V2.5 (Offline)</title>
+  <title>Ultimate Grader V2.8</title>
   <style>
     :root {
       --bg: #f0f2f5;
@@ -95,7 +95,10 @@
       margin: 0 auto 8px auto;
       padding: 0 5px;
     }
-    h2 { margin: 0; font-size: 18px; color: #1e3a8a; }
+    h2 { margin: 0; font-size: 18px; color: #1e3a8a; line-height: 1.25; overflow-wrap: anywhere; }
+    .header-bar h2 { flex: 1 1 auto; min-width: 0; }
+    .header-bar .nav-buttons { flex: 0 0 auto; margin-left: 8px; }
+    .modal-header h3 { overflow-wrap: anywhere; min-width: 0; }
     .nav-buttons { display: flex; gap: 6px; }
     .action-badge {
       background: #fef3c7;
@@ -660,7 +663,7 @@
 <div id="start-overlay">
   <div class="start-card">
     <h1>📘 Ultimate Grader</h1>
-    <p>Offline version. Pick your Excel grade sheet (the file name tells the app if it is Reach or Race) and everything you enter is saved straight into that file.</p>
+    <p>Pick your Excel grade sheet (the file name tells the app if it is Reach, Race, Run3/4, Run1/2, or Start) Everything you enter is saved straight into that file.</p>
     <button class="big-btn" id="start-open-btn">📂 Open Excel file</button>
     <button class="big-btn secondary" id="start-reopen-btn" style="display:none;"></button>
     <input type="file" id="start-file-input" accept=".xlsx" style="display:none;">
@@ -773,7 +776,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 </script>
 <script>
 // ============================================================================
-//  OFFLINE ENGINE  -  replaces Google Sheets + Google Apps Script
+//  OFFLINE ENGINE
 //  Reads the .xlsx file, edits only the cells the app changes (so all your
 //  colours, formulas and formatting stay exactly as they are), and saves it back.
 // ============================================================================
@@ -1676,7 +1679,7 @@ const Offline = (function () {
     $('file-save-btn').addEventListener('click', function () { Offline.saveNow(); });
 
     // Share the file (with all the latest changes) through the phone's share sheet -> Google Drive
-    const ENABLE_SHARE_BUTTON = false;      // Chrome on Android refuses to share .xlsx files, so the button is hidden
+    const ENABLE_SHARE_BUTTON = true;       // set to false to hide the Share to Drive button
     if (!ENABLE_SHARE_BUTTON) $('file-share-btn').style.display = 'none';
     $('file-share-btn').addEventListener('click', async function () {
       const btn = this;
@@ -2257,7 +2260,30 @@ const Offline = (function () {
     else loadDataForCurrentMode(null, false);
   }
 
+  // Page title and master-view hint follow the current tab AND sub-tab
+  function updateHeaderAndHint() {
+    let title = '', noun = 'session';
+    if (currentMode === 'homework') { title = '📚 Homework Checker'; noun = 'homework'; }
+    else if (currentMode === 'attendance') { title = '📋 Attendance Tracker'; noun = 'session'; }
+    else if (currentMode === 'reading') { title = '📖 Reading Evaluations'; noun = 'reading evaluation'; }
+    else if (currentMode === 'lis_spe') {
+      const names = { eval: 'Listening & Speaking Evaluation', describing: 'Describing', dwork: 'Dictionary Work', conversation: 'Conversation' };
+      noun = names[currentLsSubTab].toLowerCase();
+      title = '🎙️ Listening & Speaking · ' + (currentLsSubTab === 'eval' ? 'Evaluation' : names[currentLsSubTab]);
+    } else if (currentMode === 'writing') {
+      let name = writingCfg().title;
+      if (currentWrSubTab === 'nh') name = 'Neatness & Handwriting';
+      else if (currentWrSubTab === 'dictation') name = numTabCfg().label;
+      noun = name.toLowerCase();
+      title = '✍️ Writing · ' + name;
+    }
+    document.getElementById('app-title').innerText = title;
+    const hint = document.getElementById('master-hint-text');
+    if (hint) hint.innerText = '💡 Tap any ' + noun + ' header below to switch the active ' + noun + ':';
+  }
+
   function renderViews() {
+    updateHeaderAndHint();
     renderSubTabsBar();
     renderQuickViewHeader();
     renderQuickView();
@@ -2447,7 +2473,7 @@ const Offline = (function () {
           <div class="roster-header-ls-1">
             <div></div>
             <div>Student Name</div>
-            <div>Conv (Round ${appState.activeSession})</div>
+            <div>Conv ${appState.activeSession}</div>
           </div>
         `;
       }
@@ -2464,7 +2490,7 @@ const Offline = (function () {
         <div class="roster-header-single">
           <div></div>
           <div>Student Name</div>
-          <div>N&H (Round ${appState.activeSession})</div>
+          <div>N&H ${appState.activeSession}</div>
         </div>
       `;
     } else {
@@ -2473,7 +2499,7 @@ const Offline = (function () {
         <div class="roster-header-single">
           <div></div>
           <div>Student Name</div>
-          <div>${writingCfg().short} (Round ${appState.activeSession})</div>
+          <div>${writingCfg().short} ${appState.activeSession}</div>
         </div>
       `;
     }
@@ -2986,7 +3012,7 @@ const Offline = (function () {
     modalContentEl.classList.remove('dual-modal-content');
     
     if (currentMode === 'homework') {
-      document.getElementById('modal-title').innerText = student.name + " (HW " + sessionNum + ")";
+      document.getElementById('modal-title').innerText = student.name + " · Homework " + sessionNum;
       secondaryBtn.style.display = 'block';
       secondaryBtn.innerText = "Perfect (100)";
       const profileKey = getKeypadProfileForSession(sessionNum);
@@ -3000,7 +3026,7 @@ const Offline = (function () {
       document.getElementById('keypad-modal').style.display = 'flex';
       
     } else if (currentMode === 'attendance') {
-      document.getElementById('modal-title').innerText = student.name + " (Session " + sessionNum + ")";
+      document.getElementById('modal-title').innerText = student.name + " · Session " + sessionNum;
       secondaryBtn.style.display = 'block';
       secondaryBtn.innerText = "Mark Present";
       let sessObj = (student.allSessions && student.allSessions[sessionNum]) ? student.allSessions[sessionNum] : { status: "" };
@@ -3012,7 +3038,7 @@ const Offline = (function () {
     } else if (currentMode === 'lis_spe' && currentLsSubTab === 'eval') {
       // Dual L/S Eval Keypad
       modalContentEl.classList.add('dual-modal-content');
-      document.getElementById('modal-title').innerText = student.name + " - L / S Eval (LS-E " + sessionNum + ")";
+      document.getElementById('modal-title').innerText = student.name + " · Listening & Speaking Evaluation " + sessionNum;
       secondaryBtn.style.display = 'none';
       
       let sessObj = (student.allSessions && student.allSessions[sessionNum]) ? student.allSessions[sessionNum] : { l: {marks:{}}, s: {marks:{}} };
@@ -3032,22 +3058,22 @@ const Offline = (function () {
       
       if (currentMode === 'reading') {
         let subKey = readingCfg().cols[subCellIndex];
-        titleSuffix = student.name + " - " + READING_LABELS[subKey].long + " (R-E " + sessionNum + ")";
+        titleSuffix = student.name + " · Reading Evaluation " + sessionNum + " · " + READING_LABELS[subKey].long;
         subData = (sessObj && sessObj[subKey]) ? sessObj[subKey] : { score: "", marks: {} };
         
       } else if (currentMode === 'lis_spe') {
-        let subNames = { describing: 'Describing (Dec)', dwork: 'D-Work (D-W)', conversation: 'Conversation (Conv)' };
+        let subNames = { describing: 'Describing', dwork: 'Dictionary Work', conversation: 'Conversation' };
         let subKeyName = currentLsSubTab;
-        titleSuffix = student.name + " - " + subNames[subKeyName] + (subKeyName === 'conversation' ? " (Round " : " (LS-E ") + sessionNum + ")";
+        titleSuffix = student.name + " · " + subNames[subKeyName] + " " + sessionNum;
         let subKey = { describing: 'dec', dwork: 'dw', conversation: 'conv' }[currentLsSubTab];
         subData = (sessObj && sessObj[subKey]) ? sessObj[subKey] : { score: "", marks: {} };
         
       } else if (currentMode === 'writing') {
         if (currentWrSubTab === 'nh') {
-          titleSuffix = student.name + " - Neatness & Handwriting (Round " + sessionNum + ")";
+          titleSuffix = student.name + " · Neatness & Handwriting " + sessionNum;
           subData = (student.nh && student.nh[sessionNum]) ? student.nh[sessionNum] : { score: "", marks: {} };
         } else {
-          titleSuffix = student.name + " - " + writingCfg().title + " (Round " + sessionNum + ")";
+          titleSuffix = student.name + " · " + writingCfg().title + " " + sessionNum;
           subData = sessObj ? sessObj : { score: "", marks: {} };
         }
       }
