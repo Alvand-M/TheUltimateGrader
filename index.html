@@ -655,12 +655,46 @@
     #start-overlay .big-btn.secondary { background: #e2e8f0; color: var(--text); }
     #start-overlay .start-note { font-size: 12px; color: #6b7280; margin-top: 14px; }
     #start-overlay .start-error { color: var(--danger); font-size: 13px; margin-top: 12px; font-weight: bold; }
+    /* ---- About button (top-right corner of the home screen) and About panel ---- */
+    #about-open-btn {
+      position: absolute; top: 12px; right: 12px; z-index: 2;
+      background: #fff; color: var(--secondary); border: 1px solid #cbd5e1; border-radius: 999px;
+      padding: 6px 12px; font-size: 13px; font-weight: bold; cursor: pointer;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+    #about-overlay {
+      position: fixed; inset: 0; z-index: 10001; background: rgba(15,23,42,0.55);
+      display: none; align-items: center; justify-content: center; padding: 16px; box-sizing: border-box;
+    }
+    #about-overlay .about-card {
+      background: #fff; border-radius: 16px; width: 100%; max-width: 620px; max-height: 100%;
+      display: flex; flex-direction: column; box-shadow: 0 8px 32px rgba(0,0,0,0.25); overflow: hidden;
+    }
+    #about-overlay .about-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 18px; border-bottom: 1px solid #e5e7eb;
+    }
+    #about-overlay .about-head h2 { margin: 0; font-size: 18px; }
+    #about-close-btn {
+      border: none; background: #e2e8f0; color: var(--text); width: 34px; height: 34px;
+      border-radius: 50%; font-size: 16px; font-weight: bold; cursor: pointer;
+    }
+    #about-body { padding: 14px 20px 20px 20px; overflow-y: auto; -webkit-overflow-scrolling: touch;
+      font-size: 14.5px; line-height: 1.55; color: var(--text); text-align: left; }
+    #about-body h3 { font-size: 15.5px; margin: 18px 0 6px 0; color: var(--primary); }
+    #about-body h3:first-child { margin-top: 4px; }
+    #about-body p { margin: 6px 0; color: var(--text); font-size: 14.5px; }
+    #about-body ul { margin: 6px 0; padding-left: 20px; }
+    #about-body li { margin: 4px 0; }
+    #about-body .about-ok { background: #ecfdf5; border-left: 4px solid #10b981; padding: 8px 12px; border-radius: 6px; }
+    #about-body .about-keep { background: #fef2f2; border-left: 4px solid #ef4444; padding: 8px 12px; border-radius: 6px; }
   </style>
 </head>
 <body>
 
 <!-- Start screen: choose the Excel file -->
 <div id="start-overlay">
+  <button id="about-open-btn" type="button">ℹ️ About</button>
   <div class="start-card">
     <h1>📘 Ultimate Grader</h1>
     <p>Pick your Excel grade sheet (the file name tells the app if it is Reach, Race, Run3/4, Run1/2, or Start) Everything you enter is saved straight into that file.</p>
@@ -671,6 +705,62 @@
     <div class="start-note" id="start-note"></div>
   </div>
 </div>
+
+<!-- ============================================================================================
+     ABOUT PAGE
+     To change the About text later: edit ONLY the text between the "EDIT BELOW" and "EDIT ABOVE" lines.
+     It is normal HTML:  <h3>Title</h3>   <p>Paragraph</p>   <ul><li>Bullet</li></ul>
+     Use <b>bold</b> for emphasis.  Green box: class="about-ok"   Red box: class="about-keep"
+     ============================================================================================ -->
+<div id="about-overlay">
+  <div class="about-card" role="dialog" aria-modal="true" aria-labelledby="about-title">
+    <div class="about-head">
+      <h2 id="about-title">📘 About Ultimate Grader</h2>
+      <button id="about-close-btn" type="button" aria-label="Close">✕</button>
+    </div>
+    <div id="about-body"></div>
+  </div>
+</div>
+
+<template id="about-template">
+<!-- ===================== EDIT BELOW: the About text ===================== -->
+
+<h3>What this app is</h3>
+<p>Ultimate Grader is a fast, touch-friendly way to grade a class straight into its Excel grade sheet. It works offline: you open your Excel file, tap a student's cell, enter the score on a keypad, and the result is written back into the same Excel file. No server, no account, no copying numbers by hand.</p>
+
+<h3>How it works</h3>
+<ul>
+  <li><b>Open your grade sheet.</b> The app reads the <b>file name</b> to recognise the level (Reach, Race, Start, Run 1 &amp; 2, or Run 3 &amp; 4) and automatically sets up the right tabs, columns and keypads for that level.</li>
+  <li><b>Work in the tabs:</b> Attendance, Homework, Reading, Listening &amp; Speaking and Writing. Tap a student to grade them; use <b>Master View</b> to see the whole term at a glance.</li>
+  <li><b>Your work is saved into the Excel file.</b> Where the browser allows it, saving is automatic. Otherwise, tap <b>Save to Excel</b> when you finish and replace your old file with the downloaded one.</li>
+  <li>Close the file in Excel while you grade, so the two programs do not fight over it.</li>
+</ul>
+
+<h3>The Excel files: what must stay the same</h3>
+<p>There is one grade sheet type for each level group. The app finds every score by its exact position in the file, so the structure of the file is part of how the app works. Please <b>do not change</b> these:</p>
+<div class="about-keep">
+<ul>
+  <li><b>The file name.</b> It must keep the level in it (Reach, Race, Start, Run 1&amp;2, Run 3&amp;4), because that is how the app knows which level to load.</li>
+  <li><b>The names of the five working tabs:</b> HomeWork, Attendance, Reading, Listening&amp;Speaking and Writing.</li>
+  <li><b>The layout of those tabs:</b> the header row (row 1), the student names column, and the order and position of the columns. Do not insert, delete, move or rename columns.</li>
+  <li><b>The hidden tab called _AppMarks.</b> The app creates it to remember keypad choices. Leave it alone.</li>
+</ul>
+</div>
+
+<h3>What you can safely change</h3>
+<div class="about-ok">
+<ul>
+  <li><b>The Overview tab.</b> It is only a summary for you. Edit it, format it or ignore it: it does not affect the app.</li>
+  <li><b>Empty student rows.</b> A sheet comes with room for 30 students. If your class has 15, you can delete the 15 empty rows to remove the clutter. The app simply skips rows without a name, so nothing breaks.</li>
+  <li><b>Student names and colours or formatting</b> inside the working tabs, as long as the structure above is untouched.</li>
+</ul>
+</div>
+
+<h3>A good habit</h3>
+<p>Keep a copy of the original blank grade sheet. If a file is ever damaged by accident, you can start again from the copy.</p>
+
+<!-- ===================== EDIT ABOVE: the About text ===================== -->
+</template>
 
 <!-- File bar -->
 <div class="file-bar" id="file-bar" style="display:none;">
@@ -1659,6 +1749,17 @@ const Offline = (function () {
         showError(e.message || String(e));
       }
     }
+    // ---- About page: fill it from the editable <template id="about-template"> and open / close it ----
+    (function () {
+      const ov = $('about-overlay'), body = $('about-body');
+      body.innerHTML = $('about-template').innerHTML;
+      window.openAbout = function () { ov.style.display = 'flex'; body.scrollTop = 0; };
+      window.closeAbout = function () { ov.style.display = 'none'; };
+      window.isAboutOpen = function () { return ov.style.display === 'flex'; };
+      $('about-open-btn').addEventListener('click', window.openAbout);
+      $('about-close-btn').addEventListener('click', window.closeAbout);
+      ov.addEventListener('click', function (e) { if (e.target === ov) window.closeAbout(); });   // tap outside = close
+    })();
     $('start-open-btn').addEventListener('click', handleOpenClick);
     $('file-switch-btn').addEventListener('click', async function () {
       if (Offline.status().dirty && !confirm('You have unsaved changes. Open another file anyway?')) return;
@@ -3559,6 +3660,7 @@ const Offline = (function () {
 
     window.addEventListener('popstate', function () {
       if (!armed) return;
+      if (typeof isAboutOpen === 'function' && isAboutOpen()) { closeAbout(); pushGuard(); return; }
       if (typeof NumPad !== 'undefined' && NumPad.isOpen()) { NumPad.close(); pushGuard(); return; }
       const modal = document.getElementById('keypad-modal');
       if (modal && getComputedStyle(modal).display !== 'none') { closeModal(); pushGuard(); return; }
