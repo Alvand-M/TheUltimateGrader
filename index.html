@@ -7,9 +7,9 @@
   <meta name="theme-color" content="#2563eb">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <link rel="icon" href="icon-192.png">
+  <link rel="icon" href="icon-256.png">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>Ultimate Grader V2.8</title>
+  <title>Ultimate Grader V3</title>
   <style>
     :root {
       --bg: #f0f2f5;
@@ -651,8 +651,9 @@
       display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box;
     }
     #start-overlay .start-card {
-      background: #fff; border-radius: 16px; padding: 28px 24px; max-width: 420px; width: 100%;
+      background: #fff; border-radius: 16px; padding: 20px 18px; max-width: 420px; width: 100%;
       box-shadow: 0 4px 24px rgba(0,0,0,0.10); text-align: center;
+      max-height: 94vh; overflow-y: auto; box-sizing: border-box;
     }
     #start-overlay h1 { margin: 0 0 6px 0; font-size: 22px; }
     #start-overlay p { color: var(--secondary); font-size: 14px; line-height: 1.45; margin: 6px 0 16px 0; }
@@ -663,6 +664,32 @@
     #start-overlay .big-btn.secondary { background: #e2e8f0; color: var(--text); }
     #start-overlay .start-note { font-size: 12px; color: #6b7280; margin-top: 14px; }
     #start-overlay .start-error { color: var(--danger); font-size: 13px; margin-top: 12px; font-weight: bold; }
+    /* ---- Library: terms > sections > files ---- */
+    #lib-box { text-align: left; margin-top: 12px; }
+    .lib-term { display: flex; gap: 6px; align-items: center; }
+    .lib-term select {
+      flex: 1; min-width: 0; padding: 8px; font-size: 15px; font-weight: bold;
+      border: 2px solid var(--border); border-radius: 10px; background: #fff; color: var(--text);
+    }
+    .lib-mini {
+      border: 1px solid var(--border); background: #f8fafc; color: var(--text); border-radius: 8px;
+      min-width: 34px; height: 34px; font-size: 14px; cursor: pointer; padding: 0 6px;
+    }
+    .lib-sec { margin-top: 10px; border: 1px solid var(--border); border-radius: 10px; padding: 6px 8px 8px; }
+    .lib-sec-h { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+    .lib-sec-name { flex: 1; font-weight: bold; font-size: 14px; color: var(--secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .lib-row { display: flex; gap: 4px; align-items: center; margin-top: 4px; }
+    .lib-file {
+      flex: 1; min-width: 0; text-align: left; padding: 9px 10px; font-size: 14px; font-weight: bold;
+      border: none; border-radius: 8px; background: var(--primary); color: #fff; cursor: pointer;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .lib-row.last .lib-file { box-shadow: 0 0 0 3px #bfdbfe; }
+    .lib-add, .lib-add-sec {
+      display: block; width: 100%; margin-top: 6px; padding: 7px; font-size: 13px; font-weight: bold;
+      border: 1px dashed var(--secondary); background: transparent; color: var(--secondary); border-radius: 8px; cursor: pointer;
+    }
+    .lib-empty { font-size: 13px; color: #6b7280; margin-top: 8px; }
     /* ---- About button (top-right corner of the home screen) and About panel ---- */
     #about-open-btn {
       position: absolute; top: 12px; right: 12px; z-index: 2;
@@ -705,9 +732,9 @@
   <button id="about-open-btn" type="button">ℹ️ About</button>
   <div class="start-card">
     <h1>📘 Ultimate Grader</h1>
-    <p>Pick your Excel grade sheet (the file name tells the app if it is Reach, Race, Run3/4, Run1/2, or Start) Everything you enter is saved straight into that file.</p>
     <button class="big-btn" id="start-open-btn">📂 Open Excel file</button>
-    <button class="big-btn secondary" id="start-reopen-btn" style="display:none;"></button>
+    <div id="lib-box" style="display:none;"></div>
+    <p>Pick your Excel grade sheet (the file name tells the app if it is Reach, Race, Run3/4, Run1/2, or Start) Everything you enter is saved straight into that file.</p>
     <input type="file" id="start-file-input" accept=".xlsx" style="display:none;">
     <div class="start-error" id="start-error"></div>
     <div class="start-note" id="start-note"></div>
@@ -1681,6 +1708,26 @@ const Offline = (function () {
     notify(); onOpened();
   }
 
+  // library of shortcuts (terms > sections > files) kept in this browser
+  async function pickHandleOnly() {
+    const hs = await window.showOpenFilePicker({
+      multiple: false,
+      types: [{ description: 'Excel workbook', accept: { [XLSX_MIME]: ['.xlsx'] } }]
+    });
+    return hs[0];
+  }
+  async function libLoad() { return await idbGet('library'); }
+  async function libSave(v) {
+    try {
+      const db = await idb();
+      await new Promise((res, rej) => {
+        const tx = db.transaction('kv', 'readwrite');
+        tx.objectStore('kv').put(v, 'library');
+        tx.oncomplete = res; tx.onerror = () => rej(tx.error);
+      });
+    } catch (e) { }
+  }
+
   async function getLastHandleName() {
     if (!S.canAutoSave) return null;
     const h = await idbGet('lastHandle');
@@ -1696,7 +1743,7 @@ const Offline = (function () {
 
   return {
     canAutoSave: S.canAutoSave,
-    pickFile, openFromFileObject, openHandle, getLastHandleName,
+    pickFile, openFromFileObject, openHandle, getLastHandleName, pickHandleOnly, libLoad, libSave,
     saveNow, status,
     prepareShareFile, getReadyShareFile,
     onOpened: f => { onOpened = f; },
@@ -1780,12 +1827,6 @@ const Offline = (function () {
       ev.target.value = '';
       if (!f) return;
       try { await Offline.openFromFileObject(f); } catch (e) { showError(e.message || String(e)); }
-    });
-    $('start-reopen-btn').addEventListener('click', async function () {
-      if (!lastHandleInfo) return;
-      showError('');
-      try { await Offline.openHandle(lastHandleInfo.handle); }
-      catch (e) { if (!(e && e.name === 'AbortError')) showError(e.message || String(e)); }
     });
     $('file-save-btn').addEventListener('click', function () { Offline.saveNow(); });
 
@@ -2037,16 +2078,137 @@ const Offline = (function () {
     }
 
 
+    // =========================================================================================
+    //  LIBRARY  -  terms > sections > files.  Shortcuts to your Excel files, kept in this browser
+    //  (it stores links to the files, never copies, so your Excel files are never touched here).
+    // =========================================================================================
+    const LIB = { data: null };
+    const libEl = $('lib-box');
+    function uid() { return Math.random().toString(36).slice(2, 9); }
+    function esc(t) { return String(t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+    function curTerm() { const d = LIB.data; return d.terms.find(function (t) { return t.id === d.current; }) || d.terms[0]; }
+    function libPersist() { Offline.libSave(LIB.data); }
+    function findSec(t, id) { return t.sections.find(function (x) { return x.id === id; }); }
+
+    function libRender() {
+      const t = curTerm();
+      let h = '<div class="lib-term"><select id="lib-term-sel">';
+      LIB.data.terms.forEach(function (x) { h += '<option value="' + x.id + '"' + (x.id === t.id ? ' selected' : '') + '>' + esc(x.name) + '</option>'; });
+      h += '</select><button class="lib-mini" data-act="term-rename" title="Rename term">✎</button>' +
+           '<button class="lib-mini" data-act="term-new" title="New term">＋</button>' +
+           '<button class="lib-mini" data-act="term-del" title="Remove term">🗑</button></div>';
+      if (!t.sections.length) h += '<div class="lib-empty">Nothing here yet. Tap “＋ Add section” (for example Odd days), then add your Excel files to it.</div>';
+      t.sections.forEach(function (sec) {
+        h += '<div class="lib-sec"><div class="lib-sec-h"><span class="lib-sec-name">' + esc(sec.name) + '</span>' +
+             '<button class="lib-mini" data-act="sec-rename" data-s="' + sec.id + '" title="Rename section">✎</button>' +
+             '<button class="lib-mini" data-act="sec-del" data-s="' + sec.id + '" title="Remove section">✕</button></div>';
+        sec.files.forEach(function (f) {
+          const nm = String(f.handle && f.handle.name || 'file').replace(/\.xlsx$/i, '');
+          h += '<div class="lib-row' + (LIB.data.last === f.id ? ' last' : '') + '">' +
+               '<button class="lib-file" data-act="open" data-s="' + sec.id + '" data-f="' + f.id + '">📄 ' + esc(nm) + '</button>' +
+               '<button class="lib-mini" data-act="up" data-s="' + sec.id + '" data-f="' + f.id + '">▲</button>' +
+               '<button class="lib-mini" data-act="down" data-s="' + sec.id + '" data-f="' + f.id + '">▼</button>' +
+               '<button class="lib-mini" data-act="file-del" data-s="' + sec.id + '" data-f="' + f.id + '">✕</button></div>';
+        });
+        h += '<button class="lib-add" data-act="file-add" data-s="' + sec.id + '">＋ Add file</button></div>';
+      });
+      h += '<button class="lib-add-sec" data-act="sec-add">＋ Add section</button>';
+      libEl.innerHTML = h;
+    }
+
+    async function libOpen(sec, f) {
+      showError('');
+      try {
+        await Offline.openHandle(f.handle);
+        LIB.data.last = f.id; libPersist();
+      } catch (e) {
+        if (e && e.name === 'AbortError') return;
+        if (e && (e.name === 'NotFoundError' || e.name === 'NotAllowedError' && /not.*found/i.test(e.message || ''))) {
+          if (confirm('Can\'t find “' + f.handle.name + '”. It may have been moved or deleted.\n\nChoose the file again now?')) {
+            try {
+              const h = await Offline.pickHandleOnly();
+              f.handle = h; libPersist(); libRender();
+              await Offline.openHandle(h);
+              LIB.data.last = f.id; libPersist();
+            } catch (e2) { if (!(e2 && e2.name === 'AbortError')) showError(e2.message || String(e2)); }
+          }
+          return;
+        }
+        showError((e && e.message) || String(e));
+      }
+    }
+
+    libEl.addEventListener('change', function (ev) {
+      if (ev.target.id === 'lib-term-sel') { LIB.data.current = ev.target.value; libPersist(); libRender(); }
+    });
+    libEl.addEventListener('click', async function (ev) {
+      const b = ev.target.closest('button[data-act]');
+      if (!b) return;
+      const act = b.getAttribute('data-act'), t = curTerm();
+      const sec = findSec(t, b.getAttribute('data-s'));
+      const fid = b.getAttribute('data-f');
+      const fi = sec ? sec.files.findIndex(function (x) { return x.id === fid; }) : -1;
+      let name;
+      if (act === 'term-rename') {
+        name = prompt('Term name (for example Fall 2026):', t.name);
+        if (name && name.trim()) { t.name = name.trim(); }
+      } else if (act === 'term-new') {
+        name = prompt('Name of the new term (for example Spring 2027):', '');
+        if (!name || !name.trim()) return;
+        const nt = { id: uid(), name: name.trim(), sections: [] };
+        LIB.data.terms.push(nt); LIB.data.current = nt.id;
+      } else if (act === 'term-del') {
+        if (!confirm('Remove the term “' + t.name + '” and all its shortcuts?\n\nYour Excel files are NOT deleted.')) return;
+        LIB.data.terms = LIB.data.terms.filter(function (x) { return x.id !== t.id; });
+        if (!LIB.data.terms.length) LIB.data.terms.push({ id: uid(), name: 'My term', sections: [] });
+        LIB.data.current = LIB.data.terms[0].id;
+      } else if (act === 'sec-add') {
+        name = prompt('Section name (for example Odd days):', '');
+        if (!name || !name.trim()) return;
+        t.sections.push({ id: uid(), name: name.trim(), files: [] });
+      } else if (act === 'sec-rename' && sec) {
+        name = prompt('Section name:', sec.name);
+        if (name && name.trim()) sec.name = name.trim();
+      } else if (act === 'sec-del' && sec) {
+        if (!confirm('Remove the section “' + sec.name + '” and its shortcuts?\n\nYour Excel files are NOT deleted.')) return;
+        t.sections = t.sections.filter(function (x) { return x.id !== sec.id; });
+      } else if (act === 'file-add' && sec) {
+        showError('');
+        try {
+          const h = await Offline.pickHandleOnly();
+          for (const s2 of t.sections) for (const f2 of s2.files) {
+            let same = false; try { same = await f2.handle.isSameEntry(h); } catch (_) {}
+            if (same) { alert('That file is already in this term (' + s2.name + ').'); return; }
+          }
+          sec.files.push({ id: uid(), handle: h });
+        } catch (e) { if (!(e && e.name === 'AbortError')) showError((e && e.message) || String(e)); return; }
+      } else if (act === 'file-del' && sec && fi > -1) {
+        if (!confirm('Remove “' + sec.files[fi].handle.name + '” from the library?\n\nThe Excel file itself is NOT deleted.')) return;
+        sec.files.splice(fi, 1);
+      } else if (act === 'up' && sec && fi > 0) {
+        const x = sec.files.splice(fi, 1)[0]; sec.files.splice(fi - 1, 0, x);
+      } else if (act === 'down' && sec && fi > -1 && fi < sec.files.length - 1) {
+        const x = sec.files.splice(fi, 1)[0]; sec.files.splice(fi + 1, 0, x);
+      } else if (act === 'open' && sec && fi > -1) {
+        await libOpen(sec, sec.files[fi]);
+        return;
+      } else { return; }
+      libPersist(); libRender();
+    });
+
+    async function initLibrary() {
+      let d = null;
+      try { d = await Offline.libLoad(); } catch (_) {}
+      if (!d || !Array.isArray(d.terms) || !d.terms.length) d = { terms: [{ id: uid(), name: 'My term', sections: [] }], current: null, last: null };
+      if (!d.current || !d.terms.some(function (x) { return x.id === d.current; })) d.current = d.terms[0].id;
+      LIB.data = d;
+      libEl.style.display = 'block';
+      libRender();
+    }
+
     if (Offline.canAutoSave) {
       $('start-note').textContent = 'Changes are saved automatically into your file. Close the file in Excel while you use this app.';
-      Offline.getLastHandleName().then(function (info) {
-        if (info) {
-          lastHandleInfo = info;
-          const b = $('start-reopen-btn');
-          b.textContent = '↻ Reopen ' + info.name;
-          b.style.display = 'block';
-        }
-      });
+      initLibrary();
     } else {
       $('start-note').textContent = 'This browser cannot save into the file automatically. Use the Save to Excel button when you finish: it downloads the updated file (replace your old one with it). For automatic saving, use Chrome or Edge on a computer.';
     }
