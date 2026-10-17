@@ -423,6 +423,15 @@
       padding-bottom: 10px;
     }
     .modal-header h3 { margin: 0; font-size: 18px; }
+    /* NR = Not Ready (small pill, evaluation keypads only) */
+    .nr-pill {
+      margin-left: auto; margin-right: 10px;
+      padding: 4px 12px; font-size: 13px; font-weight: bold; line-height: 1.2;
+      border: 2px solid #d97706; color: #b45309; background: #fff;
+      border-radius: 999px; cursor: pointer;
+    }
+    .nr-pill.on { background: #d97706; color: #fff; }
+    .nr-pill.nr-inline { margin: 0 0 0 8px; padding: 1px 9px; font-size: 12px; vertical-align: middle; }
     /* ---- Numpad ---- */
     .np-modal { z-index: 1100; align-items: flex-end; }
     .np-box { background: #fff; width: 100%; max-width: 420px; border-radius: 18px 18px 14px 14px; padding: 14px 14px 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.25); touch-action: manipulation; user-select: none; -webkit-user-select: none; }
@@ -768,6 +777,7 @@
   <span class="file-state" id="file-state"></span>
   <button id="file-save-btn" class="primary" style="display:none;">💾 Save to Excel</button>
   <button id="file-share-btn">☁️ Share</button>
+  <button id="file-folder-btn" style="display:none;">📁 Folder</button>
   <button id="file-switch-btn">📂 Open another file</button>
 </div>
 
@@ -836,6 +846,7 @@
   <div class="modal-content">
     <div class="modal-header">
       <h3 id="modal-title">Student Name</h3>
+      <button id="nr-btn" class="nr-pill" style="display:none;" onclick="toggleNR()">NR</button>
       <button class="close-btn" onclick="closeModal()">×</button>
     </div>
     
@@ -1787,6 +1798,8 @@ const Offline = (function () {
     // Paste your Google OAuth Client ID here (looks like 123456-abc.apps.googleusercontent.com).
     // While it is empty, the button falls back to the phone's share sheet.
     const GOOGLE_CLIENT_ID = '150983617944-ps0i817s5d7ncapnrnd10qmpa8hnguve.apps.googleusercontent.com';
+    const GOOGLE_API_KEY = 'AIzaSyDU1koKVyd8CpEWiZq99d-WJYdQ_Ghn36w';   // for the folder picker
+    const GOOGLE_APP_ID = '150983617944';                                // Google Cloud project number
     const DRIVE_FOLDER_NAME = 'Ultimate Grader';   // created once in your My Drive
     const DRIVE = { token: null, expires: 0, gis: null };
 
@@ -1804,7 +1817,59 @@ const Offline = (function () {
       });
       return DRIVE.gis;
     }
-    function preloadGis() { if (GOOGLE_CLIENT_ID && navigator.onLine) loadGis().catch(function () {}); }
+    // Google's folder picker (loaded only when online, like the sign-in script)
+    let pickerLib = null;
+    function loadPickerLib() {
+      if (window.google && google.picker) return Promise.resolve();
+      if (pickerLib) return pickerLib;
+      pickerLib = new Promise(function (resolve, reject) {
+        function fail() { pickerLib = null; reject(new Error('Could not load the Google folder picker. Check your internet connection and try again.')); }
+        function ready() { try { gapi.load('picker', { callback: resolve, onerror: fail }); } catch (e) { fail(); } }
+        if (window.gapi) { ready(); return; }
+        const s = document.createElement('script');
+        s.src = 'https://apis.google.com/js/api.js';
+        s.async = true;
+        s.onload = ready;
+        s.onerror = function () { s.remove(); fail(); };
+        document.head.appendChild(s);
+      });
+      return pickerLib;
+    }
+    function getPickedFolder() {
+      try {
+        const id = localStorage.getItem('ug_pick_folder');
+        return id ? { id: id, name: localStorage.getItem('ug_pick_folder_name') || 'your folder' } : null;
+      } catch (_) { return null; }
+    }
+    function pickDriveFolder(token) {
+      return loadPickerLib().then(function () {
+        return new Promise(function (resolve) {
+          const view = new google.picker.DocsView(google.picker.ViewId.FOLDERS)
+            .setIncludeFolders(true).setSelectFolderEnabled(true)
+            .setMimeTypes('application/vnd.google-apps.folder');
+          new google.picker.PickerBuilder()
+            .setTitle('Choose the Drive folder for uploads')
+            .addView(view)
+            .setOAuthToken(token)
+            .setDeveloperKey(GOOGLE_API_KEY)
+            .setAppId(GOOGLE_APP_ID)
+            .setCallback(function (data) {
+              const act = data[google.picker.Response.ACTION];
+              if (act === google.picker.Action.PICKED) {
+                const d = data[google.picker.Response.DOCUMENTS][0];
+                const f = { id: d[google.picker.Document.ID], name: d[google.picker.Document.NAME] };
+                try { localStorage.setItem('ug_pick_folder', f.id); localStorage.setItem('ug_pick_folder_name', f.name); } catch (_) {}
+                resolve(f);
+              } else if (act === google.picker.Action.CANCEL) {
+                resolve(null);
+              }
+            })
+            .build().setVisible(true);
+        });
+      });
+    }
+
+    function preloadGis() { if (GOOGLE_CLIENT_ID && navigator.onLine) { loadGis().catch(function () {}); loadPickerLib().catch(function () {}); } }
     preloadGis();
     window.addEventListener('online', preloadGis);
 
@@ -1868,8 +1933,7 @@ const Offline = (function () {
       return id;
     }
 
-    async function uploadToDrive(token, file) {
-      const folderId = await ensureDriveFolder(token);
+    async function uploadToDrive(token, file, folderId) {
       const d = new Date(), p2 = function (n) { return (n < 10 ? '0' : '') + n; };
       const stamp = d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate()) + '_' + p2(d.getHours()) + p2(d.getMinutes());
       const name = file.name.replace(/\.xlsx$/i, '') + '_' + stamp + '.xlsx';
@@ -1886,6 +1950,25 @@ const Offline = (function () {
       });
     }
 
+    if (ENABLE_SHARE_BUTTON && GOOGLE_CLIENT_ID) $('file-folder-btn').style.display = '';
+    $('file-folder-btn').addEventListener('click', async function () {
+      const btn = this;
+      if (!navigator.onLine) { alert('You are offline. Connect to the internet to choose a Drive folder.'); return; }
+      const label = btn.textContent;
+      try {
+        btn.disabled = true; btn.textContent = '📁 …';
+        await loadGis();
+        const token = await getDriveToken();
+        const f = await pickDriveFolder(token);
+        if (f) alert('Uploads will now go to: ' + f.name);
+      } catch (e) {
+        if (e && e.status === 401) DRIVE.token = null;
+        alert('Could not choose a folder: ' + ((e && e.message) || e));
+      } finally {
+        btn.disabled = false; btn.textContent = label;
+      }
+    });
+
     $('file-share-btn').addEventListener('click', async function () {
       const btn = this;
       if (!GOOGLE_CLIENT_ID) { shareViaSheet(btn); return; }
@@ -1898,10 +1981,25 @@ const Offline = (function () {
         btn.disabled = true; btn.textContent = '☁️ …';
         await loadGis();
         const token = await getDriveToken();            // Google sign-in window (first time, or after it expires)
+        let folder = getPickedFolder();
+        if (!folder) {                                   // first time: choose where uploads go
+          btn.textContent = '📁 Choose folder…';
+          folder = await pickDriveFolder(token);
+          if (!folder) return;                           // closed the picker: nothing uploaded
+        }
         btn.textContent = '☁️ Uploading…';
         const file = Offline.getReadyShareFile() || await Offline.prepareShareFile();
-        const res = await uploadToDrive(token, file);
-        alert('Uploaded to Google Drive › ' + DRIVE_FOLDER_NAME + ' › ' + res.name);
+        let res;
+        try {
+          res = await uploadToDrive(token, file, folder.id);
+        } catch (e) {
+          if (e && (e.status === 403 || e.status === 404) &&
+              confirm('Could not save into "' + folder.name + '" (' + e.message + ').\n\nSave into the default "' + DRIVE_FOLDER_NAME + '" folder instead?')) {
+            folder = { id: await ensureDriveFolder(token), name: DRIVE_FOLDER_NAME };
+            res = await uploadToDrive(token, file, folder.id);
+          } else { throw e; }
+        }
+        alert('Uploaded to Google Drive › ' + folder.name + ' › ' + res.name);
       } catch (e) {
         if (e && e.status === 401) DRIVE.token = null;
         alert('Could not upload to Google Drive: ' + ((e && e.message) || e));
@@ -2413,6 +2511,7 @@ const Offline = (function () {
 
   let currentModalMarksL = {};
   let currentModalMarksS = {};
+  let currentNR = false, currentNRL = false, currentNRS = false;   // 'NR' (Not Ready) chosen on an evaluation keypad
 
   let currentEvalSubCell = 0; 
   const evalScores = [0, 5, 10, 15, 20];
@@ -3240,6 +3339,8 @@ const Offline = (function () {
     
     // Reset modal width class
     modalContentEl.classList.remove('dual-modal-content');
+    currentNR = false; currentNRL = false; currentNRS = false;
+    document.getElementById('nr-btn').style.display = 'none';
     
     if (currentMode === 'homework') {
       document.getElementById('modal-title').innerText = student.name + " · Homework " + sessionNum;
@@ -3274,6 +3375,8 @@ const Offline = (function () {
       let sessObj = (student.allSessions && student.allSessions[sessionNum]) ? student.allSessions[sessionNum] : { l: {marks:{}}, s: {marks:{}} };
       currentModalMarksL = JSON.parse(JSON.stringify(sessObj.l && sessObj.l.marks ? sessObj.l.marks : {}));
       currentModalMarksS = JSON.parse(JSON.stringify(sessObj.s && sessObj.s.marks ? sessObj.s.marks : {}));
+      currentNRL = !!(sessObj.l && String(sessObj.l.score).trim().toUpperCase() === 'NR');
+      currentNRS = !!(sessObj.s && String(sessObj.s.score).trim().toUpperCase() === 'NR');
       
       renderDualEvalKeypadForm();
       document.getElementById('keypad-modal').style.display = 'flex';
@@ -3309,7 +3412,10 @@ const Offline = (function () {
       }
       
       currentModalMarks = JSON.parse(JSON.stringify(subData.marks || {}));
+      currentNR = (String(subData.score).trim().toUpperCase() === 'NR');
       document.getElementById('modal-title').innerText = titleSuffix;
+      document.getElementById('nr-btn').style.display = '';
+      refreshNRBtn();
       renderEvalKeypadForm();
       document.getElementById('keypad-modal').style.display = 'flex';
     }
@@ -3319,7 +3425,7 @@ const Offline = (function () {
     let formHtml = `<div class="dual-keypad-container">`;
     
     // Left Column: Listening (L)
-    formHtml += `<div><div class="keypad-column-title title-l">🎧 Listening (L)</div>`;
+    formHtml += `<div><div class="keypad-column-title title-l">🎧 Listening (L)<button class="nr-pill nr-inline ${currentNRL ? 'on' : ''}" id="nr-l" onclick="toggleNRDual('l')">NR</button></div>`;
     for (let row = 1; row <= 5; row++) {
       let selectedVal = currentModalMarksL['row_' + row] !== undefined ? currentModalMarksL['row_' + row] : null;
       formHtml += `<div class="eval-row-box"><div class="eval-row-num">${row}</div><div class="eval-btn-group">`;
@@ -3332,7 +3438,7 @@ const Offline = (function () {
     formHtml += `</div>`;
     
     // Right Column: Speaking (S)
-    formHtml += `<div><div class="keypad-column-title title-s">🗣️ Speaking (S)</div>`;
+    formHtml += `<div><div class="keypad-column-title title-s">🗣️ Speaking (S)<button class="nr-pill nr-inline ${currentNRS ? 'on' : ''}" id="nr-s" onclick="toggleNRDual('s')">NR</button></div>`;
     for (let row = 1; row <= 5; row++) {
       let selectedVal = currentModalMarksS['row_' + row] !== undefined ? currentModalMarksS['row_' + row] : null;
       formHtml += `<div class="eval-row-box"><div class="eval-row-num">${row}</div><div class="eval-btn-group">`;
@@ -3352,6 +3458,10 @@ const Offline = (function () {
     let parent = element.parentElement;
     let buttons = parent.getElementsByClassName('eval-key-btn');
     let targetMarks = (type === 'l') ? currentModalMarksL : currentModalMarksS;
+    if (type === 'l' ? currentNRL : currentNRS) {            // picking a score cancels NR
+      if (type === 'l') currentNRL = false; else currentNRS = false;
+      const pill = document.getElementById('nr-' + type); if (pill) pill.classList.remove('on');
+    }
     
     if (element.classList.contains('selected')) {
       element.classList.remove('selected');
@@ -3398,9 +3508,24 @@ const Offline = (function () {
     return total;
   }
   
+  // ---- NR (Not Ready) ----
+  function refreshNRBtn() { document.getElementById('nr-btn').classList.toggle('on', currentNR); }
+  function toggleNR() {                                       // single evaluation keypads
+    currentNR = !currentNR;
+    if (currentNR) currentModalMarks = {};                    // NR replaces any scores picked
+    refreshNRBtn();
+    renderEvalKeypadForm();
+  }
+  function toggleNRDual(type) {                               // Listening / Speaking keypad (one NR per side)
+    if (type === 'l') { currentNRL = !currentNRL; if (currentNRL) currentModalMarksL = {}; }
+    else { currentNRS = !currentNRS; if (currentNRS) currentModalMarksS = {}; }
+    renderDualEvalKeypadForm();
+  }
+
   function selectEvalScore(rowNum, score, element) {
     let parent = element.parentElement;
     let buttons = parent.getElementsByClassName('eval-key-btn');
+    if (currentNR) { currentNR = false; refreshNRBtn(); }     // picking a score cancels NR
     
     if (element.classList.contains('selected')) {
       element.classList.remove('selected');
@@ -3613,7 +3738,7 @@ const Offline = (function () {
       }
         
     } else if (currentMode === 'reading') {
-      let finalScore = calculateEvalScore();
+      let finalScore = currentNR ? 'NR' : calculateEvalScore();
       if (!student.allSessions[activeModalSession]) student.allSessions[activeModalSession] = {};
       
       let subKey = readingCfg().cols[currentEvalSubCell];
@@ -3638,8 +3763,8 @@ const Offline = (function () {
         
     } else if (currentMode === 'lis_spe' && currentLsSubTab === 'eval') {
       // Dual L/S Save (Listening & Speaking side-by-side)
-      let finalScoreL = calculateEvalScoreCustom(currentModalMarksL);
-      let finalScoreS = calculateEvalScoreCustom(currentModalMarksS);
+      let finalScoreL = currentNRL ? 'NR' : calculateEvalScoreCustom(currentModalMarksL);
+      let finalScoreS = currentNRS ? 'NR' : calculateEvalScoreCustom(currentModalMarksS);
       
       if (!student.allSessions[activeModalSession]) student.allSessions[activeModalSession] = {};
       student.allSessions[activeModalSession].l = {
@@ -3668,7 +3793,7 @@ const Offline = (function () {
         
     } else if (currentMode === 'lis_spe') {
       // Single L/S sub-tabs (Describing / D-Work)
-      let finalScore = calculateEvalScore();
+      let finalScore = currentNR ? 'NR' : calculateEvalScore();
       if (!student.allSessions[activeModalSession]) student.allSessions[activeModalSession] = {};
       
       let subKey = { 2: 'dec', 3: 'dw', 4: 'conv' }[currentEvalSubCell];
@@ -3693,7 +3818,7 @@ const Offline = (function () {
         
     } else if (currentMode === 'writing') {
       // Writing Save
-      let finalScore = calculateEvalScore();
+      let finalScore = currentNR ? 'NR' : calculateEvalScore();
       const isNH = (currentWrSubTab === 'nh');
       if (isNH) {
         if (!student.nh) student.nh = {};
