@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <link rel="icon" href="icon-256.png">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>Ultimate Grader V3</title>
+  <title>Ultimate Grader V3.2</title>
   <style>
     :root {
       --bg: #f0f2f5;
@@ -684,12 +684,36 @@
       border: none; border-radius: 8px; background: var(--primary); color: #fff; cursor: pointer;
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
-    .lib-row.last .lib-file { box-shadow: 0 0 0 3px #bfdbfe; }
+    .lib-row.last .lib-file { box-shadow: 0 0 0 3px rgba(15,23,42,.28); }
     .lib-add, .lib-add-sec {
       display: block; width: 100%; margin-top: 6px; padding: 7px; font-size: 13px; font-weight: bold;
       border: 1px dashed var(--secondary); background: transparent; color: var(--secondary); border-radius: 8px; cursor: pointer;
     }
     .lib-empty { font-size: 13px; color: #6b7280; margin-top: 8px; }
+    /* clean (view) mode */
+    .lib-head { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+    .lib-head.view { position: relative; display: block; }
+    .lib-head.view .lib-toggle { position: absolute; right: 0; top: 50%; transform: translateY(-50%); }
+    .lib-title { flex: 1; min-width: 0; text-align: center; font-size: 20px; font-weight: 800; color: var(--text); }
+    .lib-head.view .lib-title { padding: 4px 84px; }   /* same space left and right, so the name is truly centred */
+    .lib-title select {
+      width: 100%; border: none; background: transparent; color: var(--text); font-size: 20px; font-weight: 800;
+      text-align: center; text-align-last: center; padding: 4px 0; cursor: pointer;
+    }
+    .lib-title-edit { flex: 1; font-size: 13px; font-weight: bold; color: var(--secondary); }
+    .lib-toggle {
+      border: 1px solid var(--border); background: #f8fafc; color: var(--secondary); border-radius: 999px;
+      padding: 5px 12px; font-size: 13px; font-weight: bold; cursor: pointer; white-space: nowrap;
+    }
+    .lib-toggle.done { background: var(--primary); border-color: var(--primary); color: #fff; }
+    .lib-vsec { margin-top: 16px; padding-top: 12px; border-top: 3px solid var(--border); }
+    .lib-head + .lib-vsec { border-top: none; padding-top: 0; margin-top: 12px; }
+    .lib-vsec-name {
+      font-size: 13px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase;
+      color: var(--secondary); padding: 0 2px 4px; display: flex; align-items: center; gap: 8px;
+    }
+    .lib-dot { width: 12px; height: 12px; border-radius: 50%; flex: none; }
+    .lib-sec { border-left-width: 5px; }
     /* ---- About button (top-right corner of the home screen) and About panel ---- */
     #about-open-btn {
       position: absolute; top: 12px; right: 12px; z-index: 2;
@@ -771,6 +795,17 @@
   <li>Close the file in Excel while you grade, so the two programs do not fight over it.</li>
 </ul>
 
+<h3>The home screen library</h3>
+<p>Instead of searching for your Excel file every time, keep your classes on the home screen and open them with one tap.</p>
+<ul>
+  <li><b>Open a class:</b> tap its coloured button. The last file you used has a dark outline.</li>
+  <li><b>Set it up:</b> tap <b>✎ Edit</b>. Then use <b>＋ Add section</b> (for example Odd days, Mondays) and <b>＋ Add file</b> inside a section to pick your Excel files. Each section gets its own colour.</li>
+  <li><b>Tidy up:</b> in Edit mode use ▲ ▼ to change the order, ✎ to rename, and ✕ to remove. Removing only deletes the shortcut, never your Excel file. Tap <b>✓ Done</b> to return to the clean view.</li>
+  <li><b>Terms:</b> the big name at the top is your term (for example Fall 2026). In Edit mode you can rename it, add a new term with ＋, or remove one with the bin. With more than one term, tap the name to switch.</li>
+  <li><b>Back to the home screen:</b> inside a grade sheet, tap the <b>🏠</b> button to return here and open another file.</li>
+  <li>The library is stored in this browser on this device only. Clearing the browser's site data erases it (your Excel files stay safe). If a file was moved or deleted, the app offers to let you choose it again.</li>
+</ul>
+
 <h3>The Excel files: what must stay the same</h3>
 <p>There is one grade sheet type for each level group. The app finds every score by its exact position in the file, so the structure of the file is part of how the app works. Please <b>do not change</b> these:</p>
 <div class="about-keep">
@@ -804,7 +839,7 @@
   <button id="file-save-btn" class="primary" style="display:none;">💾 Save to Excel</button>
   <button id="file-share-btn">☁️ Share</button>
   <button id="file-folder-btn" style="display:none;">📁 Folder</button>
-  <button id="file-switch-btn">📂 Open another file</button>
+  <button id="file-switch-btn" title="Home screen" aria-label="Home screen">🏠</button>
 </div>
 
 
@@ -1819,7 +1854,8 @@ const Offline = (function () {
     })();
     $('start-open-btn').addEventListener('click', handleOpenClick);
     $('file-switch-btn').addEventListener('click', async function () {
-      if (Offline.status().dirty && !confirm('You have unsaved changes. Open another file anyway?')) return;
+      if (Offline.status().dirty && !confirm('You have unsaved changes. Go to the home screen anyway?')) return;
+      if (LIB.data) { LIB.editing = false; libRender(); }       // show the library fresh (last used file outlined)
       overlay.style.display = 'flex';
     });
     $('start-file-input').addEventListener('change', async function (ev) {
@@ -2082,30 +2118,63 @@ const Offline = (function () {
     //  LIBRARY  -  terms > sections > files.  Shortcuts to your Excel files, kept in this browser
     //  (it stores links to the files, never copies, so your Excel files are never touched here).
     // =========================================================================================
-    const LIB = { data: null };
+    const LIB = { data: null, editing: false };
     const libEl = $('lib-box');
     function uid() { return Math.random().toString(36).slice(2, 9); }
     function esc(t) { return String(t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
     function curTerm() { const d = LIB.data; return d.terms.find(function (t) { return t.id === d.current; }) || d.terms[0]; }
     function libPersist() { Offline.libSave(LIB.data); }
     function findSec(t, id) { return t.sections.find(function (x) { return x.id === id; }); }
+    // Each section gets its own colour (different from the blue of the Open button); files inherit it
+    const SEC_COLORS = ['#0d9488', '#7c3aed', '#ea580c', '#16a34a', '#db2777', '#475569', '#0891b2', '#b45309'];
+    function pickColor(t) {
+      const used = t.sections.map(function (x) { return x.color; });
+      for (let i = 0; i < SEC_COLORS.length; i++) if (used.indexOf(SEC_COLORS[i]) === -1) return SEC_COLORS[i];
+      return SEC_COLORS[t.sections.length % SEC_COLORS.length];
+    }
 
     function libRender() {
       const t = curTerm();
-      let h = '<div class="lib-term"><select id="lib-term-sel">';
+      const many = LIB.data.terms.length > 1;
+      let h = '';
+      if (!LIB.editing) {
+        // ---- clean view: term = headline, sections = labels, classes = buttons ----
+        h += '<div class="lib-head view"><div class="lib-title">';
+        if (many) {
+          h += '<select id="lib-term-sel">';
+          LIB.data.terms.forEach(function (x) { h += '<option value="' + x.id + '"' + (x.id === t.id ? ' selected' : '') + '>' + esc(x.name) + '</option>'; });
+          h += '</select>';
+        } else { h += esc(t.name); }
+        h += '</div><button class="lib-toggle" data-act="edit-on">✎ Edit</button></div>';
+        if (!t.sections.length) h += '<div class="lib-empty" style="text-align:center;">No classes yet. Tap “✎ Edit” to add sections and files.</div>';
+        t.sections.forEach(function (sec) {
+          h += '<div class="lib-vsec"><div class="lib-vsec-name"><span class="lib-dot" style="background:' + (sec.color || SEC_COLORS[0]) + '"></span>' + esc(sec.name) + '</div>';
+          sec.files.forEach(function (f) {
+            const nm = String(f.handle && f.handle.name || 'file').replace(/\.xlsx$/i, '');
+            h += '<div class="lib-row' + (LIB.data.last === f.id ? ' last' : '') + '">' +
+                 '<button class="lib-file" style="background:' + (sec.color || SEC_COLORS[0]) + '" data-act="open" data-s="' + sec.id + '" data-f="' + f.id + '">📄 ' + esc(nm) + '</button></div>';
+          });
+          h += '</div>';
+        });
+        libEl.innerHTML = h;
+        return;
+      }
+      // ---- edit mode: every button is here ----
+      h += '<div class="lib-head"><div class="lib-title-edit">Editing your library</div><button class="lib-toggle done" data-act="edit-off">✓ Done</button></div>';
+      h += '<div class="lib-term" style="margin-top:8px;"><select id="lib-term-sel">';
       LIB.data.terms.forEach(function (x) { h += '<option value="' + x.id + '"' + (x.id === t.id ? ' selected' : '') + '>' + esc(x.name) + '</option>'; });
       h += '</select><button class="lib-mini" data-act="term-rename" title="Rename term">✎</button>' +
            '<button class="lib-mini" data-act="term-new" title="New term">＋</button>' +
            '<button class="lib-mini" data-act="term-del" title="Remove term">🗑</button></div>';
       if (!t.sections.length) h += '<div class="lib-empty">Nothing here yet. Tap “＋ Add section” (for example Odd days), then add your Excel files to it.</div>';
       t.sections.forEach(function (sec) {
-        h += '<div class="lib-sec"><div class="lib-sec-h"><span class="lib-sec-name">' + esc(sec.name) + '</span>' +
+        h += '<div class="lib-sec" style="border-left-color:' + (sec.color || SEC_COLORS[0]) + '"><div class="lib-sec-h"><span class="lib-sec-name">' + esc(sec.name) + '</span>' +
              '<button class="lib-mini" data-act="sec-rename" data-s="' + sec.id + '" title="Rename section">✎</button>' +
              '<button class="lib-mini" data-act="sec-del" data-s="' + sec.id + '" title="Remove section">✕</button></div>';
         sec.files.forEach(function (f) {
           const nm = String(f.handle && f.handle.name || 'file').replace(/\.xlsx$/i, '');
           h += '<div class="lib-row' + (LIB.data.last === f.id ? ' last' : '') + '">' +
-               '<button class="lib-file" data-act="open" data-s="' + sec.id + '" data-f="' + f.id + '">📄 ' + esc(nm) + '</button>' +
+               '<button class="lib-file" style="background:' + (sec.color || SEC_COLORS[0]) + '" data-act="open" data-s="' + sec.id + '" data-f="' + f.id + '">📄 ' + esc(nm) + '</button>' +
                '<button class="lib-mini" data-act="up" data-s="' + sec.id + '" data-f="' + f.id + '">▲</button>' +
                '<button class="lib-mini" data-act="down" data-s="' + sec.id + '" data-f="' + f.id + '">▼</button>' +
                '<button class="lib-mini" data-act="file-del" data-s="' + sec.id + '" data-f="' + f.id + '">✕</button></div>';
@@ -2149,6 +2218,8 @@ const Offline = (function () {
       const fid = b.getAttribute('data-f');
       const fi = sec ? sec.files.findIndex(function (x) { return x.id === fid; }) : -1;
       let name;
+      if (act === 'edit-on') { LIB.editing = true; libRender(); return; }
+      if (act === 'edit-off') { LIB.editing = false; libRender(); return; }
       if (act === 'term-rename') {
         name = prompt('Term name (for example Fall 2026):', t.name);
         if (name && name.trim()) { t.name = name.trim(); }
@@ -2165,7 +2236,7 @@ const Offline = (function () {
       } else if (act === 'sec-add') {
         name = prompt('Section name (for example Odd days):', '');
         if (!name || !name.trim()) return;
-        t.sections.push({ id: uid(), name: name.trim(), files: [] });
+        t.sections.push({ id: uid(), name: name.trim(), files: [], color: pickColor(t) });
       } else if (act === 'sec-rename' && sec) {
         name = prompt('Section name:', sec.name);
         if (name && name.trim()) sec.name = name.trim();
@@ -2201,7 +2272,18 @@ const Offline = (function () {
       try { d = await Offline.libLoad(); } catch (_) {}
       if (!d || !Array.isArray(d.terms) || !d.terms.length) d = { terms: [{ id: uid(), name: 'My term', sections: [] }], current: null, last: null };
       if (!d.current || !d.terms.some(function (x) { return x.id === d.current; })) d.current = d.terms[0].id;
+      let migrated = false;
+      d.terms.forEach(function (tm) {
+        tm.sections.forEach(function (sc) {
+          if (!sc.color) {
+            const used = tm.sections.map(function (x) { return x.color; });
+            sc.color = SEC_COLORS.filter(function (c) { return used.indexOf(c) === -1; })[0] || SEC_COLORS[0];
+            migrated = true;
+          }
+        });
+      });
       LIB.data = d;
+      if (migrated) libPersist();
       libEl.style.display = 'block';
       libRender();
     }
