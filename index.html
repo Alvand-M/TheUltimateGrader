@@ -431,7 +431,6 @@
       border-radius: 999px; cursor: pointer;
     }
     .nr-pill.on { background: #d97706; color: #fff; }
-    .nr-pill.nr-inline { margin: 0 0 0 8px; padding: 1px 9px; font-size: 12px; vertical-align: middle; }
     /* ---- Numpad ---- */
     .np-modal { z-index: 1100; align-items: flex-end; }
     .np-box { background: #fff; width: 100%; max-width: 420px; border-radius: 18px 18px 14px 14px; padding: 14px 14px 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.25); touch-action: manipulation; user-select: none; -webkit-user-select: none; }
@@ -1797,7 +1796,7 @@ const Offline = (function () {
 
     // Paste your Google OAuth Client ID here (looks like 123456-abc.apps.googleusercontent.com).
     // While it is empty, the button falls back to the phone's share sheet.
-    const GOOGLE_CLIENT_ID = '150983617944-ps0i817s5d7ncapnrnd10qmpa8hnguve.apps.googleusercontent.com';
+    const GOOGLE_CLIENT_ID = '';
     const GOOGLE_API_KEY = 'AIzaSyDU1koKVyd8CpEWiZq99d-WJYdQ_Ghn36w';   // for the folder picker
     const GOOGLE_APP_ID = '150983617944';                                // Google Cloud project number
     const DRIVE_FOLDER_NAME = 'Ultimate Grader';   // created once in your My Drive
@@ -2511,6 +2510,7 @@ const Offline = (function () {
 
   let currentModalMarksL = {};
   let currentModalMarksS = {};
+  let nrDual = false;                                              // true while the Listening & Speaking keypad is open
   let currentNR = false, currentNRL = false, currentNRS = false;   // 'NR' (Not Ready) chosen on an evaluation keypad
 
   let currentEvalSubCell = 0; 
@@ -3339,7 +3339,7 @@ const Offline = (function () {
     
     // Reset modal width class
     modalContentEl.classList.remove('dual-modal-content');
-    currentNR = false; currentNRL = false; currentNRS = false;
+    currentNR = false; currentNRL = false; currentNRS = false; nrDual = false;
     document.getElementById('nr-btn').style.display = 'none';
     
     if (currentMode === 'homework') {
@@ -3377,6 +3377,9 @@ const Offline = (function () {
       currentModalMarksS = JSON.parse(JSON.stringify(sessObj.s && sessObj.s.marks ? sessObj.s.marks : {}));
       currentNRL = !!(sessObj.l && String(sessObj.l.score).trim().toUpperCase() === 'NR');
       currentNRS = !!(sessObj.s && String(sessObj.s.score).trim().toUpperCase() === 'NR');
+      nrDual = true;
+      document.getElementById('nr-btn').style.display = '';
+      refreshNRBtn();
       
       renderDualEvalKeypadForm();
       document.getElementById('keypad-modal').style.display = 'flex';
@@ -3412,9 +3415,12 @@ const Offline = (function () {
       }
       
       currentModalMarks = JSON.parse(JSON.stringify(subData.marks || {}));
-      currentNR = (String(subData.score).trim().toUpperCase() === 'NR');
+      // NR (Not Ready) only where one evaluation happens per round: Reading, Describing, Conversation.
+      // Not for Dictionary Work or Writing (S&Q, N&H), whose cell adds up several separate askings.
+      const nrAllowed = (currentMode === 'reading') || (currentMode === 'lis_spe' && currentLsSubTab !== 'dwork');
+      currentNR = nrAllowed && (String(subData.score).trim().toUpperCase() === 'NR');
       document.getElementById('modal-title').innerText = titleSuffix;
-      document.getElementById('nr-btn').style.display = '';
+      document.getElementById('nr-btn').style.display = nrAllowed ? '' : 'none';
       refreshNRBtn();
       renderEvalKeypadForm();
       document.getElementById('keypad-modal').style.display = 'flex';
@@ -3425,7 +3431,7 @@ const Offline = (function () {
     let formHtml = `<div class="dual-keypad-container">`;
     
     // Left Column: Listening (L)
-    formHtml += `<div><div class="keypad-column-title title-l">🎧 Listening (L)<button class="nr-pill nr-inline ${currentNRL ? 'on' : ''}" id="nr-l" onclick="toggleNRDual('l')">NR</button></div>`;
+    formHtml += `<div><div class="keypad-column-title title-l">🎧 Listening (L)</div>`;
     for (let row = 1; row <= 5; row++) {
       let selectedVal = currentModalMarksL['row_' + row] !== undefined ? currentModalMarksL['row_' + row] : null;
       formHtml += `<div class="eval-row-box"><div class="eval-row-num">${row}</div><div class="eval-btn-group">`;
@@ -3438,7 +3444,7 @@ const Offline = (function () {
     formHtml += `</div>`;
     
     // Right Column: Speaking (S)
-    formHtml += `<div><div class="keypad-column-title title-s">🗣️ Speaking (S)<button class="nr-pill nr-inline ${currentNRS ? 'on' : ''}" id="nr-s" onclick="toggleNRDual('s')">NR</button></div>`;
+    formHtml += `<div><div class="keypad-column-title title-s">🗣️ Speaking (S)</div>`;
     for (let row = 1; row <= 5; row++) {
       let selectedVal = currentModalMarksS['row_' + row] !== undefined ? currentModalMarksS['row_' + row] : null;
       formHtml += `<div class="eval-row-box"><div class="eval-row-num">${row}</div><div class="eval-btn-group">`;
@@ -3458,9 +3464,9 @@ const Offline = (function () {
     let parent = element.parentElement;
     let buttons = parent.getElementsByClassName('eval-key-btn');
     let targetMarks = (type === 'l') ? currentModalMarksL : currentModalMarksS;
-    if (type === 'l' ? currentNRL : currentNRS) {            // picking a score cancels NR
+    if (type === 'l' ? currentNRL : currentNRS) {            // picking a score cancels NR on that side
       if (type === 'l') currentNRL = false; else currentNRS = false;
-      const pill = document.getElementById('nr-' + type); if (pill) pill.classList.remove('on');
+      refreshNRBtn();
     }
     
     if (element.classList.contains('selected')) {
@@ -3509,17 +3515,22 @@ const Offline = (function () {
   }
   
   // ---- NR (Not Ready) ----
-  function refreshNRBtn() { document.getElementById('nr-btn').classList.toggle('on', currentNR); }
-  function toggleNR() {                                       // single evaluation keypads
+  function refreshNRBtn() {
+    document.getElementById('nr-btn').classList.toggle('on', nrDual ? (currentNRL && currentNRS) : currentNR);
+  }
+  function toggleNR() {
+    if (nrDual) {                                             // Listening & Speaking: one NR for both sides
+      const on = !(currentNRL && currentNRS);
+      currentNRL = on; currentNRS = on;
+      if (on) { currentModalMarksL = {}; currentModalMarksS = {}; }
+      refreshNRBtn();
+      renderDualEvalKeypadForm();
+      return;
+    }
     currentNR = !currentNR;
     if (currentNR) currentModalMarks = {};                    // NR replaces any scores picked
     refreshNRBtn();
     renderEvalKeypadForm();
-  }
-  function toggleNRDual(type) {                               // Listening / Speaking keypad (one NR per side)
-    if (type === 'l') { currentNRL = !currentNRL; if (currentNRL) currentModalMarksL = {}; }
-    else { currentNRS = !currentNRS; if (currentNRS) currentModalMarksS = {}; }
-    renderDualEvalKeypadForm();
   }
 
   function selectEvalScore(rowNum, score, element) {
