@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <link rel="icon" href="icon-256.png">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>Ultimate Grader V3.2</title>
+  <title>Ultimate Grader V3.1</title>
   <style>
     :root {
       --bg: #f0f2f5;
@@ -40,10 +40,12 @@
       max-width: 1000px;
       margin: 0 auto 10px auto;
       gap: 4px;
+      overflow-x: auto;
     }
     .nav-tab {
       flex: 1;
-      padding: 10px;
+      white-space: nowrap;
+      padding: 10px 8px;
       text-align: center;
       font-weight: bold;
       font-size: 14px;
@@ -52,6 +54,10 @@
       color: var(--secondary);
       border: none;
       background: transparent;
+    }
+    @media (max-width: 600px) {   /* phones: six tabs wrap into two rows of three, nothing hides off-screen */
+      .app-nav { flex-wrap: wrap; overflow: visible; }
+      .nav-tab { flex: 1 1 30%; }
     }
     .nav-tab.active {
       background: #ffffff;
@@ -850,6 +856,7 @@
   <button class="nav-tab" id="tab-reading-btn" onclick="switchAppMode('reading')">📖 Reading</button>
   <button class="nav-tab" id="tab-ls-btn" onclick="switchAppMode('lis_spe')">🎙️ Lis & Spe</button>
   <button class="nav-tab" id="tab-writing-btn" onclick="switchAppMode('writing')">✍️ Writing</button>
+  <button class="nav-tab" id="tab-quiz-btn" onclick="switchAppMode('quizzes')">📝 Quizzes</button>
 </div>
 
 <!-- Sub-Tabs Bar for Lis & Spe -->
@@ -1015,7 +1022,7 @@ const Offline = (function () {
     }
 
     // parse the sheets the app uses + the hidden marks sheet
-    for (const name of ['HomeWork', 'Attendance', 'Reading', 'Listening&Speaking', 'Writing', MARKS_SHEET]) {
+    for (const name of ['HomeWork', 'Attendance', 'Reading', 'Listening&Speaking', 'Writing', 'Quizes', 'Quizzes', MARKS_SHEET]) {
       if (S.sheetInfo[name]) await parseSheet(name);
     }
     readMarksSheet();
@@ -1053,6 +1060,12 @@ const Offline = (function () {
 
   // ---------- reading / writing cells ----------
   function getSheet(name) { return S.sheets[name] || null; }
+  // the quiz sheet is called "Quizes" in the grade sheets (also accepts "Quizzes")
+  function quizSheet() {
+    const sh = getSheet('Quizes') || getSheet('Quizzes');
+    if (!sh) throw new Error("This Excel file has no 'Quizes' sheet.");
+    return sh;
+  }
   function needSheet(name) {
     const sh = getSheet(name);
     if (!sh) throw new Error("Sheet '" + name + "' not found!");
@@ -1542,6 +1555,33 @@ const Offline = (function () {
       const sheet = needSheet('Writing');
       const colNum = numTabCfg().col0 + parseInt(data.n, 10);
       setVal(sheet, data.row, colNum, (data.score !== '' && data.score !== undefined) ? data.score : '');
+      changed();
+      return { success: true };
+    },
+
+    getQuizData() {
+      const sheet = quizSheet();
+      const lastRow = maxRowOf(sheet);
+      const groups = quizCfg().groups;
+      const students = [];
+      for (let i = 2; i <= lastRow; i++) {
+        const name = getVal(sheet, i, 2);
+        if (name && name !== '') {
+          const quiz = {};
+          groups.forEach(g => {
+            quiz[g.key] = {};
+            for (let n = 1; n <= g.count; n++) quiz[g.key][n] = getVal(sheet, i, g.col0 + n);
+          });
+          students.push({ row: i, name: name, quiz: quiz });
+        }
+      }
+      return { students, sessionList: [1], activeSession: 1 };
+    },
+
+    updateQuizCell(data) {
+      const sheet = quizSheet();
+      const g = quizCfg().groups[parseInt(data.group, 10) || 0];
+      setVal(sheet, data.row, g.col0 + parseInt(data.n, 10), (data.score !== '' && data.score !== undefined) ? data.score : '');
       changed();
       return { success: true };
     },
@@ -2327,7 +2367,8 @@ const Offline = (function () {
       writing: { short: 'S&Q', title: 'Sentence & Question Making', appTitle: '✍️ Writing Evaluations', nh: true, numTab: { label: 'Composition', short: 'Comp', count: 6, col0: 16 } }, // Compositions 1-6 = Excel Q to V
 
       // Main tabs: true = shown, false = hidden  (only change the word true/false)
-      showTabs: { homework: true, attendance: true, reading: true, lis_spe: true, writing: true },
+      showTabs: { homework: true, attendance: true, reading: true, lis_spe: true, writing: true, quizzes: true },
+      quizzes: { groups: [ { key: 'g', label: 'Grammar', short: 'GQ', count: 6, col0: 2 }, { key: 'v', label: 'Vocabulary', short: 'VQ', count: 6, col0: 9 } ] },
 
       // Sub-tabs inside the Lis & Spe tab
       showLsSubtabs: { eval: true, describing: true, dwork: true, conversation: true },
@@ -2396,7 +2437,8 @@ const Offline = (function () {
 
       writing: { short: 'S&Q', title: 'Sentence & Question Making', appTitle: '✍️ Writing Evaluations', nh: true, numTab: { label: 'Dictation', short: 'Dict', count: 6, col0: 16 } }, // Dictation 1-6 = Excel Q to V
 
-      showTabs: { homework: true, attendance: true, reading: true, lis_spe: true, writing: true },
+      showTabs: { homework: true, attendance: true, reading: true, lis_spe: true, writing: true, quizzes: true },
+      quizzes: { groups: [ { key: 'g', label: 'Grammar', short: 'GQ', count: 6, col0: 2 } ] },
 
       showLsSubtabs: { eval: true, describing: true, dwork: false, conversation: true },
       // Excel column of Conversation: round N is column (convBase + N)  (reach AD, race W, others P)
@@ -2456,7 +2498,8 @@ const Offline = (function () {
       // Writing tab labels
       writing: { short: 'N&H', title: 'Neatness & Handwriting', appTitle: '✍️ Notebook Neatness & Handwriting', numTab: { label: 'Dictation', short: 'Dict', count: 14, col0: 9 } }, // numpad tab: Dictation 1-14 = Excel J to W (col0 + n)
 
-      showTabs: { homework: true, attendance: true, reading: true, lis_spe: true, writing: true },
+      showTabs: { homework: true, attendance: true, reading: true, lis_spe: true, writing: true, quizzes: true },
+      quizzes: { groups: [ { key: 'g', label: 'Grammar', short: 'GQ', count: 6, col0: 2 } ] },
 
       showLsSubtabs: { eval: true, describing: false, dwork: false, conversation: true },
       // Excel column of Conversation: round N is column (convBase + N)  (reach AD, race W, others P)
@@ -2519,7 +2562,8 @@ const Offline = (function () {
       // Writing tab labels
       writing: { short: 'N&H', title: 'Neatness & Handwriting', appTitle: '✍️ Notebook Neatness & Handwriting', numTab: { label: 'Dictation', short: 'Dict', count: 14, col0: 9 } }, // numpad tab: Dictation 1-14 = Excel J to W (col0 + n)
 
-      showTabs: { homework: true, attendance: true, reading: true, lis_spe: true, writing: true },
+      showTabs: { homework: true, attendance: true, reading: true, lis_spe: true, writing: true, quizzes: true },
+      quizzes: { groups: [ { key: 'g', label: 'Grammar', short: 'GQ', count: 6, col0: 2 } ] },
 
       showLsSubtabs: { eval: true, describing: false, dwork: false, conversation: true },
       // Excel column of Conversation: round N is column (convBase + N)  (reach AD, race W, others P)
@@ -2577,7 +2621,8 @@ const Offline = (function () {
       // Writing tab labels
       writing: { short: 'S&Q', title: 'Sentence & Question Making', appTitle: '✍️ Writing Evaluations', nh: true, numTab: { label: 'Dictation', short: 'Dict', count: 6, col0: 16 } }, // Dictation 1-6 = Excel Q to V
 
-      showTabs: { homework: true, attendance: true, reading: true, lis_spe: true, writing: true },
+      showTabs: { homework: true, attendance: true, reading: true, lis_spe: true, writing: true, quizzes: true },
+      quizzes: { groups: [ { key: 'g', label: 'Grammar', short: 'GQ', count: 6, col0: 2 } ] },
 
       showLsSubtabs: { eval: true, describing: false, dwork: false, conversation: true },
       // Excel column of Conversation: round N is column (convBase + N)  (reach AD, race W, others P)
@@ -2645,6 +2690,7 @@ const Offline = (function () {
 
   function readingCfg() { return VARIANTS[activeVariantKey].reading; }
   function writingCfg() { return VARIANTS[activeVariantKey].writing; }
+  function quizCfg() { return VARIANTS[activeVariantKey].quizzes; }
   function numTabCfg() { return writingCfg().numTab || { label: 'Dictation', short: 'Dict', count: 0, col0: 9 }; }
   function convBaseCol() { return VARIANTS[activeVariantKey].convBase; }
 
@@ -2707,10 +2753,10 @@ const Offline = (function () {
     SHOW_LS_SUBTABS = Object.assign({}, v.showLsSubtabs);
     keypadProfiles = v.keypadProfiles;
     window.__variantLabel = v.label;
-    document.title = 'Ultimate Grader ' + v.label + ' V3.2 (Offline)';
+    document.title = 'Ultimate Grader ' + v.label + ' V2.5 (Offline)';
     document.documentElement.style.setProperty('--reading-cols', v.reading.cols.length);
 
-    currentDictNo = 1;
+    currentDictNo = 1; currentQuizNo = 1; currentQuizGroup = 0;
     if ((currentWrSubTab === 'dictation' && !v.writing.numTab) || (currentWrSubTab === 'nh' && !v.writing.nh)) currentWrSubTab = 'main';
 
     // First sub-tab for Lis & Spe that is turned on
@@ -2727,7 +2773,8 @@ const Offline = (function () {
       homework: 'tab-hw-btn',
       reading: 'tab-reading-btn',
       lis_spe: 'tab-ls-btn',
-      writing: 'tab-writing-btn'
+      writing: 'tab-writing-btn',
+      quizzes: 'tab-quiz-btn'
     };
     let firstEnabled = null;
     for (let mode in tabButtons) {
@@ -2772,6 +2819,9 @@ const Offline = (function () {
   let readingCache = null;
   let lsCache = null;
   let writingCache = null;
+  let quizCache = null;
+  let currentQuizGroup = 0;       // Quizzes tab: 0 = Grammar, 1 = Vocabulary (Reach only)
+  let currentQuizNo = 1;          // which quiz (1-6) the quick view shows
   
   let currentIndex = 0;
   let activeModalSession = null;
@@ -2786,7 +2836,7 @@ const Offline = (function () {
   // Called every time an Excel file is opened (also when switching files)
   function startAppAfterFileOpen() {
     applyVariant(detectVariant(Offline.status().fileName));
-    hwCache = null; attCache = null; readingCache = null; lsCache = null; writingCache = null;
+    hwCache = null; attCache = null; readingCache = null; lsCache = null; writingCache = null; quizCache = null;
     isMasterViewActive = false;
     // Every time a file is opened the app starts on Attendance (or the first tab that is turned on)
     const first = SHOW_TABS.attendance ? 'attendance' : (window.__firstEnabledTab || 'homework');
@@ -2803,6 +2853,7 @@ const Offline = (function () {
     document.getElementById('tab-reading-btn').classList.toggle('active', mode === 'reading');
     document.getElementById('tab-ls-btn').classList.toggle('active', mode === 'lis_spe');
     document.getElementById('tab-writing-btn').classList.toggle('active', mode === 'writing');
+    document.getElementById('tab-quiz-btn').classList.toggle('active', mode === 'quizzes');
     
     document.getElementById('quick-container').style.display = 'block';
     document.getElementById('master-container').style.display = 'none';
@@ -2823,6 +2874,9 @@ const Offline = (function () {
     } else if (mode === 'writing') {
       document.getElementById('app-title').innerText = writingCfg().appTitle;
       document.getElementById('hw-finalize-container').style.display = 'none';
+    } else if (mode === 'quizzes') {
+      document.getElementById('app-title').innerText = "📝 Quizzes";
+      document.getElementById('hw-finalize-container').style.display = 'none';
     }
     
     if (mode === 'homework' && hwCache) renderViews();
@@ -2830,6 +2884,7 @@ const Offline = (function () {
     else if (mode === 'reading' && readingCache) renderViews();
     else if (mode === 'lis_spe' && lsCache) renderViews();
     else if (mode === 'writing' && writingCache) renderViews();
+    else if (mode === 'quizzes' && quizCache) renderViews();
     else loadDataForCurrentMode(null, false);
   }
 
@@ -2849,6 +2904,10 @@ const Offline = (function () {
       else if (currentWrSubTab === 'dictation') name = numTabCfg().label;
       noun = name.toLowerCase();
       title = '✍️ Writing · ' + name;
+    } else if (currentMode === 'quizzes') {
+      const g = quizCfg().groups[currentQuizGroup] || quizCfg().groups[0];
+      noun = 'quiz';
+      title = '📝 Quizzes · ' + g.label;
     }
     document.getElementById('app-title').innerText = title;
     const hint = document.getElementById('master-hint-text');
@@ -2873,6 +2932,12 @@ const Offline = (function () {
         `<button class="sub-tab-btn ${currentWrSubTab === t.key ? 'active-sub' : ''}" onclick="switchWrSubTab('${t.key}')">${t.label}</button>`).join('') + `</div>`;
       return;
     }
+    if (currentMode === 'quizzes') {
+      const gs = quizCfg().groups;
+      barEl.innerHTML = gs.length > 1 ? `<div class="sub-tabs-container">` + gs.map((g, i) =>
+        `<button class="sub-tab-btn ${currentQuizGroup === i ? 'active-sub' : ''}" onclick="switchQuizGroup(${i})">${g.label}</button>`).join('') + `</div>` : '';
+      return;
+    }
     if (currentMode !== 'lis_spe') {
       barEl.innerHTML = '';
       return;
@@ -2891,6 +2956,8 @@ const Offline = (function () {
     barEl.innerHTML = `<div class="sub-tabs-container">${buttonsHtml}</div>`;
   }
 
+  function switchQuizGroup(i) { currentQuizGroup = i; currentQuizNo = 1; renderViews(); }
+
   function switchWrSubTab(k) {
     currentWrSubTab = k;
     renderViews();
@@ -2902,7 +2969,7 @@ const Offline = (function () {
   }
 
   function loadDataForCurrentMode(activeSessionNum, forceRefresh = true) {
-    if (forceRefresh || (currentMode === 'homework' && !hwCache) || (currentMode === 'attendance' && !attCache) || (currentMode === 'reading' && !readingCache) || (currentMode === 'lis_spe' && !lsCache) || (currentMode === 'writing' && !writingCache)) {
+    if (forceRefresh || (currentMode === 'homework' && !hwCache) || (currentMode === 'attendance' && !attCache) || (currentMode === 'reading' && !readingCache) || (currentMode === 'lis_spe' && !lsCache) || (currentMode === 'writing' && !writingCache) || (currentMode === 'quizzes' && !quizCache)) {
       document.getElementById('student-list').innerHTML = "<p class='loading'>Loading data...</p>";
     }
     
@@ -2953,6 +3020,11 @@ const Offline = (function () {
         })
         .withFailureHandler(err => alert("Error: " + err.message))
         .getListeningSpeakingData(activeSessionNum);
+    } else if (currentMode === 'quizzes') {
+      google.script.run
+        .withSuccessHandler(data => { quizCache = data; renderViews(); })
+        .withFailureHandler(err => alert("Error: " + err.message))
+        .getQuizData();
     } else {
       google.script.run
         .withSuccessHandler(data => { 
@@ -2972,6 +3044,7 @@ const Offline = (function () {
     if (currentMode === 'attendance') return attCache;
     if (currentMode === 'reading') return readingCache;
     if (currentMode === 'lis_spe') return lsCache;
+    if (currentMode === 'quizzes') return quizCache;
     return writingCache;
   }
 
@@ -2979,6 +3052,18 @@ const Offline = (function () {
     const container = document.getElementById('roster-header-container');
     const appState = getCurrentAppData();
     if (!appState) return;
+    
+    if (currentMode === 'quizzes') {
+      const g = quizCfg().groups[currentQuizGroup] || quizCfg().groups[0];
+      container.innerHTML = `
+        <div class="roster-header-single">
+          <div></div>
+          <div>Student Name</div>
+          <div>${g.short} ${currentQuizNo}</div>
+        </div>
+      `;
+      return;
+    }
     
     if (currentMode === 'homework') {
       let activeS = appState.activeSession;
@@ -3084,6 +3169,24 @@ const Offline = (function () {
     
     if (!appState || !appState.students || appState.students.length === 0) {
       listEl.innerHTML = "<p style='text-align:center; padding:20px;'>No students found.</p>";
+      return;
+    }
+    
+    if (currentMode === 'quizzes') {
+      const g = quizCfg().groups[currentQuizGroup] || quizCfg().groups[0];
+      let qh = '';
+      appState.students.forEach((student, index) => {
+        const q = (student.quiz && student.quiz[g.key]) ? student.quiz[g.key][currentQuizNo] : '';
+        const qv = (q !== '' && q !== undefined) ? q : '—';
+        qh += `
+          <div class="student-row-single">
+            <div class="row-number">${index + 1}</div>
+            <div class="student-name">${student.name}</div>
+            <div class="score-badge active-score" onclick="openQuizPad(${index}, ${currentQuizNo})">${qv}</div>
+          </div>
+        `;
+      });
+      listEl.innerHTML = qh;
       return;
     }
     
@@ -3221,6 +3324,31 @@ const Offline = (function () {
     
     if (!appState || !appState.students || appState.students.length === 0) {
       masterEl.innerHTML = "<p>No data.</p>";
+      return;
+    }
+    
+    if (currentMode === 'quizzes') {
+      const g = quizCfg().groups[currentQuizGroup] || quizCfg().groups[0];
+      let qm = `<table class="master-table"><thead><tr><th class="sticky-col-1"></th><th class="sticky-col-2">Student Name</th>`;
+      for (let n = 1; n <= g.count; n++) {
+        const activeClass = (n === currentQuizNo) ? 'current-sess-th' : '';
+        qm += `<th class="${activeClass}" onclick="selectQuizFromMaster(${n})" style="cursor:pointer;">${g.short} ${n} 🔍</th>`;
+      }
+      qm += `<th>Avg</th></tr></thead><tbody>`;
+      appState.students.forEach((student, index) => {
+        qm += `<tr><td class="sticky-col-1">${index + 1}</td><td class="sticky-col-2">${student.name}</td>`;
+        const vals = [];
+        for (let n = 1; n <= g.count; n++) {
+          const q = (student.quiz && student.quiz[g.key]) ? student.quiz[g.key][n] : '';
+          const has = (q !== '' && q !== undefined && !isNaN(Number(q)));
+          if (has) vals.push(Number(q));
+          qm += `<td><div class="master-cell" onclick="openQuizPad(${index}, ${n})">${(q !== '' && q !== undefined) ? q : '—'}</div></td>`;
+        }
+        const avg = vals.length ? Math.ceil(vals.reduce((a, b) => a + b, 0) / vals.length - 1e-9) : '-';   // same as ROUNDUP(AVERAGE(...),0) in Excel
+        qm += `<td><div class="master-cell" style="font-weight:bold;">${avg}</div></td></tr>`;
+      });
+      qm += `</tbody></table>`;
+      masterEl.innerHTML = qm;
       return;
     }
     
@@ -3427,6 +3555,36 @@ const Offline = (function () {
       .withSuccessHandler(() => {})
       .withFailureHandler(err => alert("Error saving session colour: " + err.message))
       .setSessionDone({ sessionNum: s, done: nowDone });
+  }
+
+  function selectQuizFromMaster(n) { currentQuizNo = n; toggleMasterView(); renderViews(); }
+
+  // Opens the numpad for one student's quiz score; Enter moves down to the next student
+  function openQuizPad(index, n) {
+    const appState = getCurrentAppData();
+    const student = appState.students[index];
+    if (!student) return;
+    const g = quizCfg().groups[currentQuizGroup] || quizCfg().groups[0];
+    if (!student.quiz) student.quiz = {};
+    if (!student.quiz[g.key]) student.quiz[g.key] = {};
+    currentQuizNo = n;
+    const hasNext = index + 1 < appState.students.length;
+    NumPad.open({
+      title: student.name,
+      subtitle: g.label + ' quiz ' + n + '  ·  ' + (index + 1) + ' / ' + appState.students.length,
+      max: 100,
+      value: (student.quiz[g.key][n] === undefined) ? '' : student.quiz[g.key][n],
+      nextName: hasNext ? appState.students[index + 1].name : null,
+      onCommit: function (v) {
+        student.quiz[g.key][n] = v;
+        renderViews();
+        google.script.run
+          .withSuccessHandler(() => {})
+          .withFailureHandler(err => alert("Error saving quiz: " + err.message))
+          .updateQuizCell({ row: student.row, group: currentQuizGroup, n: n, score: v });
+      },
+      onNext: function () { openQuizPad(index + 1, n); }
+    });
   }
 
   function selectDictFromMaster(n) { currentDictNo = n; toggleMasterView(); renderViews(); }
