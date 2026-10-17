@@ -2,7 +2,7 @@
 // The app is saved on the tablet after the first visit. When you are online it checks for a newer version first;
 // when you are offline (or the connection is slow) it opens the saved copy.
 const CACHE = 'ultimate-grader-v1';
-const FILES = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
+const FILES = ['./', './index.html', './manifest.json', './icon-256.png', './icon-1024.png'];
 
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(FILES); }).then(function () { return self.skipWaiting(); }));
