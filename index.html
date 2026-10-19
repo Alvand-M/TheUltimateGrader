@@ -2605,7 +2605,7 @@ const Offline = (function () {
     $('nc-names').addEventListener('input', ncUpdateCount);
 
     if (Offline.canAutoSave) {
-      $('start-note').textContent = 'Changes are saved automatically into your file. Close the file in Excel while you use this app.';
+      $('start-note').textContent = 'Close the file in Excel while you use this app.';
       initLibrary();
     } else {
       $('start-note').textContent = 'This browser cannot save into the file automatically. Use the Save to Excel button when you finish: it downloads the updated file (replace your old one with it). For automatic saving, use Chrome or Edge on a computer.';
