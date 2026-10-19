@@ -744,6 +744,9 @@
     }
     .lib-dot { width: 12px; height: 12px; border-radius: 50%; flex: none; }
     .lib-sec { border-left-width: 5px; }
+    /* closing divider under the last section: same line and same space as between two sections */
+    .lib-end { margin-top: 16px; border-top: 3px solid var(--border); padding-top: 12px; }
+    #lib-box[style*="block"] + #start-help { margin-top: 0; }
     /* ---- About button (top-right corner of the home screen) and About panel ---- */
     #about-open-btn {
       position: absolute; top: 12px; right: 12px; z-index: 2;
@@ -791,7 +794,7 @@
       <button class="big-btn secondary" id="start-new-btn">➕ New class</button>
     </div>
     <div id="lib-box" style="display:none;"></div>
-    <p>Pick your Excel grade sheet (the file name tells the app if it is Reach, Race, Run3/4, Run1/2, or Start) Everything you enter is saved straight into that file.</p>
+    <p id="start-help">Either pick your Excel grade sheet (the file name tells the app if it is Reach, Race, Run3/4, Run1/2, or Start), Or Create your own from Scratch using +New Class Button. Everything you enter is saved straight into that file.</p>
     <input type="file" id="start-file-input" accept=".xlsx" style="display:none;">
     <div class="start-error" id="start-error"></div>
     <div class="start-note" id="start-note"></div>
@@ -802,14 +805,20 @@
 <div id="newclass-overlay">
   <div class="nc-card" role="dialog" aria-modal="true" aria-labelledby="nc-title">
     <h2 id="nc-title">➕ New class</h2>
-    <label for="nc-level">LEVEL</label>
+    <label for="nc-level">LEVEL (goes into the file name)</label>
     <select id="nc-level"></select>
-    <label for="nc-term">TERM (goes into the file name)</label>
-    <input id="nc-term" type="text" placeholder="Fall 1405" autocomplete="off">
-    <label for="nc-class">CLASS NAME (goes into the file name)</label>
-    <input id="nc-class" type="text" placeholder="Odd days, 1st class" autocomplete="off">
-    <label for="nc-names">STUDENTS (one name per line, up to 30)</label>
-    <textarea id="nc-names" placeholder="Paste or type the names here"></textarea>
+    <label for="nc-gender">CLASS (goes into the file name)</label>
+    <select id="nc-gender"><option value="Boys">Boys</option><option value="Girls">Girls</option></select>
+    <label for="nc-day">DAYS (goes into the file name)</label>
+    <select id="nc-day"><option value="Odd">Odd days</option><option value="Even">Even days</option><option value="Mon">Mon (Mondays &amp; Thursdays)</option></select>
+    <label for="nc-season">SEASON (goes into the file name)</label>
+    <select id="nc-season"><option value="Spring">Spring</option><option value="Summer">Summer</option><option value="Fall">Fall</option><option value="Winter">Winter</option></select>
+    <label for="nc-year">YEAR OF THE TERM (goes into the file name)</label>
+    <input id="nc-year" type="text" inputmode="numeric" placeholder="1405" autocomplete="off">
+    <label for="nc-time">TIME OF THE CLASS (goes into the file name)</label>
+    <input id="nc-time" type="text" placeholder="17:30" autocomplete="off">
+    <label for="nc-names">STUDENTS (optional: one name per line, up to 30)</label>
+    <textarea id="nc-names" placeholder="Paste or type the names here, or leave empty to add them later"></textarea>
     <div id="nc-count"></div>
     <div id="nc-sec-wrap" style="display:none;">
       <label for="nc-sec">ADD TO LIBRARY SECTION</label>
@@ -861,7 +870,7 @@
   <li><b>Set it up:</b> tap <b>✎ Edit</b>. Then use <b>＋ Add section</b> (for example Odd days, Mondays) and <b>＋ Add file</b> inside a section to pick your Excel files. Each section gets its own colour.</li>
   <li><b>Tidy up:</b> in Edit mode use ▲ ▼ to change the order, ✎ to rename, and ✕ to remove. Removing only deletes the shortcut, never your Excel file. Tap <b>✓ Done</b> to return to the clean view.</li>
   <li><b>Terms:</b> the big name at the top is your term (for example Fall 2026). In Edit mode you can rename it, add a new term with ＋, or remove one with the bin. With more than one term, tap the name to switch.</li>
-  <li><b>New class:</b> tap <b>➕ New class</b> on the home screen, choose the level, type the term and class name, and paste the student names (one per line, up to 30). The app builds a fresh grade sheet with all the tabs, colors and formulas, asks where to save it, and opens it. If you picked a library section it is added there too. The term and class name only go into the file name.</li>
+  <li><b>New class:</b> tap <b>➕ New class</b> on the home screen and choose the level (Start, Run 1–4, Race 1–4 or Reach 1–4), boys or girls, the days (Odd, Even or Mon), the season, the year and the time. Optionally paste the student names (one per line, up to 30); the sheet has exactly as many students as names (one empty student if you give none). The app builds a fresh grade sheet with all the tabs, colors and formulas, asks where to save it, and opens it. If you picked a library section it is added there too. All these choices go into the file name, which is how the app knows the level next time.</li>
   <li><b>Back to the home screen:</b> inside a grade sheet, tap the <b>🏠</b> button to return here and open another file.</li>
   <li>The library is stored in this browser on this device only. Clearing the browser's site data erases it (your Excel files stay safe). If a file was moved or deleted, the app offers to let you choose it again.</li>
 </ul>
@@ -2250,6 +2259,7 @@ const Offline = (function () {
           });
           h += '</div>';
         });
+        h += '<div class="lib-end"></div>';
         libEl.innerHTML = h;
         return;
       }
@@ -2263,6 +2273,8 @@ const Offline = (function () {
       if (!t.sections.length) h += '<div class="lib-empty">Nothing here yet. Tap “＋ Add section” (for example Odd days), then add your Excel files to it.</div>';
       t.sections.forEach(function (sec) {
         h += '<div class="lib-sec" style="border-left-color:' + (sec.color || SEC_COLORS[0]) + '"><div class="lib-sec-h"><span class="lib-sec-name">' + esc(sec.name) + '</span>' +
+             '<button class="lib-mini" data-act="sec-up" data-s="' + sec.id + '" title="Move section up">▲</button>' +
+             '<button class="lib-mini" data-act="sec-down" data-s="' + sec.id + '" title="Move section down">▼</button>' +
              '<button class="lib-mini" data-act="sec-rename" data-s="' + sec.id + '" title="Rename section">✎</button>' +
              '<button class="lib-mini" data-act="sec-del" data-s="' + sec.id + '" title="Remove section">✕</button></div>';
         sec.files.forEach(function (f) {
@@ -2276,6 +2288,7 @@ const Offline = (function () {
         h += '<button class="lib-add" data-act="file-add" data-s="' + sec.id + '">＋ Add file</button></div>';
       });
       h += '<button class="lib-add-sec" data-act="sec-add">＋ Add section</button>';
+      h += '<div class="lib-end"></div>';
       libEl.innerHTML = h;
     }
 
@@ -2337,6 +2350,14 @@ const Offline = (function () {
       } else if (act === 'sec-del' && sec) {
         if (!confirm('Remove the section “' + sec.name + '” and its shortcuts?\n\nYour Excel files are NOT deleted.')) return;
         t.sections = t.sections.filter(function (x) { return x.id !== sec.id; });
+      } else if (act === 'sec-up' && sec) {
+        const si = t.sections.indexOf(sec);
+        if (si < 1) return;
+        t.sections.splice(si, 1); t.sections.splice(si - 1, 0, sec);
+      } else if (act === 'sec-down' && sec) {
+        const si = t.sections.indexOf(sec);
+        if (si < 0 || si >= t.sections.length - 1) return;
+        t.sections.splice(si, 1); t.sections.splice(si + 1, 0, sec);
       } else if (act === 'file-add' && sec) {
         showError('');
         try {
@@ -2386,8 +2407,24 @@ const Offline = (function () {
     //  NEW CLASS  -  builds a fresh grade sheet from the built-in templates (window.UG_TEMPLATES)
     // =========================================================================================
     const NC_XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-    const NC_TEMPLATE = { start: 'start', run12: 'start', run34: 'run34', race: 'race', reach: 'reach' };   // Start and Run 1&2 share one sheet
-    const NC_TOKEN = { start: 'Start', run12: 'Run1_2', run34: 'Run3_4', race: 'Race', reach: 'Reach' };    // level word the app reads from the file name
+    // the 13 levels, in the order shown in the dialog. 'tpl' = built-in template, 'token' = level word the app reads from the file name
+    // (Start and Run 1 & 2 share one sheet; Run1/Run2 -> Run 1&2 settings, Run3/Run4 -> Run 3&4 settings, Race1-4 -> Race, Reach1-4 -> Reach)
+    const NC_LEVELS = [
+      { id: 'start', label: 'Start',   tpl: 'start', token: 'Start' },
+      { id: 'run1',  label: 'Run 1',   tpl: 'start', token: 'Run1' },
+      { id: 'run2',  label: 'Run 2',   tpl: 'start', token: 'Run2' },
+      { id: 'run3',  label: 'Run 3',   tpl: 'run34', token: 'Run3' },
+      { id: 'run4',  label: 'Run 4',   tpl: 'run34', token: 'Run4' },
+      { id: 'race1', label: 'Race 1',  tpl: 'race',  token: 'Race1' },
+      { id: 'race2', label: 'Race 2',  tpl: 'race',  token: 'Race2' },
+      { id: 'race3', label: 'Race 3',  tpl: 'race',  token: 'Race3' },
+      { id: 'race4', label: 'Race 4',  tpl: 'race',  token: 'Race4' },
+      { id: 'reach1', label: 'Reach 1', tpl: 'reach', token: 'Reach1' },
+      { id: 'reach2', label: 'Reach 2', tpl: 'reach', token: 'Reach2' },
+      { id: 'reach3', label: 'Reach 3', tpl: 'reach', token: 'Reach3' },
+      { id: 'reach4', label: 'Reach 4', tpl: 'reach', token: 'Reach4' }
+    ];
+    function ncLevel(id) { return NC_LEVELS.filter(function (l) { return l.id === id; })[0] || NC_LEVELS[0]; }
     const NC_MAX = 30;
 
     function ncParseNames() {
@@ -2395,11 +2432,14 @@ const Offline = (function () {
     }
     function ncUpdateCount() {
       const n = ncParseNames().length;
-      $('nc-count').textContent = n + ' student' + (n === 1 ? '' : 's') + (n > NC_MAX ? ' (too many: the sheet holds ' + NC_MAX + ')' : '');
+      $('nc-count').textContent = n === 0 ? 'No names: the sheet is created with one student (“Student 1”) that you can rename in Excel.' : n + ' student' + (n === 1 ? '' : 's') + (n > NC_MAX ? ' (too many: the sheet holds ' + NC_MAX + ')' : '');
       $('nc-count').style.color = n > NC_MAX ? '#dc2626' : '#6b7280';
     }
     // keeps the level words (start / race / reach / run) out of the term and class text, so the app never confuses the level when it reads the file name
     function ncClean(t) { return String(t || '').replace(/start|race|reach|run/gi, ' ').trim().replace(/[^\p{L}\p{N}]+/gu, '_').replace(/^_+|_+$/g, ''); }
+
+    // time like “17:30” or “5:30 pm” -> “1730” / “530pm” (keeps the file name tidy; the app ignores it when it reads the level)
+    function ncTime(t) { return String(t || '').replace(/start|race|reach|run/gi, '').replace(/[:\s]+/g, '').replace(/[^\p{L}\p{N}-]+/gu, '-').replace(/^-+|-+$/g, ''); }
 
     async function buildClassWorkbook(tplKey, names) {
       const b64 = window.UG_TEMPLATES && window.UG_TEMPLATES[tplKey];
@@ -2423,6 +2463,7 @@ const Offline = (function () {
         const doc = parse(await f.async('string'));
         const ns = doc.documentElement.namespaceURI;
         let changed = false;
+        const hideRows = {};                                       // student rows that have no name: hidden so the sheet only shows the students that were typed
         Array.prototype.forEach.call(doc.getElementsByTagName('c'), function (c) {
           const ref = c.getAttribute('r') || '';
           const m = /^B(\d+)$/.exec(ref);
@@ -2430,7 +2471,8 @@ const Offline = (function () {
           const row = parseInt(m[1], 10);
           if (name === 'Overview') {
             const idx = row - 3;                                   // student 1 is on row 3
-            if (idx < 0 || idx >= names.length) return;
+            if (idx >= names.length) { if (idx >= 0) hideRows[row] = true; return; }
+            if (idx < 0) return;
             while (c.firstChild) c.removeChild(c.firstChild);
             c.setAttribute('t', 'inlineStr');
             const is = doc.createElementNS(ns, 'is'), t = doc.createElementNS(ns, 't');
@@ -2441,6 +2483,7 @@ const Offline = (function () {
             const fEl = c.getElementsByTagName('f')[0];
             const fm = fEl && /^Overview!\$?B\$?(\d+)$/.exec(fEl.textContent.trim());
             if (!fm) return;
+            if (parseInt(fm[1], 10) - 3 >= names.length) hideRows[row] = true;
             const nm = names[parseInt(fm[1], 10) - 3] || '';       // the cached name that the app reads in every tab
             c.setAttribute('t', 'str');
             let v = c.getElementsByTagName('v')[0];
@@ -2448,6 +2491,9 @@ const Offline = (function () {
             v.textContent = nm;
             changed = true;
           }
+        });
+        Array.prototype.forEach.call(doc.getElementsByTagName('row'), function (r) {
+          if (hideRows[parseInt(r.getAttribute('r'), 10)]) { r.setAttribute('hidden', '1'); changed = true; }
         });
         if (changed) zip.file(paths[name], ser(doc));
       }
@@ -2462,8 +2508,7 @@ const Offline = (function () {
 
     function ncOpenDialog() {
       showError('');
-      const order = ['start', 'run12', 'run34', 'race', 'reach'].filter(function (k) { return VARIANTS[k]; });
-      $('nc-level').innerHTML = order.map(function (k) { return '<option value="' + k + '">' + esc(VARIANTS[k].label) + '</option>'; }).join('');
+      $('nc-level').innerHTML = NC_LEVELS.map(function (l) { return '<option value="' + l.id + '">' + esc(l.label) + '</option>'; }).join('');
       $('nc-error').textContent = '';
       $('nc-names').value = '';
       ncUpdateCount();
@@ -2482,14 +2527,14 @@ const Offline = (function () {
     async function ncCreate() {
       const err = $('nc-error'); err.textContent = '';
       const names = ncParseNames();
-      if (!names.length) { err.textContent = 'Type at least one student name.'; return; }
       if (names.length > NC_MAX) { err.textContent = 'The grade sheet holds ' + NC_MAX + ' students, but you typed ' + names.length + '.'; return; }
-      const level = $('nc-level').value;
+      const lv = ncLevel($('nc-level').value);
+      const rows = names.length ? names : ['Student 1'];          // no names typed: one student row so the app still has something to show
       const btn = $('nc-create'), label = btn.textContent;
-      const fileName = [NC_TOKEN[level], ncClean($('nc-term').value), ncClean($('nc-class').value), 'GradeSheet'].filter(Boolean).join('_') + '.xlsx';
+      const fileName = [lv.token, $('nc-gender').value, $('nc-day').value, $('nc-season').value, ncClean($('nc-year').value), ncTime($('nc-time').value), 'GradeSheet'].filter(Boolean).join('_') + '.xlsx';
       try {
         btn.disabled = true; btn.textContent = 'Building…';
-        const blob = await buildClassWorkbook(NC_TEMPLATE[level], names);
+        const blob = await buildClassWorkbook(lv.tpl, rows);
         if (Offline.canAutoSave && window.showSaveFilePicker) {
           const handle = await window.showSaveFilePicker({
             suggestedName: fileName,
