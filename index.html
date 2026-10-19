@@ -1034,7 +1034,7 @@
       <button class="big-btn secondary" id="start-new-btn">➕ New class</button>
     </div>
     <div id="lib-box" style="display:none;"></div>
-    <p id="start-help">Pick your Excel grade sheet (the file name tells the app if it is Reach, Race, Run3/4, Run1/2, or Start) Everything you enter is saved straight into that file.</p>
+    <p id="start-help">Either pick your Excel grade sheet (the file name tells the app if it is Reach, Race, Run3/4, Run1/2, or Start), Or Create your own from Scratch using +New Class Button. Everything you enter is saved straight into that file.</p>
     <input type="file" id="start-file-input" accept=".xlsx" style="display:none;">
     <div class="start-error" id="start-error"></div>
     <div class="start-note" id="start-note"></div>
@@ -2845,7 +2845,7 @@ const Offline = (function () {
     $('nc-names').addEventListener('input', ncUpdateCount);
 
     if (Offline.canAutoSave) {
-      $('start-note').textContent = 'Changes are saved automatically into your file. Close the file in Excel while you use this app.';
+      $('start-note').textContent = 'Close the file in Excel while you use this app.';
       initLibrary();
     } else {
       $('start-note').textContent = 'This browser cannot save into the file automatically. Use the Save to Excel button when you finish: it downloads the updated file (replace your old one with it). For automatic saving, use Chrome or Edge on a computer.';
