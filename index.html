@@ -19,7 +19,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <link rel="icon" href="icon-256.png">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>Ultimate Grader V3.3</title>
+  <title>Ultimate Grader V3.4</title>
   <style>
     :root {
       --bg: #f0f2f5;
@@ -673,6 +673,28 @@
       border-radius: 999px; cursor: pointer;
     }
     .nr-pill.on { background: var(--bg-d97706); color: var(--fg-ffffff); }
+    /* Pad switch: flips an evaluation keypad to the regular numpad and back */
+    .pad-pill {
+      margin-left: auto; margin-right: 10px;
+      padding: 4px 12px; font-size: 13px; font-weight: bold; line-height: 1.2;
+      border: 2px solid var(--bd-1d4ed8); color: var(--fg-2563eb); background: var(--bg-ffffff);
+      border-radius: 999px; cursor: pointer; white-space: nowrap;
+    }
+    .pad-pill + .nr-pill { margin-left: 0; }
+    /* Numpad shown inside the evaluation modal */
+    .pad-fields { display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 6px; }
+    .pad-fields.two { grid-template-columns: 1fr 1fr; }
+    .pad-field { background: var(--bg-f3f4f6); border: 2px solid var(--border); border-radius: 12px; padding: 6px 12px; cursor: pointer; text-align: center; }
+    .pad-field.active { border-color: var(--bd-1d4ed8); background: var(--bg-eff6ff); }
+    .pad-field.f-s.active { border-color: var(--bd-15803d); background: var(--bg-f0fdf4); }
+    .pad-field-label { font-size: 12px; font-weight: 700; color: var(--fg-6b7280); }
+    .pad-field-val { font-size: 34px; font-weight: 800; line-height: 1.15; }
+    .pad-field-val.untouched { color: var(--fg-2563eb); }
+    .pad-field-val.nr { color: var(--fg-b45309); }
+    .pad-field-val.over { color: var(--fg-dc2626); }
+    .pad-max { text-align: right; font-size: 12px; color: var(--fg-9ca3af); font-weight: 700; margin-bottom: 8px; }
+    .pad-grid button { height: 58px; font-size: 26px; touch-action: manipulation; }
+    .pad-next { width: 100%; margin-top: 10px; height: 50px; font-size: 17px; font-weight: 800; border: none; border-radius: 12px; background: var(--bg-16a34a); color: var(--fg-ffffff); cursor: pointer; }
     /* ---- Numpad ---- */
     .np-modal { z-index: 1100; align-items: flex-end; }
     .np-box { background: var(--bg-ffffff); width: 100%; max-width: 420px; border-radius: 18px 18px 14px 14px; padding: 14px 14px 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.25); touch-action: manipulation; user-select: none; -webkit-user-select: none; }
@@ -1217,6 +1239,7 @@
   <div class="modal-content">
     <div class="modal-header">
       <h3 id="modal-title">Student Name</h3>
+      <button id="pad-btn" class="pad-pill" style="display:none;" onclick="togglePadMode()">🔢 Numpad</button>
       <button id="nr-btn" class="nr-pill" style="display:none;" onclick="toggleNR()">NR</button>
       <button class="close-btn" onclick="closeModal()">×</button>
     </div>
@@ -3269,7 +3292,7 @@ const Offline = (function () {
     SHOW_LS_SUBTABS = Object.assign({}, v.showLsSubtabs);
     keypadProfiles = v.keypadProfiles;
     window.__variantLabel = v.label;
-    document.title = 'Ultimate Grader ' + v.label + ' V3.3';
+    document.title = 'Ultimate Grader ' + v.label + ' V3.4';
     document.documentElement.style.setProperty('--reading-cols', v.reading.cols.length);
 
     currentDictNo = 1; currentQuizNo = 1; currentQuizGroup = 0;
@@ -3318,6 +3341,12 @@ const Offline = (function () {
   let currentModalMarksL = {};
   let currentModalMarksS = {};
   let nrDual = false;                                              // true while the Listening & Speaking keypad is open
+  // Pad switch (evaluation keypads only): 'keypad' = the usual 5-row keypad, 'numpad' = regular numpad
+  let padMode = 'keypad';
+  let npActive = 'single';                                        // which field the numpad types into: 'single', or 'l' / 's' on Listening & Speaking
+  let npBuf = { single: '', l: '', s: '' };                       // what has been typed per field
+  let npTouched = { single: false, l: false, s: false };          // true once a key was pressed on that field
+  let npOrig = { single: '', l: '', s: '' };                      // the score stored when the keypad was opened
   let currentNR = false, currentNRL = false, currentNRS = false;   // 'NR' (Not Ready) chosen on an evaluation keypad
 
   let currentEvalSubCell = 0; 
@@ -4259,6 +4288,9 @@ const Offline = (function () {
     modalContentEl.classList.remove('dual-modal-content');
     currentNR = false; currentNRL = false; currentNRS = false; nrDual = false;
     document.getElementById('nr-btn').style.display = 'none';
+    padMode = 'keypad'; npActive = 'single';
+    npBuf = { single: '', l: '', s: '' }; npTouched = { single: false, l: false, s: false }; npOrig = { single: '', l: '', s: '' };
+    document.getElementById('pad-btn').style.display = 'none';
     
     if (currentMode === 'homework') {
       document.getElementById('modal-title').innerText = student.name + " · Homework " + sessionNum;
@@ -4298,8 +4330,14 @@ const Offline = (function () {
       nrDual = true;
       document.getElementById('nr-btn').style.display = '';
       refreshNRBtn();
-      
-      renderDualEvalKeypadForm();
+      npOrig.l = sessObj.l ? sessObj.l.score : '';
+      npOrig.s = sessObj.s ? sessObj.s.score : '';
+      document.getElementById('pad-btn').style.display = '';
+      // A score that was typed (no keypad marks behind it) reopens on the numpad, so it is not lost
+      padMode = (padHoldsTypedScore('l') || padHoldsTypedScore('s')) ? 'numpad' : 'keypad';
+      if (padMode === 'numpad') fillPadBuffers();
+      applyPadModeUI();
+      renderPadBody();
       document.getElementById('keypad-modal').style.display = 'flex';
       
     } else {
@@ -4340,10 +4378,157 @@ const Offline = (function () {
       document.getElementById('modal-title').innerText = titleSuffix;
       document.getElementById('nr-btn').style.display = nrAllowed ? '' : 'none';
       refreshNRBtn();
-      renderEvalKeypadForm();
+      npOrig.single = subData.score;
+      document.getElementById('pad-btn').style.display = '';
+      padMode = padHoldsTypedScore('single') ? 'numpad' : 'keypad';
+      if (padMode === 'numpad') fillPadBuffers();
+      applyPadModeUI();
+      renderPadBody();
       document.getElementById('keypad-modal').style.display = 'flex';
     }
   }
+
+  // ==========================================================================
+  //  Pad switch  -  evaluation keypads can be flipped to the regular numpad.
+  //  Keypad mode is the original 5-row keypad and is untouched. Numpad mode types one
+  //  number per field (Listening and Speaking separately) and saves it with no keypad marks.
+  // ==========================================================================
+  function padNR(key) { return key === 'l' ? currentNRL : key === 's' ? currentNRS : currentNR; }
+  function padMarks(key) { return key === 'l' ? currentModalMarksL : key === 's' ? currentModalMarksS : currentModalMarks; }
+  function padIsNum(v) {
+    return v !== '' && v !== null && v !== undefined && !isNaN(Number(v)) && String(v).trim().toUpperCase() !== 'NR';
+  }
+  function padHoldsTypedScore(key) {                          // a number is stored but no keypad marks sit behind it
+    return Object.keys(padMarks(key)).length === 0 && padIsNum(npOrig[key]);
+  }
+  function setPadNR(key, on) {
+    if (key === 'l') currentNRL = on; else if (key === 's') currentNRS = on; else currentNR = on;
+    refreshNRBtn();
+  }
+  // Fills the numpad fields with what the cell holds now (typed values are kept)
+  function fillPadBuffers() {
+    const keys = nrDual ? ['l', 's'] : ['single'];
+    keys.forEach(k => {
+      if (npTouched[k]) return;
+      const marks = padMarks(k);
+      if (padNR(k)) npBuf[k] = '';
+      else if (Object.keys(marks).length > 0) npBuf[k] = String(calculateEvalScoreCustom(marks));
+      else if (padIsNum(npOrig[k])) npBuf[k] = String(npOrig[k]);
+      else npBuf[k] = '';
+    });
+    npActive = keys[0];
+  }
+  function applyPadModeUI() {
+    const num = (padMode === 'numpad');
+    document.getElementById('pad-btn').innerText = num ? '🎯 Keypad' : '🔢 Numpad';
+    document.querySelector('.modal-content').classList.toggle('dual-modal-content', nrDual && !num);
+    const sb = document.getElementById('modal-secondary-btn');
+    if (num) { sb.style.display = 'block'; sb.innerText = 'Clear'; } else { sb.style.display = 'none'; }
+  }
+  function renderPadBody() {
+    if (padMode === 'numpad') renderNumpadForm();
+    else if (nrDual) renderDualEvalKeypadForm();
+    else renderEvalKeypadForm();
+  }
+  function togglePadMode() {
+    padMode = (padMode === 'keypad') ? 'numpad' : 'keypad';
+    if (padMode === 'numpad') fillPadBuffers();
+    applyPadModeUI();
+    renderPadBody();
+  }
+  function renderNumpadForm() {
+    const keys = nrDual ? ['l', 's'] : ['single'];
+    if (keys.indexOf(npActive) === -1) npActive = keys[0];
+    const labels = { l: '🎧 Listening (L)', s: '🗣️ Speaking (S)', single: 'Score' };
+    let h = '<div class="pad-fields' + (nrDual ? ' two' : '') + '">';
+    keys.forEach(k => {
+      const nr = padNR(k);
+      const txt = nr ? 'NR' : (npBuf[k] === '' ? '—' : npBuf[k]);
+      const cls = 'pad-field' + (k === 's' ? ' f-s' : '') + (npActive === k ? ' active' : '');
+      const vcls = 'pad-field-val' + (nr ? ' nr' : ((!npTouched[k] && npBuf[k] !== '') ? ' untouched' : ''));
+      h += '<div class="' + cls + '" onclick="padSelectField(\'' + k + '\')"><div class="pad-field-label">' + labels[k] + '</div><div class="' + vcls + '">' + txt + '</div></div>';
+    });
+    h += '</div><div class="pad-max">max 100</div>';
+    h += '<div class="np-grid pad-grid">';
+    ['1', '2', '3', '4', '5', '6', '7', '8', '9'].forEach(k => { h += '<button onclick="padPress(\'' + k + '\')">' + k + '</button>'; });
+    h += '<button class="np-fn" onclick="padPress(\'.\')">.</button><button onclick="padPress(\'0\')">0</button><button class="np-fn" onclick="padBack()">⌫</button></div>';
+    if (nrDual) h += '<button class="pad-next" onclick="padNext()">' + (npActive === 'l' ? 'Next: Speaking →' : '← Back: Listening') + '</button>';
+    document.getElementById('modal-body-content').innerHTML = h;
+  }
+  function padSelectField(k) { npActive = k; renderNumpadForm(); }
+  function padNext() { if (nrDual) { npActive = (npActive === 'l') ? 's' : 'l'; renderNumpadForm(); } }
+  function padFlash() {
+    const el = document.querySelector('.pad-field.active .pad-field-val');
+    if (el) { el.classList.add('over'); setTimeout(() => el.classList.remove('over'), 350); }
+  }
+  function padPress(k) {
+    const key = npActive;
+    if (padNR(key)) setPadNR(key, false);                     // typing a number cancels NR on that field
+    if (!npTouched[key]) { npBuf[key] = ''; npTouched[key] = true; }   // first key replaces the old score
+    const buf = npBuf[key];
+    if (k === '.') {
+      if (buf.indexOf('.') !== -1) return;
+      npBuf[key] = (buf === '' ? '0' : buf) + '.';
+      return renderNumpadForm();
+    }
+    const cand = (buf === '0') ? k : buf + k;
+    const dot = cand.indexOf('.');
+    if (dot !== -1 && cand.length - dot > 3) return;          // max 2 decimals
+    if (parseFloat(cand) > 100) return padFlash();            // over the cap: refuse + flash
+    npBuf[key] = cand;
+    renderNumpadForm();
+  }
+  function padBack() {
+    const key = npActive;
+    if (padNR(key)) { setPadNR(key, false); return renderNumpadForm(); }
+    npTouched[key] = true;
+    npBuf[key] = npBuf[key].slice(0, -1);
+    renderNumpadForm();
+  }
+  function padClear() {                                       // clears the field being typed into
+    const key = npActive;
+    if (padNR(key)) setPadNR(key, false);
+    npTouched[key] = true;
+    npBuf[key] = '';
+    renderNumpadForm();
+  }
+  // What gets saved for one field while on the numpad
+  function resolvePadResult(key) {
+    const marks = padMarks(key);
+    if (padNR(key)) return { score: 'NR', marks: marks };
+    if (npTouched[key]) {
+      const b = npBuf[key];
+      return { score: (b === '' || b === '.') ? '' : Number(b), marks: {} };
+    }
+    if (Object.keys(marks).length > 0) return { score: calculateEvalScoreCustom(marks), marks: marks };   // untouched: keep the keypad marks as they were
+    return { score: padIsNum(npOrig[key]) ? Number(npOrig[key]) : '', marks: {} };
+  }
+  function singleFinalScore() {
+    if (padMode === 'numpad') {
+      const r = resolvePadResult('single');
+      currentModalMarks = r.marks;
+      return r.score;
+    }
+    return currentNR ? 'NR' : calculateEvalScore();
+  }
+  function dualFinalScore(key) {
+    if (padMode === 'numpad') {
+      const r = resolvePadResult(key);
+      if (key === 'l') currentModalMarksL = r.marks; else currentModalMarksS = r.marks;
+      return r.score;
+    }
+    return key === 'l'
+      ? (currentNRL ? 'NR' : calculateEvalScoreCustom(currentModalMarksL))
+      : (currentNRS ? 'NR' : calculateEvalScoreCustom(currentModalMarksS));
+  }
+  window.addEventListener('keydown', function (e) {           // desktop keyboard on the pad numpad
+    if (padMode !== 'numpad') return;
+    const m = document.getElementById('keypad-modal');
+    if (!m || m.style.display !== 'flex') return;
+    if (/^[0-9.]$/.test(e.key)) { padPress(e.key); e.preventDefault(); }
+    else if (e.key === 'Backspace') { padBack(); e.preventDefault(); }
+    else if (e.key === 'Enter') { if (nrDual && npActive === 'l') padNext(); else saveModalData(); e.preventDefault(); }
+  });
 
   function renderDualEvalKeypadForm() {
     let formHtml = `<div class="dual-keypad-container">`;
@@ -4379,6 +4564,7 @@ const Offline = (function () {
   }
 
   function selectEvalScoreDual(type, rowNum, score, element) {
+    npTouched[type] = false;
     let parent = element.parentElement;
     let buttons = parent.getElementsByClassName('eval-key-btn');
     let targetMarks = (type === 'l') ? currentModalMarksL : currentModalMarksS;
@@ -4440,18 +4626,19 @@ const Offline = (function () {
     if (nrDual) {                                             // Listening & Speaking: one NR for both sides
       const on = !(currentNRL && currentNRS);
       currentNRL = on; currentNRS = on;
-      if (on) { currentModalMarksL = {}; currentModalMarksS = {}; }
+      if (on) { currentModalMarksL = {}; currentModalMarksS = {}; npBuf.l = ''; npBuf.s = ''; npTouched.l = false; npTouched.s = false; }
       refreshNRBtn();
-      renderDualEvalKeypadForm();
+      renderPadBody();
       return;
     }
     currentNR = !currentNR;
-    if (currentNR) currentModalMarks = {};                    // NR replaces any scores picked
+    if (currentNR) { currentModalMarks = {}; npBuf.single = ''; npTouched.single = false; }   // NR replaces any scores picked
     refreshNRBtn();
-    renderEvalKeypadForm();
+    renderPadBody();
   }
 
   function selectEvalScore(rowNum, score, element) {
+    npTouched.single = false;
     let parent = element.parentElement;
     let buttons = parent.getElementsByClassName('eval-key-btn');
     if (currentNR) { currentNR = false; refreshNRBtn(); }     // picking a score cancels NR
@@ -4551,6 +4738,7 @@ const Offline = (function () {
   }
   
   function modalSecondaryAction() {
+    if (padMode === 'numpad') { padClear(); return; }
     if (currentMode === 'homework') {
       isAbsentModal = false;
       currentModalMarks = {};
@@ -4667,7 +4855,7 @@ const Offline = (function () {
       }
         
     } else if (currentMode === 'reading') {
-      let finalScore = currentNR ? 'NR' : calculateEvalScore();
+      let finalScore = singleFinalScore();
       if (!student.allSessions[activeModalSession]) student.allSessions[activeModalSession] = {};
       
       let subKey = readingCfg().cols[currentEvalSubCell];
@@ -4692,8 +4880,8 @@ const Offline = (function () {
         
     } else if (currentMode === 'lis_spe' && currentLsSubTab === 'eval') {
       // Dual L/S Save (Listening & Speaking side-by-side)
-      let finalScoreL = currentNRL ? 'NR' : calculateEvalScoreCustom(currentModalMarksL);
-      let finalScoreS = currentNRS ? 'NR' : calculateEvalScoreCustom(currentModalMarksS);
+      let finalScoreL = dualFinalScore('l');
+      let finalScoreS = dualFinalScore('s');
       
       if (!student.allSessions[activeModalSession]) student.allSessions[activeModalSession] = {};
       student.allSessions[activeModalSession].l = {
@@ -4722,7 +4910,7 @@ const Offline = (function () {
         
     } else if (currentMode === 'lis_spe') {
       // Single L/S sub-tabs (Describing / D-Work)
-      let finalScore = currentNR ? 'NR' : calculateEvalScore();
+      let finalScore = singleFinalScore();
       if (!student.allSessions[activeModalSession]) student.allSessions[activeModalSession] = {};
       
       let subKey = { 2: 'dec', 3: 'dw', 4: 'conv' }[currentEvalSubCell];
@@ -4747,7 +4935,7 @@ const Offline = (function () {
         
     } else if (currentMode === 'writing') {
       // Writing Save
-      let finalScore = currentNR ? 'NR' : calculateEvalScore();
+      let finalScore = singleFinalScore();
       const isNH = (currentWrSubTab === 'nh');
       if (isNH) {
         if (!student.nh) student.nh = {};
