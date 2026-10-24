@@ -1474,6 +1474,81 @@
     #start-overlay .hs-sh .b { width:100%; height:100%; box-sizing:border-box; }
     #start-overlay .hs-sh svg { width:100%; height:100%; overflow:visible; filter:drop-shadow(4px 4px 0 var(--hs-sh)); }
     #start-overlay .hs-sh svg * { stroke-linejoin:round; stroke-linecap:round; }
+
+    /* =====================================================================================================
+       STITCH LOOK for the tab screens: dotted page, big white-ish card per tab, vibrant rows, hard shadows, parallax shapes
+       ===================================================================================================== */
+    html { overflow-x:hidden; }
+    body[data-nb] { overflow-x:clip; background-color:#f1f5f9; background-image:radial-gradient(#cbd5e1 1.2px, transparent 1.2px); background-size:20px 20px;
+      --nb-ink:#0f172a; --nb-line:#0f172a; --nb-shadow:#0f172a; --nb-sh:3.5px 3.5px 0 var(--nb-shadow); --nb-sh-s:2px 2px 0 var(--nb-shadow); --nb-sh-press:1px 1px 0 var(--nb-shadow);
+      --nb-prev:color-mix(in srgb, var(--nb-row) 50%, #ffffff); }
+    :root[data-theme="dark"] body[data-nb] { background-color:#090d16; background-image:radial-gradient(#1e293b 1.2px, transparent 1.2px); }
+    body[data-nb="attendance"] { --nb-tab:#f472b6; --nb-page:#fff4fb; --nb-row:#f9a8d4; --nb-dark:#9d174d; --nb-tink:#0f172a; }
+    body[data-nb="homework"]   { --nb-tab:#a3e635; --nb-page:#f9fde8; --nb-row:#bef264; --nb-dark:#4d7c0f; --nb-tink:#0f172a; }
+    body[data-nb="reading"]    { --nb-tab:#60a5fa; --nb-page:#f1f7ff; --nb-row:#93c5fd; --nb-dark:#1d4ed8; --nb-tink:#0f172a; }
+    body[data-nb="lis_spe"]    { --nb-tab:#2dd4aa; --nb-page:#effdf8; --nb-row:#5ee6c0; --nb-dark:#0f766e; --nb-tink:#0f172a; }
+    body[data-nb="writing"]    { --nb-tab:#fbbf24; --nb-page:#fffaeb; --nb-row:#fcc04a; --nb-dark:#b45309; --nb-tink:#0f172a; }
+    body[data-nb="quizzes"]    { --nb-tab:#dc2626; --nb-page:#fff3f3; --nb-row:#f87171; --nb-dark:#b91c1c; --nb-tink:#ffffff; }
+    body[data-nb] #tab-att-btn     { --tc:#f472b6; --tci:#0f172a; }
+    body[data-nb] #tab-hw-btn      { --tc:#a3e635; --tci:#0f172a; }
+    body[data-nb] #tab-reading-btn { --tc:#60a5fa; --tci:#0f172a; }
+    body[data-nb] #tab-ls-btn      { --tc:#2dd4aa; --tci:#0f172a; }
+    body[data-nb] #tab-writing-btn { --tc:#fbbf24; --tci:#0f172a; }
+    body[data-nb] #tab-quiz-btn    { --tc:#dc2626; --tci:#ffffff; }
+    /* the card = frame + page in one */
+    body[data-nb] #nb-frame { background-color:var(--nb-page); background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .085 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); border:2.5px solid var(--nb-line); border-radius:22px; box-shadow:6px 6px 0 var(--nb-shadow); padding:14px; position:relative; z-index:1; }
+    :root[data-theme="dark"] body[data-nb] #nb-frame { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .10 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+    body[data-nb] #nb-page { background:transparent; padding:0; border-radius:0; }
+    /* tabs: inactive ones in the vibrant colour, the open one is the same colour as the card and joins it */
+    body[data-nb] .nav-tab { background:var(--tc); color:var(--tci); border:2.5px solid var(--nb-line); border-bottom:none; border-radius:16px 16px 0 0; filter:none;
+      box-shadow:3px 0 0 var(--nb-shadow); padding:11px 6px 10px; margin-top:10px; font-weight:800; transition:padding .12s, transform .12s; }
+    body[data-nb] .nav-tab:hover { padding-bottom:13px; }
+    body[data-nb] .nav-tab.active { background-color:var(--nb-page); background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .085 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); color:var(--nb-ink); box-shadow:none; padding:16px 6px 16px; margin-top:0; margin-bottom:-2.5px; z-index:3; }
+    :root[data-theme="dark"] body[data-nb] .nav-tab { background:color-mix(in srgb, var(--tc) 60%, #000); color:#f4f4f4; border-color:#000; }
+    :root[data-theme="dark"] body[data-nb] .nav-tab.active { background:var(--nb-page); color:var(--nb-ink); }
+    @media (max-width:600px) {
+      body[data-nb] .app-nav { padding:0 6px 14px; gap:8px; }
+      body[data-nb] .nav-tab { flex:1 1 28%; border:2.5px solid var(--nb-line); border-radius:14px; margin:0; padding:10px 4px; box-shadow:3px 3px 0 var(--nb-shadow); }
+      body[data-nb] .nav-tab:hover { padding:10px 4px; }
+      body[data-nb] .nav-tab.active { margin:0; padding:10px 4px; box-shadow:1px 1px 0 var(--nb-shadow); transform:translate(2px,2px); }
+    }
+    /* file bar buttons = the home-screen pills */
+    body[data-nb] .file-bar button { background:#ffffff; color:#1e293b; border:2px solid var(--nb-line); border-radius:999px; box-shadow:2px 2px 0 var(--nb-shadow); }
+    body[data-nb] .file-bar button.primary { background:#3b4656; color:#fff; }
+    :root[data-theme="dark"] body[data-nb] .file-bar button { background:#1e293b; color:#f1f5f9; }
+    :root[data-theme="dark"] body[data-nb] .file-bar button.primary { background:#475569; }
+    body[data-nb] .action-badge, body[data-nb] .finalize-btn { border-radius:12px; }
+    body[data-nb] .file-bar button:hover, body[data-nb] .action-badge:hover, body[data-nb] .finalize-btn:hover { transform:translate(-1px,-1px); box-shadow:4px 4px 0 var(--nb-shadow); }
+    body[data-nb] [class^="roster-header-"] { border-radius:14px; }
+    /* parallax layers */
+    #app-cardwrap { position:relative; z-index:1; max-width:1000px; margin:0 auto; }
+    #app-cardwrap > #nb-frame { max-width:none; }
+    #app-back, #app-front { position:absolute; inset:0; pointer-events:none; }
+    #app-back { z-index:0; } #app-front { z-index:2; }
+    #app-free { position:fixed; inset:0; overflow:hidden; pointer-events:none; z-index:-1; }
+    #app-free, #app-back, #app-front { --hs-bd:var(--nb-line); --hs-sh:var(--nb-shadow); }
+    .hs-sh { position:absolute; pointer-events:none; will-change:transform; }
+    .hs-sh .b { width:100%; height:100%; box-sizing:border-box; }
+    .hs-sh svg { width:100%; height:100%; overflow:visible; filter:drop-shadow(4px 4px 0 var(--hs-sh)); }
+    .hs-sh svg * { stroke-linejoin:round; stroke-linecap:round; }
+    body:not([data-nb]) #app-free, body:not([data-nb]) #app-back, body:not([data-nb]) #app-front { display:none; }
+
+    /* landscape fix: the tab row is capped at 1000px like the card, but its padding was added on top, so the end tabs overhung the rounded corners */
+    body[data-nb] .app-nav { box-sizing:border-box; }
+    /* keypad sections: each one gets its own colour so Workbook / Supplementary / ... can be found at a glance */
+    body[data-nb] .category-box { border-color:var(--nb-line) !important; box-shadow:var(--nb-sh-s); }
+    body[data-nb] .category-box[data-ci="0"] { background:#a7f3d0 !important; }
+    body[data-nb] .category-box[data-ci="1"] { background:#fde68a !important; }
+    body[data-nb] .category-box[data-ci="2"] { background:#fbcfe8 !important; }
+    body[data-nb] .category-box[data-ci="3"] { background:#bfdbfe !important; }
+    body[data-nb] .category-box[data-ci="4"] { background:#fed7aa !important; }
+    body[data-nb] .category-box[data-ci="5"] { background:#ddd6fe !important; }
+    :root[data-theme="dark"] body[data-nb] .category-box[data-ci="0"] { background:color-mix(in srgb,#34d399 38%,#1b1b1b) !important; }
+    :root[data-theme="dark"] body[data-nb] .category-box[data-ci="1"] { background:color-mix(in srgb,#fbbf24 38%,#1b1b1b) !important; }
+    :root[data-theme="dark"] body[data-nb] .category-box[data-ci="2"] { background:color-mix(in srgb,#f472b6 38%,#1b1b1b) !important; }
+    :root[data-theme="dark"] body[data-nb] .category-box[data-ci="3"] { background:color-mix(in srgb,#60a5fa 38%,#1b1b1b) !important; }
+    :root[data-theme="dark"] body[data-nb] .category-box[data-ci="4"] { background:color-mix(in srgb,#fb923c 38%,#1b1b1b) !important; }
+    :root[data-theme="dark"] body[data-nb] .category-box[data-ci="5"] { background:color-mix(in srgb,#a78bfa 38%,#1b1b1b) !important; }
   </style>
 </head>
 <body data-nb="attendance">
@@ -1503,7 +1578,7 @@
       <div class="start-error" id="start-error"></div>
       <p id="start-help">Either pick your Excel grade sheet (<span class="m">Reach</span>, <span class="m">Race</span>, <span class="m">Run</span>, or <span class="m">Start</span> — the file name tells the app which one it is), or create your own from scratch using <b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> New class</b>. Everything you enter is saved straight into that file.</p>
       <div class="start-note" id="start-note"></div>
-      <div class="hs-stamp" id="hs-stamp"><span id="hs-build">App build: 2026-10-23 b13</span><span class="sep"></span><span class="hs-native" id="hs-native"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" x2="2" y1="12" y2="12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><line x1="6" x2="6.01" y1="16" y2="16"/><line x1="10" x2="10.01" y1="16" y2="16"/></svg> <span id="hs-native-txt">native file access: ON</span></span></div>
+      <div class="hs-stamp" id="hs-stamp"><span id="hs-build">App build: 2026-10-24 b15</span><span class="sep"></span><span class="hs-native" id="hs-native"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" x2="2" y1="12" y2="12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><line x1="6" x2="6.01" y1="16" y2="16"/><line x1="10" x2="10.01" y1="16" y2="16"/></svg> <span id="hs-native-txt">native file access: ON</span></span></div>
     </footer>
     <input type="file" id="start-file-input" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" style="display:none;">
   </div>
@@ -5783,7 +5858,7 @@ window.UG_TEMPLATES = {
 
     var tx = 0, ty = 0, cx = 0, cy = 0, raf = 0, gyro = false, bg = null, bb = null;
     var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-    function visible() { return ov.getClientRects().length > 0; }
+    function visible() { return !document.hidden; }
     function frame() {
       raf = 0;
       if (!visible()) return;
@@ -5792,7 +5867,7 @@ window.UG_TEMPLATES = {
         var n = nodes[i], k = -cfg.amp * n._d;
         n.style.transform = 'translate3d(' + (cx * k).toFixed(2) + 'px,' + (cy * k).toFixed(2) + 'px,0) rotate(' + n._r + 'deg)';
       }
-      ov.style.backgroundPosition = (-cx * cfg.amp * cfg.bg).toFixed(2) + 'px ' + (-cy * cfg.amp * cfg.bg).toFixed(2) + 'px';
+      var bp = (-cx * cfg.amp * cfg.bg).toFixed(2) + 'px ' + (-cy * cfg.amp * cfg.bg).toFixed(2) + 'px'; ov.style.backgroundPosition = bp; document.body.style.backgroundPosition = bp;
       if (Math.abs(tx - cx) > .002 || Math.abs(ty - cy) > .002) raf = requestAnimationFrame(frame);
     }
     function kick() { if (!raf && !reduce) raf = requestAnimationFrame(frame); }
@@ -5819,6 +5894,67 @@ window.UG_TEMPLATES = {
     }
     window.addEventListener('resize', kick);
     window.HS_PAR_kick = kick;
+    var appNodes = [];
+    window.HS_PAR_api = { build: build, kick: kick, setApp: function (list) {
+      appNodes.forEach(function (n) { if (n.parentNode) n.parentNode.removeChild(n); var i = nodes.indexOf(n); if (i > -1) nodes.splice(i, 1); });
+      appNodes = list; list.forEach(function (n) { nodes.push(n); }); kick(); } };
+  })();
+</script>
+<script>
+  // Tab screens: every tab gets its own arrangement of parallax shapes (behind the page, behind the card, and a few small ones overlapping the card corners).
+  (function () {
+    var api = window.HS_PAR_api, frame = document.getElementById('nb-frame'); if (!api || !frame) return;
+    var wrap = document.createElement('div'); wrap.id = 'app-cardwrap';
+    var back = document.createElement('div'); back.id = 'app-back'; back.setAttribute('aria-hidden', 'true');
+    var front = document.createElement('div'); front.id = 'app-front'; front.setAttribute('aria-hidden', 'true');
+    var free = document.createElement('div'); free.id = 'app-free'; free.setAttribute('aria-hidden', 'true');
+    frame.parentNode.insertBefore(wrap, frame); wrap.appendChild(back); wrap.appendChild(frame); wrap.appendChild(front);
+    document.body.insertBefore(free, document.body.firstChild);
+    var TAB = { attendance:'#f472b6', homework:'#a3e635', reading:'#60a5fa', lis_spe:'#2dd4aa', writing:'#fbbf24', quizzes:'#dc2626' };
+    var PAL = ['#fbbf24', '#818cf8', '#34d399', '#fb923c', '#f472b6', '#38bdf8'];
+    // slots: [position, size, depth]  (free = fixed to the screen, back = behind the card, front = over the card corners)
+    var FREE = [['left:-60px;top:15%',200,1.5],['right:-50px;top:9%',150,1.4],['left:4%;bottom:5%',92,1.3],['right:5%;bottom:4%',112,1.6],['left:42%;top:-40px',96,1.2],['right:-30px;top:54%',120,1.35],['left:-34px;top:64%',100,1.25],['left:28%;bottom:-34px',120,1.45]];
+    var BACK = [['left:-34px;top:11%',70,.8],['right:-36px;top:28%',80,.9],['left:-40px;bottom:24%',76,.7],['right:-30px;bottom:7%',90,1],['left:22%;bottom:-36px',80,.6],['right:36%;bottom:-34px',66,.75]];
+    var FRONT = [['right:-26px;top:62px',46,.35],['left:-28px;bottom:-22px',48,.45],['right:-24px;bottom:-26px',52,.3],['left:-26px;top:128px',40,.5]];
+    function rng(seed) { return function () { seed |= 0; seed = seed + 0x6D2B79F5 | 0; var t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+    function shuffle(a, r) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(r() * (i + 1)), x = a[i]; a[i] = a[j]; a[j] = x; } return a; }
+    function make(mode) {
+      var r = rng(mode.split('').reduce(function (h, c) { return (h * 31 + c.charCodeAt(0)) | 0; }, 7)), tab = TAB[mode] || '#fbbf24';
+      var cols = shuffle([tab, tab].concat(PAL.filter(function (c) { return c !== tab; })), r), ci = 0;
+      var big = shuffle(['ci', 'sq', 'ring', 'tri', 'plus', 'zig', 'half', 'dots'], r), small = shuffle(['ci', 'sq', 'ring', 'tri', 'plus'], r);
+      function item(slot, types, i, host, rot) {
+        var t = types[i % types.length]; return { host: host, o: { t: t, c: cols[ci++ % cols.length], s: slot[1] * (t === 'zig' ? 1.25 : 1), pos: slot[0], r: Math.round((r() - .5) * rot), d: slot[2] } };
+      }
+      var out = [];
+      FREE.forEach(function (sl, i) { out.push(item(sl, big, i, free, 60)); });
+      BACK.forEach(function (sl, i) { out.push(item(sl, big, i + 3, back, 50)); });
+      FRONT.forEach(function (sl, i) { var it = item(sl, i === 0 ? ['plus'] : small, i, front, 56); out.push(it); });
+      return out;
+    }
+    var cur = null;
+    function render() {
+      var mode = document.body.getAttribute('data-nb'); if (!mode || mode === cur) return; cur = mode;
+      [free, back, front].forEach(function (h) { h.innerHTML = ''; });
+      var list = make(mode).map(function (x) { var el = api.build(x.o); x.host.appendChild(el); return el; });
+      api.setApp(list);
+    }
+    render();
+    new MutationObserver(render).observe(document.body, { attributes: true, attributeFilter: ['data-nb'] });
+  })();
+</script>
+<script>
+  // number the keypad sections 0..5 so CSS can colour each one differently (runs whenever a keypad is built)
+  (function () {
+    var host = document.getElementById('keypad-modal'); if (!host) return;
+    var busy = false;
+    function tag() {
+      if (busy) return; busy = true;
+      var list = host.querySelectorAll('.category-box');
+      for (var i = 0; i < list.length; i++) { var v = String(i % 6); if (list[i].getAttribute('data-ci') !== v) list[i].setAttribute('data-ci', v); }
+      busy = false;
+    }
+    new MutationObserver(tag).observe(host, { childList: true, subtree: true });
+    tag();
   })();
 </script>
 </body>
