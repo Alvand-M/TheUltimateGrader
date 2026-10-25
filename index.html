@@ -1549,6 +1549,30 @@
     :root[data-theme="dark"] body[data-nb] .category-box[data-ci="3"] { background:color-mix(in srgb,#60a5fa 38%,#1b1b1b) !important; }
     :root[data-theme="dark"] body[data-nb] .category-box[data-ci="4"] { background:color-mix(in srgb,#fb923c 38%,#1b1b1b) !important; }
     :root[data-theme="dark"] body[data-nb] .category-box[data-ci="5"] { background:color-mix(in srgb,#a78bfa 38%,#1b1b1b) !important; }
+
+    /* ---- phone file bar: one line, file name shortens, Share / Folder / Home stay together ---- */
+    @media (max-width:700px) {
+      body[data-nb] .file-bar { flex-wrap:nowrap; gap:6px; padding:0 4px; }
+      body[data-nb] .file-bar .file-name { flex:1 1 auto; min-width:0; max-width:none; }
+      body[data-nb] .file-bar .file-state { flex:0 0 auto; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+      body[data-nb] .file-bar button { flex:none; white-space:nowrap; }
+    }
+    /* ---- Listening & Speaking evaluation keypad: bigger buttons that use the free height ---- */
+    body[data-nb] .dual-modal-content { box-sizing:border-box; max-height:calc(100vh - 16px); max-height:calc(100dvh - 16px); overflow-y:auto; }
+    body[data-nb] .dual-modal-content .eval-row-box { box-sizing:border-box; }
+    body[data-nb] .dual-modal-content .eval-btn-group { align-self:stretch; }
+    body[data-nb] .dual-modal-content .eval-key-btn { padding:0; font-size:19px; display:flex; align-items:center; justify-content:center; }
+    @media (max-width:600px) {
+      body[data-nb] .dual-modal-content .eval-row-box { min-height:clamp(30px, calc((100vh - 360px) / 10), 60px); min-height:clamp(30px, calc((100dvh - 360px) / 10), 60px); padding:3px 7px; margin-bottom:5px; }
+      body[data-nb] .dual-modal-content .eval-row-num { width:30px; height:30px; }
+    }
+    @media (min-width:601px) {
+      body[data-nb] .dual-modal-content { max-width:860px !important; }
+      body[data-nb] .dual-modal-content .eval-row-box { min-height:clamp(46px, calc((100vh - 340px) / 5 - 8px), 78px); min-height:clamp(46px, calc((100dvh - 340px) / 5 - 8px), 78px); padding:5px 10px; margin-bottom:8px; }
+      body[data-nb] .dual-modal-content .eval-btn-group { gap:8px; }
+      body[data-nb] .dual-modal-content .eval-key-btn { font-size:21px; }
+      body[data-nb] .dual-modal-content .eval-row-num { width:36px; height:36px; font-size:18px; }
+    }
   </style>
 </head>
 <body data-nb="attendance">
@@ -1578,7 +1602,7 @@
       <div class="start-error" id="start-error"></div>
       <p id="start-help">Either pick your Excel grade sheet (<span class="m">Reach</span>, <span class="m">Race</span>, <span class="m">Run</span>, or <span class="m">Start</span> — the file name tells the app which one it is), or create your own from scratch using <b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> New class</b>. Everything you enter is saved straight into that file.</p>
       <div class="start-note" id="start-note"></div>
-      <div class="hs-stamp" id="hs-stamp"><span id="hs-build">App build: 2026-10-24 b15</span><span class="sep"></span><span class="hs-native" id="hs-native"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" x2="2" y1="12" y2="12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><line x1="6" x2="6.01" y1="16" y2="16"/><line x1="10" x2="10.01" y1="16" y2="16"/></svg> <span id="hs-native-txt">native file access: ON</span></span></div>
+      <div class="hs-stamp" id="hs-stamp"><span id="hs-build">App build: 2026-10-25 b16</span><span class="sep"></span><span class="hs-native" id="hs-native"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" x2="2" y1="12" y2="12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><line x1="6" x2="6.01" y1="16" y2="16"/><line x1="10" x2="10.01" y1="16" y2="16"/></svg> <span id="hs-native-txt">native file access: ON</span></span></div>
     </footer>
     <input type="file" id="start-file-input" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" style="display:none;">
   </div>
