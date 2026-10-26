@@ -106,7 +106,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <link rel="icon" href="icon-256.png">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>Ultimate Grader V3.4</title>
+  <title>Ultimate Grader V1.08</title>
   <style>
     :root {
       --bg: #f0f2f5;
@@ -1582,6 +1582,61 @@
       body[data-nb] .dual-modal-content .eval-key-btn { font-size:21px; }
       body[data-nb] .dual-modal-content .eval-row-num { width:36px; height:36px; font-size:18px; }
     }
+
+    /* ===================== OVERVIEW tab ===================== */
+    body[data-nb="overview"] { --nb-tab:#a78bfa; --nb-page:#f6f3ff; --nb-row:#c4b5fd; --nb-dark:#6d28d9; --nb-tink:#0f172a; }
+    body[data-nb] #tab-ov-btn { --tc:#a78bfa; --tci:#0f172a; }
+    @media (max-width:600px) { body[data-nb] .nav-tab { flex:1 1 22%; } }
+    #ov-container { --ov-ink:var(--nb-ink); --ov-card:#ffffff; --ov-mut:#64748b; --ov-line:#e2e8f0; }
+    :root[data-theme="dark"] #ov-container { --ov-card:#1e293b; --ov-mut:#94a3b8; --ov-line:#334155; }
+    #ov-container .ov-grid { display:grid; grid-template-columns:1fr; gap:16px; }
+    @media (min-width:900px) { #ov-container .ov-grid { grid-template-columns:minmax(300px,380px) 1fr; align-items:start; } }
+    @media (max-width:899px) { #ov-container.ov-has-sel .ov-left { display:none; } #ov-container:not(.ov-has-sel) .ov-right { display:none; } }
+    #ov-container .ov-card { background:var(--ov-card); color:var(--ov-ink); border:2.5px solid var(--nb-line); border-radius:16px; box-shadow:var(--nb-sh); padding:14px; margin-bottom:16px; }
+    #ov-container .ov-h { margin:0 0 10px; font-size:12px; font-weight:900; letter-spacing:.1em; text-transform:uppercase; color:var(--ov-mut); display:flex; align-items:center; gap:8px; }
+    #ov-container .ov-h i { width:12px; height:12px; border-radius:50%; border:2px solid var(--nb-line); display:inline-block; }
+    #ov-container .ov-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:16px; }
+    #ov-container .ov-stat { background:var(--nb-row); color:#0f172a; border:2px solid var(--nb-line); border-radius:12px; box-shadow:var(--nb-sh-s); padding:8px 10px; text-align:center; }
+    #ov-container .ov-stat b { display:block; font-size:22px; line-height:1.1; }
+    #ov-container .ov-stat span { font-size:11px; font-weight:800; letter-spacing:.05em; text-transform:uppercase; }
+    #ov-container .ov-top { display:flex; align-items:center; gap:10px; padding:8px 10px; border:2px solid var(--nb-line); border-radius:12px; margin-bottom:8px; background:var(--nb-row); color:#0f172a; box-shadow:var(--nb-sh-s); cursor:pointer; width:100%; text-align:left; font:inherit; }
+    #ov-container .ov-top.first { background:#fde68a; padding:12px; }
+    #ov-container .ov-top.first .ov-nm { font-size:18px; }
+    #ov-container .ov-rank { flex:none; width:30px; height:30px; border-radius:50%; background:#0f172a; color:#fff; font-weight:900; display:flex; align-items:center; justify-content:center; }
+    #ov-container .ov-top.first .ov-rank { width:38px; height:38px; background:#d97706; font-size:18px; }
+    #ov-container .ov-nm { flex:1; min-width:0; font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    #ov-container .ov-pct { flex:none; font-weight:900; font-size:16px; }
+    #ov-container .ov-att { border:2px solid var(--nb-line); border-radius:12px; padding:10px; margin-bottom:8px; background:var(--ov-card); box-shadow:var(--nb-sh-s); cursor:pointer; width:100%; text-align:left; font:inherit; color:var(--ov-ink); display:block; }
+    #ov-container .ov-att-top { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+    #ov-container .ov-badge { flex:none; font-size:10px; font-weight:900; letter-spacing:.06em; text-transform:uppercase; padding:2px 8px; border-radius:999px; border:2px solid var(--nb-line); color:#0f172a; }
+    #ov-container .ov-chip { display:inline-block; margin:2px 4px 2px 0; padding:2px 8px; border-radius:8px; border:2px solid var(--nb-line); font-size:12px; font-weight:800; color:#0f172a; }
+    #ov-container .ov-note { font-size:12px; color:var(--ov-mut); font-weight:600; margin-top:2px; }
+    #ov-container .ov-stu { display:flex; align-items:center; gap:10px; width:100%; padding:7px 10px; margin-bottom:8px; border:2px solid var(--nb-line); border-radius:12px; background:var(--nb-row); color:#0f172a; box-shadow:var(--nb-sh-s); cursor:pointer; font:inherit; text-align:left; }
+    #ov-container .ov-stu:hover { transform:translate(-1px,-1px); box-shadow:4px 4px 0 var(--nb-shadow); }
+    #ov-container .ov-stu.sel { background:#fff; outline:3px solid var(--nb-dark); outline-offset:1px; }
+    #ov-container .ov-dots { display:flex; gap:3px; flex:none; }
+    #ov-container .ov-dots i { width:10px; height:10px; border-radius:50%; border:1.5px solid #0f172a; display:block; }
+    #ov-container .ov-back { margin-bottom:12px; }
+    #ov-container .ov-hd { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:6px; }
+    #ov-container .ov-hd h3 { margin:0; font-size:22px; flex:1; min-width:0; }
+    #ov-container .ov-big { font-size:34px; font-weight:900; line-height:1; }
+    #ov-container .ov-radar { display:block; width:100%; max-width:420px; margin:0 auto; }
+    #ov-container .ov-radar text { font-family:inherit; font-size:12px; font-weight:800; fill:var(--ov-ink); }
+    #ov-container .ov-leg { display:flex; gap:14px; justify-content:center; font-size:12px; font-weight:700; color:var(--ov-mut); margin-top:4px; flex-wrap:wrap; }
+    #ov-container .ov-leg i { display:inline-block; width:14px; height:10px; border:2px solid var(--nb-line); margin-right:5px; vertical-align:-1px; }
+    #ov-container .ov-area { border:2px solid var(--nb-line); border-radius:14px; padding:10px 12px; margin-bottom:10px; background:var(--ov-card); box-shadow:var(--nb-sh-s); }
+    #ov-container .ov-area-top { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    #ov-container .ov-area-top b { font-size:15px; flex:1; min-width:100px; }
+    #ov-container .ov-bar { position:relative; height:16px; border:2px solid var(--nb-line); border-radius:999px; background:var(--ov-line); margin:8px 0 4px; overflow:visible; }
+    #ov-container .ov-bar > span { position:absolute; left:0; top:0; bottom:0; border-radius:999px; }
+    #ov-container .ov-bar > em { position:absolute; top:-6px; bottom:-6px; width:3px; background:var(--ov-ink); border-radius:2px; }
+    #ov-container .ov-sub { display:grid; grid-template-columns:110px 1fr 40px; align-items:center; gap:8px; font-size:12px; font-weight:700; margin-top:6px; }
+    #ov-container .ov-sub .mini { height:10px; border:1.5px solid var(--nb-line); border-radius:999px; background:var(--ov-line); position:relative; overflow:hidden; }
+    #ov-container .ov-sub .mini span { position:absolute; left:0; top:0; bottom:0; }
+    #ov-container .ov-spark { display:block; width:100%; max-width:260px; height:46px; margin-top:6px; }
+    #ov-container .ov-spark text { font-family:inherit; font-size:9px; font-weight:700; fill:var(--ov-mut); }
+    #ov-container .ov-insight { font-size:13px; line-height:1.5; font-weight:600; }
+    #ov-container .ov-empty { text-align:center; color:var(--ov-mut); padding:40px 10px; font-weight:700; }
   </style>
 </head>
 <body data-nb="attendance">
@@ -1611,7 +1666,7 @@
       <div class="start-error" id="start-error"></div>
       <p id="start-help">Either pick your Excel grade sheet (<span class="m">Reach</span>, <span class="m">Race</span>, <span class="m">Run</span>, or <span class="m">Start</span> — the file name tells the app which one it is), or create your own from scratch using <b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> New class</b>. Everything you enter is saved straight into that file.</p>
       <div class="start-note" id="start-note"></div>
-      <div class="hs-stamp" id="hs-stamp"><span id="hs-build">App build: 2026-10-25 b17</span><span class="sep"></span><span class="hs-native" id="hs-native"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" x2="2" y1="12" y2="12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><line x1="6" x2="6.01" y1="16" y2="16"/><line x1="10" x2="10.01" y1="16" y2="16"/></svg> <span id="hs-native-txt">native file access: ON</span></span></div>
+      <div class="hs-stamp" id="hs-stamp"><span id="hs-build">App build: 2026-10-26 b18</span><span class="sep"></span><span class="hs-native" id="hs-native"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" x2="2" y1="12" y2="12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><line x1="6" x2="6.01" y1="16" y2="16"/><line x1="10" x2="10.01" y1="16" y2="16"/></svg> <span id="hs-native-txt">native file access: ON</span></span></div>
     </footer>
     <input type="file" id="start-file-input" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" style="display:none;">
   </div>
@@ -1738,6 +1793,7 @@
   <button class="nav-tab" id="tab-ls-btn" onclick="switchAppMode('lis_spe')">Lis & Spe</button>
   <button class="nav-tab" id="tab-writing-btn" onclick="switchAppMode('writing')">Writing</button>
   <button class="nav-tab" id="tab-quiz-btn" onclick="switchAppMode('quizzes')">Quizzes</button>
+  <button class="nav-tab" id="tab-ov-btn" onclick="switchAppMode('overview')">Overview</button>
 </div>
 
 <div id="nb-frame"><div id="nb-page">
@@ -1751,6 +1807,7 @@
   </div>
 </div>
 
+<div id="ov-container" style="display:none;"></div>
 <div class="container">
   <!-- Quick View Container -->
   <div id="quick-container">
@@ -3963,7 +4020,7 @@ const Offline = (function () {
     SHOW_LS_SUBTABS = Object.assign({}, v.showLsSubtabs);
     keypadProfiles = v.keypadProfiles;
     window.__variantLabel = v.label;
-    document.title = 'Ultimate Grader ' + v.label + ' V3.4';
+    document.title = 'Ultimate Grader ' + v.label + ' V1.08';
     document.documentElement.style.setProperty('--reading-cols', v.reading.cols.length);
 
     currentDictNo = 1; currentQuizNo = 1; currentQuizGroup = 0;
@@ -5943,7 +6000,7 @@ window.UG_TEMPLATES = {
     var free = document.createElement('div'); free.id = 'app-free'; free.setAttribute('aria-hidden', 'true');
     frame.parentNode.insertBefore(wrap, frame); wrap.appendChild(back); wrap.appendChild(frame); wrap.appendChild(front);
     document.body.insertBefore(free, document.body.firstChild);
-    var TAB = { attendance:'#f472b6', homework:'#a3e635', reading:'#60a5fa', lis_spe:'#2dd4aa', writing:'#fbbf24', quizzes:'#dc2626' };
+    var TAB = { attendance:'#f472b6', homework:'#a3e635', reading:'#60a5fa', lis_spe:'#2dd4aa', writing:'#fbbf24', quizzes:'#dc2626', overview:'#a78bfa' };
     var PAL = ['#fbbf24', '#818cf8', '#34d399', '#fb923c', '#f472b6', '#38bdf8'];
     // slots: [position, size, depth]  (free = fixed to the screen, back = behind the card, front = over the card corners)
     var FREE = [['left:-60px;top:15%',200,1.5],['right:-50px;top:9%',150,1.4],['left:4%;bottom:5%',92,1.3],['right:5%;bottom:4%',112,1.6],['left:42%;top:-40px',96,1.2],['right:-30px;top:54%',120,1.35],['left:-34px;top:64%',100,1.25],['left:28%;bottom:-34px',120,1.45]];
@@ -6001,6 +6058,213 @@ window.UG_TEMPLATES = {
     }
     new MutationObserver(clean).observe(t, { childList: true, characterData: true, subtree: true });
     clean();
+  })();
+</script>
+<script>
+  // ============================== OVERVIEW tab: class leaderboard, students needing attention, per-student charts ==============================
+  (function () {
+    var box = document.getElementById('ov-container'); if (!box) return;
+    var ovOn = false, sel = null, DATA = null;
+    var AREAS = [
+      { key: 'attendance', label: 'Attendance', color: '#f472b6' },
+      { key: 'homework',   label: 'Homework',   color: '#a3e635' },
+      { key: 'reading',    label: 'Reading',    color: '#60a5fa' },
+      { key: 'lis_spe',    label: 'Listening & Speaking', short: 'Lis & Spe', color: '#2dd4aa' },
+      { key: 'writing',    label: 'Writing',    color: '#fbbf24' },
+      { key: 'quizzes',    label: 'Quizzes',    color: '#ef4444' }
+    ];
+    function num(v) { if (v === '' || v === undefined || v === null) return null; var n = Number(v); return isNaN(n) ? null : Math.max(0, Math.min(100, n)); }
+    function avg(a) { return a.length ? a.reduce(function (x, y) { return x + y; }, 0) / a.length : null; }
+    function esc(t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+    function level(v) { return v >= 85 ? { t: 'Excellent', c: '#4ade80' } : v >= 70 ? { t: 'Good', c: '#bef264' } : v >= 55 ? { t: 'Needs work', c: '#fbbf24' } : { t: 'Critical', c: '#f87171' }; }
+    function R(v) { return Math.round(v); }
+
+    // ---- caches (they fill lazily, one per tab) ----
+    function cacheOf(k) { return { attendance: attCache, homework: hwCache, reading: readingCache, lis_spe: lsCache, writing: writingCache, quizzes: quizCache }[k]; }
+    var LOAD = {
+      attendance: ['getAttendanceData', function (d) { attCache = d; if (d && d.sessionList && d.sessionList.length) { var done = d.doneSessions || [], nx = d.sessionList.find(function (n) { return done.indexOf(n) === -1; }); d.activeSession = nx !== undefined ? nx : d.sessionList[d.sessionList.length - 1]; } }],
+      homework:   ['getAppData', function (d) { hwCache = d; if (d && d.sessionList && d.sessionList.length) d.activeSession = d.sessionList[0]; }],
+      reading:    ['getReadingData', function (d) { readingCache = d; if (d && d.sessionList && d.sessionList.length) d.activeSession = d.sessionList[0]; }],
+      lis_spe:    ['getListeningSpeakingData', function (d) { lsCache = d; if (d && d.sessionList && d.sessionList.length) d.activeSession = d.sessionList[0]; }],
+      writing:    ['getWritingData', function (d) { writingCache = d; if (d && d.sessionList && d.sessionList.length) d.activeSession = d.sessionList[0]; }],
+      quizzes:    ['getQuizData', function (d) { quizCache = d; }]
+    };
+    function ensureLoaded(done) {
+      var need = AREAS.filter(function (a) { return SHOW_TABS[a.key] && !cacheOf(a.key); }), left = need.length;
+      if (!left) return done();
+      need.forEach(function (a) {
+        var fin = function () { if (--left === 0) done(); };
+        try { google.script.run.withSuccessHandler(function (d) { LOAD[a.key][1](d); fin(); }).withFailureHandler(fin)[LOAD[a.key][0]](null); } catch (e) { fin(); }
+      });
+    }
+
+    // ---- per-area calculators: return { avg, pts:[{l,v}], subs:[{l,v}], note } or null ----
+    function getSt(cache, i, name) { if (!cache || !cache.students) return null; var s = cache.students[i]; if (s && s.name === name) return s; return cache.students.filter(function (x) { return x.name === name; })[0] || s || null; }
+    var CALC = {
+      attendance: function (c, st) {
+        var done = (c && c.doneSessions) || []; if (!st || !done.length) return null;
+        var pts = [], ab = 0, la = 0;
+        done.slice().sort(function (a, b) { return a - b; }).forEach(function (n) { var o = st.allSessions && st.allSessions[n], v = o ? o.status : ''; if (v === 'A') { ab++; pts.push({ l: 'S' + n, v: 0 }); } else if (v === 'L') { la++; pts.push({ l: 'S' + n, v: 50 }); } else pts.push({ l: 'S' + n, v: 100 }); });
+        return { avg: avg(pts.map(function (p) { return p.v; })), pts: pts, subs: [], note: ab + ' absent · ' + la + ' late · out of ' + done.length + ' finished sessions' };
+      },
+      homework: function (c, st) {
+        if (!c || !st) return null; var pts = [], missed = 0;
+        (c.sessionList || []).forEach(function (n) { var o = st.allSessions && st.allSessions[n], v = o ? o.score : ''; if (v === 'A') { missed++; return; } var x = num(v); if (x !== null) pts.push({ l: 'HW' + n, v: x }); });
+        if (!pts.length) return null; return { avg: avg(pts.map(function (p) { return p.v; })), pts: pts, subs: [], note: pts.length + ' homework scored' + (missed ? ' · absent on ' + missed : '') };
+      },
+      reading: function (c, st) {
+        if (!c || !st) return null; var cols = readingCfg().cols, acc = {}, pts = [];
+        (c.sessionList || []).forEach(function (n) { var o = (st.allSessions && st.allSessions[n]) || {}, vs = []; cols.forEach(function (k) { var x = num(o[k] && o[k].score); if (x !== null) { vs.push(x); (acc[k] = acc[k] || []).push(x); } }); if (vs.length) pts.push({ l: 'R' + n, v: avg(vs) }); });
+        if (!pts.length) return null;
+        return { avg: avg(pts.map(function (p) { return p.v; })), pts: pts, subs: cols.filter(function (k) { return acc[k]; }).map(function (k) { return { l: READING_LABELS[k].long, v: avg(acc[k]) }; }), note: pts.length + ' reading evaluations' };
+      },
+      lis_spe: function (c, st) {
+        if (!c || !st) return null; var keys = [];
+        if (SHOW_LS_SUBTABS.eval) keys.push(['l', 'Listening'], ['s', 'Speaking']); if (SHOW_LS_SUBTABS.describing) keys.push(['dec', 'Describing']); if (SHOW_LS_SUBTABS.dwork) keys.push(['dw', 'D-Work']); if (SHOW_LS_SUBTABS.conversation) keys.push(['conv', 'Conversation']);
+        var acc = {}, pts = [];
+        (c.sessionList || []).forEach(function (n) { var o = (st.allSessions && st.allSessions[n]) || {}, vs = []; keys.forEach(function (k) { var x = num(o[k[0]] && o[k[0]].score); if (x !== null) { vs.push(x); (acc[k[0]] = acc[k[0]] || []).push(x); } }); if (vs.length) pts.push({ l: 'LS' + n, v: avg(vs) }); });
+        if (!pts.length) return null;
+        return { avg: avg(pts.map(function (p) { return p.v; })), pts: pts, subs: keys.filter(function (k) { return acc[k[0]]; }).map(function (k) { return { l: k[1], v: avg(acc[k[0]]) }; }), note: pts.length + ' sessions evaluated' };
+      },
+      writing: function (c, st) {
+        if (!c || !st) return null; var wc = writingCfg(), acc = { m: [], nh: [], d: [] }, pts = [];
+        (c.sessionList || []).forEach(function (n) { var vs = [], m = num(st.allSessions && st.allSessions[n] && st.allSessions[n].score); if (m !== null) { vs.push(m); acc.m.push(m); } if (wc.nh) { var h = num(st.nh && st.nh[n] && st.nh[n].score); if (h !== null) { vs.push(h); acc.nh.push(h); } } if (vs.length) pts.push({ l: 'W' + n, v: avg(vs) }); });
+        var nt = numTabCfg(); for (var n = 1; n <= (nt.count || 0); n++) { var d = num(st.dict && st.dict[n]); if (d !== null) { acc.d.push(d); pts.push({ l: nt.short + n, v: d }); } }
+        if (!pts.length) return null; var subs = [];
+        if (acc.m.length) subs.push({ l: wc.short || 'S&Q', v: avg(acc.m) }); if (acc.nh.length) subs.push({ l: 'N&H', v: avg(acc.nh) }); if (acc.d.length) subs.push({ l: nt.label, v: avg(acc.d) });
+        return { avg: avg(subs.map(function (x) { return x.v; })), pts: pts, subs: subs, note: pts.length + ' writing scores' };
+      },
+      quizzes: function (c, st) {
+        if (!c || !st) return null; var gs = quizCfg().groups, subs = [], byN = {}, maxN = 0;
+        gs.forEach(function (g) { var vs = []; for (var n = 1; n <= g.count; n++) { var x = num(st.quiz && st.quiz[g.key] && st.quiz[g.key][n]); if (x !== null) { vs.push(x); (byN[n] = byN[n] || []).push(x); maxN = Math.max(maxN, n); } } if (vs.length) subs.push({ l: g.label, v: avg(vs) }); });
+        if (!subs.length) return null; var pts = []; for (var n = 1; n <= maxN; n++) if (byN[n]) pts.push({ l: 'Q' + n, v: avg(byN[n]) });
+        return { avg: avg(subs.map(function (x) { return x.v; })), pts: pts, subs: subs, note: pts.length + ' quizzes' };
+      }
+    };
+
+    function compute() {
+      var avail = AREAS.filter(function (a) { return SHOW_TABS[a.key] && cacheOf(a.key) && cacheOf(a.key).students; });
+      var baseCache = null; avail.forEach(function (a) { if (!baseCache) baseCache = cacheOf(a.key); });
+      var list = (baseCache ? baseCache.students : []).map(function (b, i) {
+        var o = { name: b.name, idx: i, areas: {} }, vals = [];
+        avail.forEach(function (a) { var r = CALC[a.key](cacheOf(a.key), getSt(cacheOf(a.key), i, b.name)); if (r && r.avg !== null) { o.areas[a.key] = r; vals.push(r.avg); } });
+        o.overall = vals.length ? avg(vals) : null; return o;
+      });
+      var used = avail.filter(function (a) { return list.some(function (s) { return s.areas[a.key]; }); });
+      var classAvg = {}; used.forEach(function (a) { var v = list.filter(function (s) { return s.areas[a.key]; }).map(function (s) { return s.areas[a.key].avg; }); classAvg[a.key] = avg(v); });
+      var ranked = list.filter(function (s) { return s.overall !== null; }).sort(function (a, b) { return b.overall - a.overall; });
+      ranked.forEach(function (s, i) { s.rank = i + 1; });
+      return { list: list, used: used, classAvg: classAvg, ranked: ranked };
+    }
+
+    // ---- SVG charts ----
+    function radar(used, vals, cls, accent) {
+      var n = used.length, cx = 170, cy = 150, Rr = 100, g = '';
+      function pt(i, r) { var a = -Math.PI / 2 + 2 * Math.PI * i / n; return [cx + Math.cos(a) * r, cy + Math.sin(a) * r]; }
+      [25, 50, 75, 100].forEach(function (p) { g += '<polygon points="' + used.map(function (_, i) { return pt(i, Rr * p / 100).join(','); }).join(' ') + '" fill="none" stroke="#94a3b8" stroke-width="' + (p === 100 ? 2 : 1) + '" opacity="' + (p === 100 ? .9 : .55) + '"/>'; });
+      used.forEach(function (_, i) { var q = pt(i, Rr); g += '<line x1="' + cx + '" y1="' + cy + '" x2="' + q[0] + '" y2="' + q[1] + '" stroke="#94a3b8" stroke-width="1" opacity=".6"/>'; });
+      g += '<polygon points="' + used.map(function (a, i) { return pt(i, Rr * (cls[a.key] || 0) / 100).join(','); }).join(' ') + '" fill="none" stroke="#475569" stroke-width="2.5" stroke-dasharray="6 5"/>';
+      g += '<polygon points="' + used.map(function (a, i) { return pt(i, Rr * (vals[a.key] || 0) / 100).join(','); }).join(' ') + '" fill="' + accent + '" fill-opacity=".45" stroke="#0f172a" stroke-width="3" stroke-linejoin="round"/>';
+      used.forEach(function (a, i) { var v = vals[a.key]; if (v == null) return; var q = pt(i, Rr * v / 100); g += '<circle cx="' + q[0] + '" cy="' + q[1] + '" r="5" fill="' + a.color + '" stroke="#0f172a" stroke-width="2.5"/>'; });
+      used.forEach(function (a, i) { var q = pt(i, Rr + 24), c = Math.cos(-Math.PI / 2 + 2 * Math.PI * i / n); g += '<text x="' + q[0] + '" y="' + (q[1] + 4) + '" text-anchor="' + (Math.abs(c) < .25 ? 'middle' : c > 0 ? 'start' : 'end') + '">' + esc(a.short || a.label) + '</text>'; });
+      [50, 100].forEach(function (p) { g += '<text x="' + (cx + 4) + '" y="' + (cy - Rr * p / 100 + 11) + '" style="font-size:9px;fill:#64748b">' + p + '</text>'; });
+      return '<svg class="ov-radar" viewBox="0 0 340 310" role="img" aria-label="Radar chart of the student\'s level in each area">' + g + '</svg>';
+    }
+    function spark(pts, color) {
+      if (pts.length < 2) return pts.length ? '<div class="ov-note">Only one score so far.</div>' : '';
+      var W = 260, H = 46, px = 8, py = 6, x = function (i) { return px + (W - 2 * px) * i / (pts.length - 1); }, y = function (v) { return H - py - (H - 2 * py) * v / 100; };
+      var d = pts.map(function (p, i) { return (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(p.v).toFixed(1); }).join(' ');
+      var dots = pts.map(function (p, i) { return '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(p.v).toFixed(1) + '" r="' + (i === pts.length - 1 ? 4 : 2.6) + '" fill="' + color + '" stroke="#0f172a" stroke-width="1.6"/>'; }).join('');
+      var half = '<line x1="' + px + '" x2="' + (W - px) + '" y1="' + y(50) + '" y2="' + y(50) + '" stroke="#94a3b8" stroke-dasharray="3 4" stroke-width="1"/>';
+      return '<svg class="ov-spark" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="xMinYMid meet" role="img" aria-label="Trend over time">' + half + '<path d="' + d + '" fill="none" stroke="#0f172a" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>' + dots + '</svg>';
+    }
+
+    // ---- views ----
+    function dotsFor(s, used) { return '<span class="ov-dots">' + used.map(function (a) { var r = s.areas[a.key]; return '<i style="background:' + (r ? level(r.avg).c : '#e2e8f0') + '" title="' + esc(a.label) + '"></i>'; }).join('') + '</span>'; }
+    function weakOf(s, used, classAvg) {
+      return used.filter(function (a) { return s.areas[a.key] && s.areas[a.key].avg < 70; }).sort(function (a, b) { return s.areas[a.key].avg - s.areas[b.key].avg; }).slice(0, 3).map(function (a) {
+        var r = s.areas[a.key], w = r.subs.length > 1 ? r.subs.slice().sort(function (x, y) { return x.v - y.v; })[0] : null;
+        return { a: a, v: r.avg, sub: w && w.v < 70 ? w : null };
+      });
+    }
+    function leftHtml(D) {
+      var h = '', n = D.ranked.length;
+      h += '<div class="ov-stats"><div class="ov-stat"><b>' + D.list.length + '</b><span>Students</span></div><div class="ov-stat"><b>' + (n ? R(avg(D.ranked.map(function (s) { return s.overall; }))) + '%' : '–') + '</b><span>Class average</span></div><div class="ov-stat"><b>' + D.used.length + '</b><span>Areas tracked</span></div></div>';
+      if (!n) return h + '<div class="ov-card ov-empty">No scores have been entered yet, so there is nothing to compare. Add some scores in the tabs and come back.</div>';
+      h += '<div class="ov-card"><p class="ov-h"><i style="background:#fbbf24"></i>Top of the class</p>';
+      D.ranked.slice(0, 3).forEach(function (s, i) { h += '<button class="ov-top' + (i === 0 ? ' first' : '') + '" data-ov="' + s.idx + '"><span class="ov-rank">' + s.rank + '</span><span class="ov-nm">' + esc(s.name) + '</span><span class="ov-pct">' + R(s.overall) + '%</span></button>'; });
+      h += '</div>';
+      var low = D.ranked.slice(-3).reverse(); if (n < 4) low = [];
+      h += '<div class="ov-card"><p class="ov-h"><i style="background:#f87171"></i>Need attention</p>';
+      if (!low.length) h += '<div class="ov-note">Needs at least four students with scores.</div>';
+      low.forEach(function (s) {
+        var lv = level(s.overall), wk = weakOf(s, D.used, D.classAvg), fine = s.overall >= 75;
+        h += '<button class="ov-att" data-ov="' + s.idx + '"><div class="ov-att-top"><span class="ov-nm" style="font-weight:800">' + esc(s.name) + '</span><span class="ov-badge" style="background:' + (fine ? '#bef264' : lv.c) + '">' + (fine ? 'Lowest in class' : lv.t) + '</span><span class="ov-pct">' + R(s.overall) + '%</span></div>';
+        if (fine) h += '<div class="ov-note">Still doing well overall. Nothing urgent.</div>';
+        else if (!wk.length) h += '<div class="ov-note">No single area is below 70%.</div>';
+        else wk.forEach(function (w) { h += '<span class="ov-chip" style="background:' + w.a.color + '">' + esc(w.a.short || w.a.label) + ' ' + R(w.v) + '%' + (w.sub ? ' · ' + esc(w.sub.l) + ' ' + R(w.sub.v) + '%' : '') + '</span>'; });
+        h += '</button>';
+      });
+      h += '</div><div class="ov-card"><p class="ov-h"><i style="background:#a78bfa"></i>All students</p>';
+      D.list.forEach(function (s) { h += '<button class="ov-stu' + (sel === s.idx ? ' sel' : '') + '" data-ov="' + s.idx + '"><span class="ov-rank" style="background:#0f172a;color:#fff;width:28px;height:28px;font-size:13px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none">' + (s.rank || '–') + '</span><span class="ov-nm">' + esc(s.name) + '</span>' + dotsFor(s, D.used) + '<span class="ov-pct">' + (s.overall === null ? '–' : R(s.overall) + '%') + '</span></button>'; });
+      return h + '</div>';
+    }
+    function rightHtml(D) {
+      var s = D.list[sel]; if (!s) return '<div class="ov-card ov-empty">Pick a student to see their charts.</div>';
+      var h = '<button class="action-badge ov-back" data-ovback="1" type="button">← All students</button>';
+      if (s.overall === null) return h + '<div class="ov-card ov-empty">' + esc(s.name) + ' has no scores yet.</div>';
+      var lv = level(s.overall), vals = {}; D.used.forEach(function (a) { if (s.areas[a.key]) vals[a.key] = s.areas[a.key].avg; });
+      var ar = D.used.filter(function (a) { return s.areas[a.key]; }), sorted = ar.slice().sort(function (a, b) { return s.areas[b.key].avg - s.areas[a.key].avg; });
+      h += '<div class="ov-card"><div class="ov-hd"><h3>' + esc(s.name) + '</h3><span class="ov-badge" style="background:' + lv.c + '">' + lv.t + '</span><span class="ov-big">' + R(s.overall) + '%</span></div>';
+      h += '<div class="ov-note">Rank ' + s.rank + ' of ' + D.ranked.length + ' · class average ' + R(avg(D.ranked.map(function (x) { return x.overall; }))) + '%</div></div>';
+      if (ar.length >= 3) h += '<div class="ov-card"><p class="ov-h">Strengths and weak spots</p>' + radar(ar, vals, D.classAvg, '#a78bfa') + '<div class="ov-leg"><span><i style="background:#a78bfa"></i>' + esc(s.name.split(' ')[0]) + '</span><span><i style="background:transparent;border-style:dashed"></i>Class average</span></div></div>';
+      var best = sorted[0], worst = sorted[sorted.length - 1], ins = '';
+      if (ar.length > 1) { ins = 'Strongest area: <b>' + esc(best.label) + '</b> (' + R(vals[best.key]) + '%). '; if (vals[worst.key] < 70) ins += 'Needs attention: <b>' + esc(worst.label) + '</b> (' + R(vals[worst.key]) + '%, class average ' + R(D.classAvg[worst.key]) + '%).'; else ins += 'No area is below 70%.'; }
+      if (ins) h += '<div class="ov-card"><p class="ov-h">In short</p><div class="ov-insight">' + ins + '</div></div>';
+      sorted.forEach(function (a) {
+        var r = s.areas[a.key], v = r.avg, l = level(v), ca = D.classAvg[a.key];
+        h += '<div class="ov-area"><div class="ov-area-top"><i style="width:14px;height:14px;border-radius:4px;border:2px solid var(--nb-line);background:' + a.color + '"></i><b>' + esc(a.label) + '</b><span class="ov-badge" style="background:' + l.c + '">' + l.t + '</span><span class="ov-pct">' + R(v) + '%</span></div>';
+        h += '<div class="ov-bar"><span style="width:' + v + '%;background:' + a.color + '"></span><em style="left:calc(' + ca + '% - 1px)" title="Class average"></em></div><div class="ov-note">The black marker is the class average (' + R(ca) + '%). ' + esc(r.note) + '</div>';
+        r.subs.length > 1 && r.subs.forEach(function (x) { h += '<div class="ov-sub"><span>' + esc(x.l) + '</span><span class="mini"><span style="width:' + x.v + '%;background:' + level(x.v).c + '"></span></span><span>' + R(x.v) + '%</span></div>'; });
+        h += spark(r.pts, a.color) + '</div>';
+      });
+      return h;
+    }
+    function render() {
+      if (!ovOn) return; DATA = compute();
+      box.classList.toggle('ov-has-sel', sel !== null && !!DATA.list[sel]);
+      box.innerHTML = '<div class="ov-grid"><div class="ov-left">' + leftHtml(DATA) + '</div><div class="ov-right">' + rightHtml(DATA) + '</div></div>';
+    }
+    box.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-ov],[data-ovback]'); if (!b) return;
+      if (b.hasAttribute('data-ovback')) sel = null; else sel = Number(b.getAttribute('data-ov'));
+      render(); box.scrollIntoView({ block: 'start' });
+    });
+
+    // ---- tab switching ----
+    var orig = window.switchAppMode;
+    function hide() {
+      ovOn = false; box.style.display = 'none';
+      var c = document.querySelector('.container'); if (c) c.style.display = '';
+      var nb = document.querySelector('.header-bar .nav-buttons'); if (nb) nb.style.display = '';
+      var sb = document.getElementById('ls-subtabs-bar'); if (sb) sb.style.display = '';
+      document.getElementById('tab-ov-btn').classList.remove('active');
+    }
+    function show() {
+      ovOn = true; sel = null;
+      document.querySelectorAll('.nav-tab').forEach(function (b) { b.classList.remove('active'); });
+      document.getElementById('tab-ov-btn').classList.add('active');
+      document.body.setAttribute('data-nb', 'overview');
+      document.getElementById('app-title').textContent = 'Class Overview';
+      var c = document.querySelector('.container'); if (c) c.style.display = 'none';
+      var nb = document.querySelector('.header-bar .nav-buttons'); if (nb) nb.style.display = 'none';
+      var sb = document.getElementById('ls-subtabs-bar'); if (sb) sb.style.display = 'none';
+      var fin = document.getElementById('hw-finalize-container'); if (fin) fin.style.display = 'none';
+      box.style.display = 'block'; box.className = ''; box.innerHTML = '<div class="ov-empty">Collecting scores from every tab…</div>';
+      ensureLoaded(render);
+    }
+    window.switchAppMode = function (mode) { if (mode === 'overview') { show(); return; } if (ovOn) hide(); return orig.apply(this, arguments); };
+    window.ovRefresh = render;
   })();
 </script>
 </body>
