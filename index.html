@@ -8,11 +8,12 @@
   <script>
     // light / dark: remembered on this device; applied before anything is drawn so there is no flash
     (function () {
-      var t = 'light';
-      try { if (localStorage.getItem('ug_theme') === 'dark') t = 'dark'; } catch (e) {}
+      var t = 'light', k = 'classic';
+      try { if (localStorage.getItem('ug_theme') === 'dark') t = 'dark'; if (localStorage.getItem('ug_skin') === 'elegant') k = 'elegant'; } catch (e) {}
       document.documentElement.setAttribute('data-theme', t);
+      document.documentElement.setAttribute('data-skin', k);
       var m = document.querySelector('meta[name="theme-color"]');
-      if (m) m.setAttribute('content', t === 'dark' ? '#0f1623' : '#2563eb');
+      if (m) m.setAttribute('content', k === 'elegant' ? (t === 'dark' ? '#14120f' : '#f4f1ea') : (t === 'dark' ? '#0f1623' : '#2563eb'));
     })();
   </script>
   <script>
@@ -106,7 +107,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <link rel="icon" href="icon-256.png">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>Ultimate Grader V1.08</title>
+  <title>Ultimate Grader V3.4</title>
   <style>
     :root {
       --bg: #f0f2f5;
@@ -1105,26 +1106,26 @@
     /* dark mode: the section colours are set per section by the app, so deepen them a little to keep the white file names readable */
     :root[data-theme="dark"] .lib-file { background-image: linear-gradient(rgba(0,0,0,.22), rgba(0,0,0,.22)) !important; }
     #theme-toggle-btn { position: absolute; top: 12px; left: 12px; z-index: 2; background: var(--bg-ffffff); color: var(--secondary); border: 1px solid var(--bd-cbd5e1); border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: bold; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
-    #about-open-btn {
+    #settings-open-btn {
       position: absolute; top: 12px; right: 12px; z-index: 2;
       background: var(--bg-ffffff); color: var(--secondary); border: 1px solid var(--bd-cbd5e1); border-radius: 999px;
       padding: 6px 12px; font-size: 13px; font-weight: bold; cursor: pointer;
       box-shadow: 0 1px 4px rgba(0,0,0,0.08);
     }
-    #about-overlay {
+    #settings-overlay {
       position: fixed; inset: 0; z-index: 10001; background: var(--scrim);
       display: none; align-items: center; justify-content: center; padding: 16px; box-sizing: border-box;
     }
-    #about-overlay .about-card {
+    #settings-overlay .about-card {
       background: var(--bg-ffffff); border-radius: 16px; width: 100%; max-width: 620px; max-height: 100%;
       display: flex; flex-direction: column; box-shadow: 0 8px 32px rgba(0,0,0,0.25); overflow: hidden;
     }
-    #about-overlay .about-head {
+    #settings-overlay .about-head {
       display: flex; align-items: center; justify-content: space-between;
       padding: 14px 18px; border-bottom: 1px solid var(--bd-e5e7eb);
     }
-    #about-overlay .about-head h2 { margin: 0; font-size: 18px; }
-    #about-close-btn {
+    #settings-overlay .about-head h2 { margin: 0; font-size: 18px; }
+    #settings-close-btn {
       border: none; background: var(--bg-e2e8f0); color: var(--text); width: 34px; height: 34px;
       border-radius: 50%; font-size: 16px; font-weight: bold; cursor: pointer;
     }
@@ -1243,7 +1244,7 @@
     [data-ico] { display: inline-flex; align-items: center; justify-content: center; gap: .5em; }
     [data-ico] .ic { width: 1.25em; height: 1.25em; flex: none; }
     [data-ico] .tx { display: block; line-height: 1.2; }
-    #file-switch-btn { padding-left: 11px; padding-right: 11px; }
+    #file-switch-btn, #file-settings-btn { padding-left: 11px; padding-right: 11px; }
     #start-overlay .big-btn[data-ico] { display: flex; width: 100%; }
 
     /* ---- text centred by cap height / x-height: identical on every phone and tablet (needs a current Android WebView) ---- */
@@ -1301,20 +1302,20 @@
     }
 
     /* ---- home screen: minimal neutral colours, same chunky style; the library keeps its section colours ---- */
-    #start-overlay, #newclass-overlay, #about-overlay {
+    #start-overlay, #newclass-overlay, #settings-overlay {
       --h-page:#f1f1f1; --h-card:#ffffff; --h-ink:#1b1b1b; --h-sub:#5d5d5d; --h-btn:#2b2b2b; --h-btn-ink:#ffffff; --h-btn2:#e9e9e9; --h-line:#8c8c8c; --h-shadow:#0d0d0d; --h-field:#f6f6f6; }
-    :root[data-theme="dark"] #start-overlay, :root[data-theme="dark"] #newclass-overlay, :root[data-theme="dark"] #about-overlay {
+    :root[data-theme="dark"] #start-overlay, :root[data-theme="dark"] #newclass-overlay, :root[data-theme="dark"] #settings-overlay {
       --h-page:#121212; --h-card:#1e1e1e; --h-ink:#f1f1f1; --h-sub:#ababab; --h-btn:#e7e7e7; --h-btn-ink:#111111; --h-btn2:#2d2d2d; --h-line:#666666; --h-shadow:#000000; --h-field:#161616; }
     #start-overlay { background: var(--h-page); color: var(--h-ink); }
-    #start-overlay .start-card, #newclass-overlay .nc-card, #about-overlay .about-card { background: var(--h-card); color: var(--h-ink); border: 2px solid var(--h-line); border-radius: 22px; box-shadow: 5px 5px 0 var(--h-shadow); }
-    #start-overlay h1, #newclass-overlay h2, #about-overlay .about-head h2 { color: var(--h-ink); }
+    #start-overlay .start-card, #newclass-overlay .nc-card, #settings-overlay .about-card { background: var(--h-card); color: var(--h-ink); border: 2px solid var(--h-line); border-radius: 22px; box-shadow: 5px 5px 0 var(--h-shadow); }
+    #start-overlay h1, #newclass-overlay h2, #settings-overlay .about-head h2 { color: var(--h-ink); }
     #start-overlay p, #newclass-overlay label, #start-overlay .start-note, #nc-count, .lib-vsec-name, .lib-sec-name { color: var(--h-sub); }
-    #start-overlay .big-btn, #newclass-overlay .nc-actions button, #theme-toggle-btn, #about-open-btn, .lib-toggle, .lib-mini {
+    #start-overlay .big-btn, #newclass-overlay .nc-actions button, #theme-toggle-btn, #settings-open-btn, .lib-toggle, .lib-mini {
       background: var(--h-btn2); color: var(--h-ink); border: 2px solid var(--h-line); border-radius: 13px; box-shadow: 3px 3px 0 var(--h-shadow); font-weight: 700; }
     #start-overlay #start-open-btn, #newclass-overlay .nc-actions button.primary, .lib-toggle.done { background: var(--h-btn); color: var(--h-btn-ink); }
-    #theme-toggle-btn, #about-open-btn { border-radius: 999px; box-shadow: 2px 2px 0 var(--h-shadow); }
+    #theme-toggle-btn, #settings-open-btn { border-radius: 999px; box-shadow: 2px 2px 0 var(--h-shadow); }
     .lib-mini { box-shadow: 2px 2px 0 var(--h-shadow); border-radius: 10px; }
-    #start-overlay .big-btn:active, #newclass-overlay .nc-actions button:active, .lib-toggle:active, .lib-mini:active, #theme-toggle-btn:active, #about-open-btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--h-shadow); }
+    #start-overlay .big-btn:active, #newclass-overlay .nc-actions button:active, .lib-toggle:active, .lib-mini:active, #theme-toggle-btn:active, #settings-open-btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--h-shadow); }
     #newclass-overlay input, #newclass-overlay select, #newclass-overlay textarea, .lib-term select, .lib-hex { background: var(--h-field); color: var(--h-ink); border: 2px solid var(--h-line); border-radius: 12px; }
     .lib-title, .lib-title select { color: var(--h-ink); }
     .lib-file { border: 2px solid var(--h-line); border-radius: 12px; box-shadow: 3px 3px 0 var(--h-shadow); padding: 10px 12px; }
@@ -1345,14 +1346,14 @@
     }
     @media (min-width:640px) { #start-overlay { padding:24px; } }
     #start-overlay .hs-top { width:100%; max-width:576px; display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; user-select:none; }
-    #start-overlay #theme-toggle-btn, #start-overlay #about-open-btn {
+    #start-overlay #theme-toggle-btn, #start-overlay #settings-open-btn {
       position:static; display:inline-flex; align-items:center; gap:8px; padding:6px 14px; background:var(--hs-pill); color:var(--hs-pill-ink);
       font-size:12px; font-weight:700; font-family:inherit; border:2px solid var(--hs-bd); border-radius:999px; box-shadow:2px 2px 0 var(--hs-sh); cursor:pointer; transition:all .15s cubic-bezier(.16,1,.3,1);
     }
-    #start-overlay #theme-toggle-btn .ic, #start-overlay #about-open-btn .ic { width:14px; height:14px; stroke-width:2.5; }
+    #start-overlay #theme-toggle-btn .ic, #start-overlay #settings-open-btn .ic { width:14px; height:14px; stroke-width:2.5; }
     #start-overlay #theme-toggle-btn .ic { color:var(--hs-moon); }
-    #start-overlay #about-open-btn .ic { color:#334155; }
-    :root[data-theme="dark"] #start-overlay #about-open-btn .ic { color:#cbd5e1; }
+    #start-overlay #settings-open-btn .ic { color:#334155; }
+    :root[data-theme="dark"] #start-overlay #settings-open-btn .ic { color:#cbd5e1; }
     #start-overlay .hs-live { display:none; align-items:center; gap:6px; padding:4px 10px; border-radius:999px; background:#d1fae5; border:1px solid rgba(16,185,129,.4); color:#065f46; font-size:11px; font-weight:600; }
     :root[data-theme="dark"] #start-overlay .hs-live { background:rgba(2,44,34,.6); color:#6ee7b7; }
     @media (min-width:640px) { #start-overlay .hs-live.on { display:flex; } }
@@ -1382,7 +1383,7 @@
     :root:not([data-theme="dark"]) #start-overlay #start-open-btn { background:#3b4656; border-color:#0f172a; box-shadow:3.5px 3.5px 0 #0f172a; }
     #start-overlay #start-open-btn .ic { color:var(--hs-open-ico); width:16px; height:16px; stroke-width:2; }
     #start-overlay #start-new-btn .ic { color:var(--hs-plus); width:16px; height:16px; stroke-width:3; }
-    #start-overlay .big-btn:active, #start-overlay #theme-toggle-btn:active, #start-overlay #about-open-btn:active, #start-overlay .lib-toggle:active { transform:translate(2px,2px); box-shadow:1px 1px 0 var(--hs-sh); }
+    #start-overlay .big-btn:active, #start-overlay #theme-toggle-btn:active, #start-overlay #settings-open-btn:active, #start-overlay .lib-toggle:active { transform:translate(2px,2px); box-shadow:1px 1px 0 var(--hs-sh); }
     #start-overlay #lib-box { margin-top:0; }
     /* term bar */
     #start-overlay .hs-term { display:flex; align-items:center; justify-content:space-between; padding-bottom:14px; margin-bottom:16px; border-bottom:2px solid var(--hs-line); }
@@ -1451,8 +1452,8 @@
     :root[data-theme="dark"] #start-overlay #start-open-btn:hover { background:#ffffff; }
     #start-overlay #start-new-btn:hover { background:#e2e8f0; }
     :root[data-theme="dark"] #start-overlay #start-new-btn:hover { background:rgba(51,65,85,.8); }
-    #start-overlay #theme-toggle-btn:hover, #start-overlay #about-open-btn:hover { background:#f8fafc; }
-    :root[data-theme="dark"] #start-overlay #theme-toggle-btn:hover, :root[data-theme="dark"] #start-overlay #about-open-btn:hover { background:#273449; }
+    #start-overlay #theme-toggle-btn:hover, #start-overlay #settings-open-btn:hover { background:#f8fafc; }
+    :root[data-theme="dark"] #start-overlay #theme-toggle-btn:hover, :root[data-theme="dark"] #start-overlay #settings-open-btn:hover { background:#273449; }
     #start-overlay .lib-toggle:hover { background:#f1f5f9; }
     :root[data-theme="dark"] #start-overlay .lib-toggle:hover { background:#334155; }
     #start-overlay .lib-vsec .lib-file:hover .hs-fn { text-decoration:underline; }
@@ -1637,6 +1638,364 @@
     #ov-container .ov-spark text { font-family:inherit; font-size:9px; font-weight:700; fill:var(--ov-mut); }
     #ov-container .ov-insight { font-size:13px; line-height:1.5; font-weight:600; }
     #ov-container .ov-empty { text-align:center; color:var(--ov-mut); padding:40px 10px; font-weight:700; }
+
+    /* ---- Overview: share buttons ---- */
+    #ov-container .ov-top-row { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px; }
+    #ov-container .ov-top-row .ov-back { margin-bottom:0; }
+    #ov-container .ov-share { display:inline-flex; align-items:center; justify-content:center; gap:.5em; cursor:pointer; }
+    #ov-container .ov-share .ic { width:1.25em; height:1.25em; flex:none; }
+    #ov-container .ov-share-class { width:100%; margin-bottom:16px; padding:11px 12px; }
+
+
+    /* ===================== SETTINGS (gear button, Appearance, About) ===================== */
+    #start-overlay .hs-sp { width:36px; height:36px; flex:none; }
+    #start-overlay #settings-open-btn { width:36px; height:36px; padding:0; justify-content:center; gap:0; }
+    #start-overlay #settings-open-btn .ic { width:18px; height:18px; stroke-width:2.2; color:var(--hs-pill-ink); }
+    #settings-overlay .about-card { height:min(660px, 100%); }
+    .set-tabs { display:flex; gap:8px; padding:12px 18px 0; flex:none; }
+    .set-tab { flex:1; font:inherit; font-weight:700; font-size:14px; padding:10px 10px; border:2px solid var(--h-line); border-radius:12px; background:var(--h-btn2); color:var(--h-ink); box-shadow:2px 2px 0 var(--h-shadow); cursor:pointer; }
+    .set-tab.active { background:var(--h-btn); color:var(--h-btn-ink); }
+    .set-tab:active { transform:translate(1px,1px); box-shadow:1px 1px 0 var(--h-shadow); }
+    .set-panes { flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:4px 20px 22px; color:var(--h-ink); }
+    .set-pane[hidden] { display:none; }
+    .set-panes #about-body { overflow:visible; padding:10px 0 0; }
+    .set-h { margin:20px 0 10px; font-size:12px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:var(--h-sub); }
+    .set-row { display:flex; align-items:center; gap:14px; padding:12px 14px; border:2px solid var(--h-line); border-radius:14px; background:var(--h-field); }
+    .set-row .set-txt { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+    .set-row .set-txt b { font-size:15px; color:var(--h-ink); }
+    .set-row .set-txt span { font-size:12.5px; font-weight:500; color:var(--h-sub); }
+    .set-switch { flex:none; width:54px; height:32px; padding:0; border-radius:999px; border:2px solid var(--h-line); background:var(--h-btn2); position:relative; cursor:pointer; transition:background .18s; }
+    .set-switch i { position:absolute; top:3px; left:3px; width:22px; height:22px; border-radius:50%; background:var(--h-sub); transition:transform .18s, background .18s; }
+    .set-switch[aria-checked="true"] { background:var(--h-btn); }
+    .set-switch[aria-checked="true"] i { transform:translateX(22px); background:var(--h-btn-ink); }
+    .set-themes { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .set-theme { position:relative; display:flex; flex-direction:column; align-items:stretch; gap:3px; padding:10px; font:inherit; text-align:left; border:2px solid var(--h-line); border-radius:16px; background:var(--h-field); color:var(--h-ink); cursor:pointer; }
+    .set-theme > b { font-size:15px; margin-top:6px; }
+    .set-theme > .d { font-size:12px; font-weight:500; color:var(--h-sub); line-height:1.3; }
+    .set-theme.on { border-color:var(--h-ink); box-shadow:3px 3px 0 var(--h-shadow); }
+    .set-theme .chk { position:absolute; top:16px; right:16px; width:24px; height:24px; border-radius:50%; background:var(--h-btn); color:var(--h-btn-ink); display:none; align-items:center; justify-content:center; font-style:normal; }
+    .set-theme.on .chk { display:flex; }
+    .set-prev { display:block; position:relative; height:92px; border-radius:10px; overflow:hidden; }
+    .set-prev i, .set-prev u, .set-prev s { position:absolute; display:block; text-decoration:none; }
+    .set-prev i { top:10px; width:30px; height:14px; border-radius:6px 6px 0 0; }
+    .set-prev i.a { left:10px; } .set-prev i.b { left:44px; } .set-prev i.c { left:78px; }
+    .set-prev u { left:7px; right:7px; top:24px; bottom:7px; border-radius:8px; }
+    .set-prev s { left:9px; right:9px; height:15px; border-radius:6px; }
+    .set-prev s:first-child { top:9px; } .set-prev s:last-child { top:30px; right:34px; }
+    .prev-classic { background:#f1f5f9; }
+    .prev-classic i { border:2px solid #0f172a; border-bottom:none; }
+    .prev-classic i.a { background:#f472b6; } .prev-classic i.b { background:#a3e635; } .prev-classic i.c { background:#60a5fa; }
+    .prev-classic u { background:#fff4fb; border:2px solid #0f172a; box-shadow:3px 3px 0 #0f172a; }
+    .prev-classic s { background:#f9a8d4; border:2px solid #0f172a; }
+    .prev-elegant { background:#f4f1ea; }
+    .prev-elegant i { background:#e8dfd9; border:1px solid rgba(74,56,30,.16); border-bottom:none; }
+    .prev-elegant i.a { background:#fffdf9; box-shadow:inset 0 2px 0 #c7899a; } .prev-elegant i.b { background:#ebe6da; } .prev-elegant i.c { background:#e4e8ee; }
+    .prev-elegant u { background:#fffdf9; border:1px solid rgba(74,56,30,.14); box-shadow:0 6px 14px rgba(60,45,20,.10); }
+    .prev-elegant s { background:#faf3f4; border:1px solid rgba(74,56,30,.10); }
+    @media (max-width:420px) { .set-themes { gap:9px; } .set-prev { height:78px; } }
+
+
+    /* =====================================================================================================
+       ELEGANT THEME  (Settings > Appearance > Elegant).  Same layout, same sizes, same buttons as Classic -
+       only the look changes: warm paper, hairline borders, soft shadows, refined serif titles, muted colours.
+       Everything is scoped to <html data-skin="elegant">, so Classic is untouched.
+       ===================================================================================================== */
+    :root[data-skin="elegant"] {
+      --e-bg:#f3f0e9; --e-paper:#fffdf8; --e-paper2:#f9f6ee; --e-ink:#26221c; --e-mut:#8a8173; --e-hair:rgba(74,56,30,.16); --e-hair2:rgba(74,56,30,.09);
+      --e-gold:#a8844a; --e-btn:#2a251e; --e-btn-ink:#fffaf0; --e-bad:#a8453a; --e-warn:#b0782c; --e-good:#4a8560;
+      --e-sh:0 1px 2px rgba(60,45,20,.05), 0 16px 38px rgba(60,45,20,.09); --e-sh-s:0 1px 2px rgba(60,45,20,.06), 0 4px 10px rgba(60,45,20,.05);
+      --e-pop:0 24px 60px rgba(40,30,12,.28);
+      --e-serif:Georgia, "Iowan Old Style", "Palatino Linotype", "Noto Serif", "UG Persian", serif;
+      --ug-font:"Inter", "SF Pro Text", "Segoe UI", Roboto, "UG Persian", system-ui, Arial, sans-serif;
+      color-scheme:light;
+      --bg:var(--e-bg); --card-bg:var(--e-paper); --text:var(--e-ink); --border:var(--e-hair); --secondary:var(--e-mut);
+      --primary:var(--e-btn); --primary-fg:var(--e-gold); --danger:#b5483d; --success:#4a8560; --warning:#b97f30;
+      --danger-fg:var(--e-bad); --success-fg:var(--e-good); --warning-fg:var(--e-warn);
+      --toast-bg:rgba(38,34,28,.94); --toast-fg:#fffaf0; --ring:rgba(168,132,74,.55); --scrim:rgba(38,30,16,.42);
+      --bd-0c0c0c: #26221c;
+      --bd-0f766e: #3d7e77;
+      --bd-12be85: #3f8792;
+      --bd-15803d: #4a7f59;
+      --bd-16a34a: #5f9a6f;
+      --bd-1d4ed8: #46628d;
+      --bd-2563eb: #5b79a8;
+      --bd-6ebe12: #7c9640;
+      --bd-7e22ce: #6f5393;
+      --bd-991b1b: #8f3d35;
+      --bd-a16207: #98772a;
+      --bd-b91c1c: #9d4339;
+      --bd-bbf7d0: color-mix(in srgb, #7fae8c 45%, var(--e-paper));
+      --bd-be123c: #9f3f50;
+      --bd-be1285: #a04b86;
+      --bd-bfdbfe: color-mix(in srgb, #7f9bc6 45%, var(--e-paper));
+      --bd-c2410c: #a8663d;
+      --bd-cbd5e1: var(--e-hair);
+      --bd-ccfbf1: color-mix(in srgb, #7fae8c 45%, var(--e-paper));
+      --bd-cdfeee: color-mix(in srgb, #7fae8c 45%, var(--e-paper));
+      --bd-d1d5db: var(--e-hair);
+      --bd-d97706: #c48a3c;
+      --bd-e1fecd: color-mix(in srgb, #7fae8c 45%, var(--e-paper));
+      --bd-e2e8f0: var(--e-hair);
+      --bd-e5e7eb: var(--e-hair);
+      --bd-e6cdfe: color-mix(in srgb, #9a8cc0 45%, var(--e-paper));
+      --bd-e9d5ff: color-mix(in srgb, #9a8cc0 45%, var(--e-paper));
+      --bd-ef4444: #c0564a;
+      --bd-fca5a5: color-mix(in srgb, #c97a6e 45%, var(--e-paper));
+      --bd-fdba74: color-mix(in srgb, #cfab5d 45%, var(--e-paper));
+      --bd-fecdd3: color-mix(in srgb, #c97a6e 45%, var(--e-paper));
+      --bd-fed7aa: color-mix(in srgb, #cfab5d 45%, var(--e-paper));
+      --bd-fef08a: color-mix(in srgb, #cfab5d 45%, var(--e-paper));
+      --bg-0d9488: #4f9a92;
+      --bg-15803d: #4a7f59;
+      --bg-16a34a: #5f9a6f;
+      --bg-1de1e1: #5aa7b3;
+      --bg-2563eb: #5b79a8;
+      --bg-4533ea: #5a55b5;
+      --bg-821de1: #7b5fb2;
+      --bg-86efac: color-mix(in srgb, #7fae8c 34%, var(--e-paper));
+      --bg-9333ea: #8a6bb0;
+      --bg-96e11d: #9bb552;
+      --bg-b8f1ce: color-mix(in srgb, #7fae8c 24%, var(--e-paper));
+      --bg-bbf7d0: color-mix(in srgb, #7fae8c 24%, var(--e-paper));
+      --bg-bddbfd: color-mix(in srgb, #7f9bc6 26%, var(--e-paper));
+      --bg-ca8a04: #c19a3f;
+      --bg-cbd5e1: color-mix(in srgb, var(--e-ink) 14%, var(--e-paper));
+      --bg-d5b1ff: color-mix(in srgb, #9a8cc0 24%, var(--e-paper));
+      --bg-d97706: #c48a3c;
+      --bg-daffb1: color-mix(in srgb, #7fae8c 24%, var(--e-paper));
+      --bg-dbeafe: color-mix(in srgb, #7f9bc6 20%, var(--e-paper));
+      --bg-dc2626: #c0564a;
+      --bg-dcfce7: color-mix(in srgb, #7fae8c 18%, var(--e-paper));
+      --bg-e0e7ff: color-mix(in srgb, #7f9bc6 14%, var(--e-paper));
+      --bg-e11d48: #bf5568;
+      --bg-e2e8f0: color-mix(in srgb, var(--e-ink) 9%, var(--e-paper));
+      --bg-e5e7eb: color-mix(in srgb, var(--e-ink) 8%, var(--e-paper));
+      --bg-ea580c: #c98255;
+      --bg-ecfdf5: color-mix(in srgb, #7fae8c 10%, var(--e-paper));
+      --bg-eff6ff: color-mix(in srgb, #7f9bc6 10%, var(--e-paper));
+      --bg-f0fdf4: color-mix(in srgb, #7fae8c 10%, var(--e-paper));
+      --bg-f0fdfa: color-mix(in srgb, #7fae8c 10%, var(--e-paper));
+      --bg-f1f8ff: color-mix(in srgb, #7f9bc6 10%, var(--e-paper));
+      --bg-f3f4f6: color-mix(in srgb, var(--e-ink) 5%, var(--e-paper));
+      --bg-f8fafc: var(--e-paper2);
+      --bg-f8fff1: color-mix(in srgb, #7fae8c 10%, var(--e-paper));
+      --bg-faf5ff: color-mix(in srgb, #9a8cc0 10%, var(--e-paper));
+      --bg-fee2e2: color-mix(in srgb, #c97a6e 18%, var(--e-paper));
+      --bg-fef08a: color-mix(in srgb, #cfab5d 28%, var(--e-paper));
+      --bg-fef2f2: color-mix(in srgb, #c97a6e 10%, var(--e-paper));
+      --bg-fef3c7: color-mix(in srgb, #cfab5d 20%, var(--e-paper));
+      --bg-fefce8: color-mix(in srgb, #cfab5d 10%, var(--e-paper));
+      --bg-ffedd5: color-mix(in srgb, #cfab5d 18%, var(--e-paper));
+      --bg-fff1f2: color-mix(in srgb, #c97a6e 10%, var(--e-paper));
+      --bg-fff5fb: color-mix(in srgb, #c7899a 10%, var(--e-paper));
+      --bg-fff7ed: color-mix(in srgb, #cfab5d 10%, var(--e-paper));
+      --bg-ffffff: var(--e-paper);
+      --fg-166534: color-mix(in srgb, #3f7a58 58%, var(--e-ink));
+      --fg-16a34a: color-mix(in srgb, #4c8a5e 62%, var(--e-ink));
+      --fg-1e293b: var(--e-ink);
+      --fg-1e3a8a: var(--e-ink);
+      --fg-1e40af: color-mix(in srgb, #5071a3 55%, var(--e-ink));
+      --fg-1f2937: var(--e-ink);
+      --fg-2563eb: color-mix(in srgb, #5071a3 60%, var(--e-ink));
+      --fg-374151: color-mix(in srgb, var(--e-mut) 30%, var(--e-ink));
+      --fg-475569: color-mix(in srgb, var(--e-mut) 70%, var(--e-ink));
+      --fg-4b5563: color-mix(in srgb, var(--e-mut) 70%, var(--e-ink));
+      --fg-6b7280: var(--e-mut);
+      --fg-92400e: color-mix(in srgb, #8a5a2a 60%, var(--e-ink));
+      --fg-94a3b8: var(--e-mut);
+      --fg-991b1b: color-mix(in srgb, #a8453a 60%, var(--e-ink));
+      --fg-9ca3af: var(--e-mut);
+      --fg-b45309: color-mix(in srgb, #9a6a2e 62%, var(--e-ink));
+      --fg-ca8a04: color-mix(in srgb, #a8812f 62%, var(--e-ink));
+      --fg-dc2626: color-mix(in srgb, #b44c40 62%, var(--e-ink));
+      --fg-ea580c: color-mix(in srgb, #b8733f 62%, var(--e-ink));
+      --fg-ffffff: #ffffff;
+    }
+    :root[data-skin="elegant"][data-theme="dark"] {
+      --e-bg:#12110f; --e-paper:#1b1916; --e-paper2:#211f1b; --e-ink:#eee8dc; --e-mut:#a69d8c; --e-hair:rgba(255,236,200,.14); --e-hair2:rgba(255,236,200,.08);
+      --e-gold:#c9a96e; --e-btn:#c9a96e; --e-btn-ink:#17130b; --e-bad:#e39587; --e-warn:#e2b46a; --e-good:#8cc5a0;
+      --e-sh:0 1px 2px rgba(0,0,0,.45), 0 18px 44px rgba(0,0,0,.5); --e-sh-s:0 1px 2px rgba(0,0,0,.45), 0 5px 12px rgba(0,0,0,.35);
+      --e-pop:0 28px 70px rgba(0,0,0,.6);
+      color-scheme:dark;
+      --toast-bg:rgba(238,232,220,.96); --toast-fg:#17130b; --ring:rgba(201,169,110,.6); --scrim:rgba(0,0,0,.66);
+      --danger:#d9786a; --success:#7dbb92; --warning:#d9a455;
+    }
+
+    /* ---------- page, frame, titles ---------- */
+    :root[data-skin="elegant"] body, :root[data-skin="elegant"] body[data-nb] { background-color:var(--e-bg); background-image:none; color:var(--e-ink); }
+    :root[data-skin="elegant"] body[data-nb] { --nb-ink:var(--e-ink); --nb-line:var(--e-hair); --nb-shadow:transparent; --nb-sh:var(--e-sh-s); --nb-sh-s:none; --nb-sh-press:none;
+      --nb-page:color-mix(in srgb, var(--nb-tab) 6%, var(--e-paper)); --nb-row:color-mix(in srgb, var(--nb-tab) 15%, var(--e-paper)); --nb-frame:color-mix(in srgb, var(--nb-tab) 21%, var(--e-paper));
+      --nb-dark:var(--e-btn); --nb-tink:var(--e-ink); --nb-prev:color-mix(in srgb, var(--nb-tab) 7%, var(--e-paper2)); }
+    :root[data-skin="elegant"] body[data-nb="attendance"] { --nb-tab:#c7899a; }
+    :root[data-skin="elegant"] body[data-nb="homework"]   { --nb-tab:#94ae83; }
+    :root[data-skin="elegant"] body[data-nb="reading"]    { --nb-tab:#7f9bc6; }
+    :root[data-skin="elegant"] body[data-nb="lis_spe"]    { --nb-tab:#5fa39a; }
+    :root[data-skin="elegant"] body[data-nb="writing"]    { --nb-tab:#cfab5d; }
+    :root[data-skin="elegant"] body[data-nb="quizzes"]    { --nb-tab:#c2705f; }
+    :root[data-skin="elegant"] body[data-nb="overview"]   { --nb-tab:#9a8cc0; }
+    :root[data-skin="elegant"] #app-free, :root[data-skin="elegant"] #app-back, :root[data-skin="elegant"] #app-front,
+    :root[data-skin="elegant"] #start-overlay .hs-free, :root[data-skin="elegant"] #start-overlay .hs-par { display:none !important; }
+    :root[data-skin="elegant"] body[data-nb] #nb-frame { background-color:var(--nb-page); background-image:none; border-radius:22px; box-shadow:0 0 0 1px var(--e-hair), var(--e-sh); }
+    :root[data-skin="elegant"] body[data-nb] h2, :root[data-skin="elegant"] body[data-nb] .header-bar h2 { font-family:var(--e-serif); font-weight:600; letter-spacing:-.01em; color:var(--e-ink); }
+    :root[data-skin="elegant"] body[data-nb] :is(.nav-tab, .student-name, .score-badge, .row-number, .sub-tab-btn, .session-done-btn, .action-badge, .finalize-btn, .file-bar button,
+      [class^="roster-header-"], .key-btn, .eval-key-btn, .att-key-btn, .np-grid button, .np-row button, .action-btn, .np-enter, .pad-next, .master-cell, .master-table th, .nr-pill, .pad-pill, .eval-row-num) { font-weight:500; }
+
+    /* ---------- tabs ---------- */
+    :root[data-skin="elegant"] body[data-nb] .nav-tab { background:color-mix(in srgb, var(--tc) 18%, var(--e-bg)); color:color-mix(in srgb, var(--e-ink) 78%, transparent); border:1px solid var(--e-hair); border-bottom:none;
+      border-radius:14px 14px 0 0; box-shadow:none; padding:12px 6px 11px; filter:none; letter-spacing:.01em; }
+    :root[data-skin="elegant"] body[data-nb] .nav-tab:hover { padding-bottom:14px; }
+    :root[data-skin="elegant"] body[data-nb] .nav-tab.active { background-color:var(--nb-page); background-image:none; color:var(--e-ink); font-weight:600; box-shadow:inset 0 3px 0 var(--tc); padding:12px 6px 11px; }
+    :root[data-skin="elegant"] body[data-nb] #tab-att-btn     { --tc:#c7899a; --tci:var(--e-ink); }
+    :root[data-skin="elegant"] body[data-nb] #tab-hw-btn      { --tc:#94ae83; --tci:var(--e-ink); }
+    :root[data-skin="elegant"] body[data-nb] #tab-reading-btn { --tc:#7f9bc6; --tci:var(--e-ink); }
+    :root[data-skin="elegant"] body[data-nb] #tab-ls-btn      { --tc:#5fa39a; --tci:var(--e-ink); }
+    :root[data-skin="elegant"] body[data-nb] #tab-writing-btn { --tc:#cfab5d; --tci:var(--e-ink); }
+    :root[data-skin="elegant"] body[data-nb] #tab-quiz-btn    { --tc:#c2705f; --tci:var(--e-ink); }
+    :root[data-skin="elegant"] body[data-nb] #tab-ov-btn      { --tc:#9a8cc0; --tci:var(--e-ink); }
+    @media (max-width:600px) {
+      :root[data-skin="elegant"] body[data-nb] .nav-tab { border:1px solid var(--e-hair); border-radius:12px; box-shadow:none; padding:10px 4px; background:color-mix(in srgb, var(--tc) 14%, var(--e-paper)); }
+      :root[data-skin="elegant"] body[data-nb] .nav-tab:hover { padding:10px 4px; }
+      :root[data-skin="elegant"] body[data-nb] .nav-tab.active { background:color-mix(in srgb, var(--tc) 38%, var(--e-paper)); box-shadow:0 0 0 1.5px var(--tc); transform:none; padding:10px 4px; font-weight:600; }
+    }
+
+    /* ---------- file bar, buttons ---------- */
+    :root[data-skin="elegant"] body[data-nb] .file-bar button { background:var(--e-paper); color:var(--e-ink); border:1px solid var(--e-hair); border-radius:999px; box-shadow:var(--e-sh-s); }
+    :root[data-skin="elegant"] body[data-nb] .file-bar button.primary { background:var(--e-btn); color:var(--e-btn-ink); border-color:transparent; }
+    :root[data-skin="elegant"] body[data-nb] .file-bar button:hover, :root[data-skin="elegant"] body[data-nb] .action-badge:hover, :root[data-skin="elegant"] body[data-nb] .finalize-btn:hover { transform:none; box-shadow:var(--e-sh); }
+    :root[data-skin="elegant"] body[data-nb] .file-bar button:active, :root[data-skin="elegant"] body[data-nb] .action-badge:active, :root[data-skin="elegant"] body[data-nb] .finalize-btn:active { transform:scale(.97); box-shadow:var(--e-sh-s); }
+    :root[data-skin="elegant"] body[data-nb] .action-badge, :root[data-skin="elegant"] body[data-nb] .finalize-btn { background:var(--e-btn) !important; color:var(--e-btn-ink) !important; border:1px solid transparent; border-radius:10px; box-shadow:var(--e-sh-s); letter-spacing:.01em; }
+    :root[data-skin="elegant"] body[data-nb] .finalize-btn { letter-spacing:.02em; }
+    :root[data-skin="elegant"] body[data-nb] .sub-tab-btn { background:var(--e-paper); color:color-mix(in srgb, var(--e-ink) 80%, transparent); border:1px solid var(--e-hair); border-radius:10px; box-shadow:none; }
+    :root[data-skin="elegant"] body[data-nb] .sub-tab-btn.active-sub { background:var(--e-btn); color:var(--e-btn-ink); border-color:transparent; box-shadow:var(--e-sh-s); }
+    :root[data-skin="elegant"] body[data-nb] .session-done-btn { background:var(--e-paper); color:var(--e-ink); border:1px solid var(--e-hair); border-radius:10px; box-shadow:none; }
+    :root[data-skin="elegant"] body[data-nb] .session-done-btn.done { background:color-mix(in srgb, var(--nb-tab) 30%, var(--e-paper)); color:var(--e-ink); border-color:var(--nb-tab); }
+
+    /* ---------- roster header, rows ---------- */
+    :root[data-skin="elegant"] body[data-nb] [class^="roster-header-"] { background:var(--nb-frame); color:var(--e-ink); border:1px solid var(--e-hair); border-radius:12px; box-shadow:none; letter-spacing:.02em; }
+    :root[data-skin="elegant"] body[data-nb] .row-number, :root[data-skin="elegant"] body[data-nb] .student-name, :root[data-skin="elegant"] body[data-nb] .score-badge {
+      background:var(--e-paper); color:var(--e-ink); border:1px solid var(--e-hair); border-radius:12px; box-shadow:none; }
+    :root[data-skin="elegant"] body[data-nb] .row-number { color:var(--e-mut); background:var(--e-paper2); }
+    :root[data-skin="elegant"] body[data-nb] .score-badge { background:var(--nb-row); }
+    :root[data-skin="elegant"] body[data-nb] .score-badge:active { transform:scale(.97); box-shadow:none; }
+    :root[data-skin="elegant"] body[data-nb] .prev-score { background:var(--nb-prev); color:var(--e-mut); }
+    :root[data-skin="elegant"] body[data-nb] .active-score { background:var(--nb-row); color:var(--e-ink); border-color:var(--nb-tab); }
+    :root[data-skin="elegant"] body[data-nb] .status-A { background:color-mix(in srgb, var(--e-bad) 17%, var(--e-paper)) !important; color:var(--e-bad) !important; border-color:color-mix(in srgb, var(--e-bad) 40%, transparent) !important; }
+    :root[data-skin="elegant"] body[data-nb] .status-L { background:color-mix(in srgb, var(--e-warn) 17%, var(--e-paper)) !important; color:var(--e-warn) !important; border-color:color-mix(in srgb, var(--e-warn) 40%, transparent) !important; }
+    :root[data-skin="elegant"] body[data-nb] .status-empty { background:var(--nb-row) !important; color:var(--e-mut) !important; border-color:var(--e-hair) !important; }
+    :root[data-skin="elegant"] body[data-nb] .master-hint, :root[data-skin="elegant"] body[data-nb] .session-done-note { color:var(--e-mut); }
+    :root[data-skin="elegant"] body[data-nb] .master-table th { background:var(--nb-frame); color:var(--e-ink); border-color:var(--e-hair); }
+    :root[data-skin="elegant"] body[data-nb] .master-table td { border-color:var(--e-hair); }
+    :root[data-skin="elegant"] body[data-nb] .master-cell { background:var(--nb-row); }
+    :root[data-skin="elegant"] body[data-nb] .master-table th.current-sess-th { background:color-mix(in srgb, var(--nb-tab) 38%, var(--e-paper)); color:var(--e-ink); border-bottom-color:var(--nb-tab); }
+    :root[data-skin="elegant"] body[data-nb] .master-table th.done-sess-th { background:color-mix(in srgb, var(--e-good) 24%, var(--e-paper)); color:var(--e-ink); }
+
+    /* ---------- keypads ---------- */
+    :root[data-skin="elegant"] body[data-nb] .modal-content, :root[data-skin="elegant"] body[data-nb] .np-box { background:var(--e-paper); color:var(--e-ink); border:1px solid var(--e-hair); border-radius:20px; box-shadow:var(--e-pop); }
+    :root[data-skin="elegant"] body[data-nb] .modal-header { border-bottom:1px solid var(--e-hair); }
+    :root[data-skin="elegant"] body[data-nb] .modal-header h3, :root[data-skin="elegant"] body[data-nb] .np-title { font-family:var(--e-serif); font-weight:600; color:var(--e-ink); }
+    :root[data-skin="elegant"] body[data-nb] .pad-pill, :root[data-skin="elegant"] body[data-nb] .nr-pill { background:var(--e-paper2); color:var(--e-ink); border:1px solid var(--e-hair); box-shadow:none; }
+    :root[data-skin="elegant"] body[data-nb] .nr-pill.on { background:var(--e-btn); color:var(--e-btn-ink); }
+    :root[data-skin="elegant"] body[data-nb] .category-box { border-color:var(--e-hair) !important; border-width:1px !important; box-shadow:none; }
+    :root[data-skin="elegant"] body[data-nb] .category-box[data-ci="0"] { background:color-mix(in srgb, #7fae8c 15%, var(--e-paper)) !important; }
+    :root[data-skin="elegant"] body[data-nb] .category-box[data-ci="1"] { background:color-mix(in srgb, #cfab5d 16%, var(--e-paper)) !important; }
+    :root[data-skin="elegant"] body[data-nb] .category-box[data-ci="2"] { background:color-mix(in srgb, #c7899a 15%, var(--e-paper)) !important; }
+    :root[data-skin="elegant"] body[data-nb] .category-box[data-ci="3"] { background:color-mix(in srgb, #7f9bc6 16%, var(--e-paper)) !important; }
+    :root[data-skin="elegant"] body[data-nb] .category-box[data-ci="4"] { background:color-mix(in srgb, #c98255 14%, var(--e-paper)) !important; }
+    :root[data-skin="elegant"] body[data-nb] .category-box[data-ci="5"] { background:color-mix(in srgb, #9a8cc0 16%, var(--e-paper)) !important; }
+    :root[data-skin="elegant"] body[data-nb] :is(.key-btn, .att-key-btn, .eval-key-btn, .np-grid button, .action-btn, .np-row button, .np-enter, .pad-next) { border-width:1px !important; border-color:var(--e-hair) !important; box-shadow:none; }
+    :root[data-skin="elegant"] body[data-nb] :is(.key-btn, .att-key-btn, .eval-key-btn, .np-grid button, .action-btn, .np-row button, .np-enter, .pad-next):active { transform:scale(.96); box-shadow:none; }
+    :root[data-skin="elegant"] body[data-nb] .key-btn { background:var(--e-paper); color:var(--e-ink); }
+    :root[data-skin="elegant"] body[data-nb] .eval-row-box { background:var(--nb-row); border:1px solid var(--e-hair); }
+    :root[data-skin="elegant"] body[data-nb] .eval-row-num { background:var(--e-btn); color:var(--e-btn-ink); border:1px solid transparent; }
+    :root[data-skin="elegant"] body[data-nb] .eval-key-btn:not(.selected) { filter:none; }
+    :root[data-skin="elegant"] body[data-nb] .btn-save, :root[data-skin="elegant"] body[data-nb] .np-save, :root[data-skin="elegant"] body[data-nb] .pad-next, :root[data-skin="elegant"] body[data-nb] .np-enter { background:var(--e-btn); color:var(--e-btn-ink); border-color:transparent !important; }
+    :root[data-skin="elegant"] body[data-nb] .btn-clear, :root[data-skin="elegant"] body[data-nb] .np-clear { background:var(--e-paper2); color:var(--e-ink); }
+    :root[data-skin="elegant"] body[data-nb] .np-screen, :root[data-skin="elegant"] body[data-nb] .pad-field { background:var(--e-paper2); border:1px solid var(--e-hair); }
+    :root[data-skin="elegant"] body[data-nb] .pad-field.active { border-color:var(--e-gold); box-shadow:0 0 0 1px var(--e-gold); }
+    :root[data-skin="elegant"] body[data-nb] .np-grid button { background:var(--e-paper); color:var(--e-ink); }
+    :root[data-skin="elegant"] body[data-nb] .np-grid .np-fn { background:var(--e-paper2); }
+    :root[data-skin="elegant"] body[data-nb] .np-display, :root[data-skin="elegant"] body[data-nb] .pad-field-val { font-weight:500; }
+
+    /* ---------- home screen, New class, Settings ---------- */
+    :root[data-skin="elegant"] #start-overlay, :root[data-skin="elegant"] #newclass-overlay, :root[data-skin="elegant"] #settings-overlay {
+      --h-page:var(--e-bg); --h-card:var(--e-paper); --h-ink:var(--e-ink); --h-sub:var(--e-mut); --h-btn:var(--e-btn); --h-btn-ink:var(--e-btn-ink); --h-btn2:var(--e-paper); --h-line:var(--e-hair); --h-shadow:transparent; --h-field:var(--e-paper2); }
+    :root[data-skin="elegant"] #start-overlay {
+      --hs-bd:var(--e-hair); --hs-sh:transparent; --hs-card:var(--e-paper); --hs-ink:var(--e-ink); --hs-pill:var(--e-paper); --hs-pill-ink:var(--e-ink); --hs-line:var(--e-hair2); --hs-sub:var(--e-mut); --hs-body:var(--e-mut);
+      --hs-head:var(--e-ink); --hs-count:var(--e-mut); --hs-btn2:var(--e-paper); --hs-btn2-ink:var(--e-ink); --hs-open:var(--e-btn); --hs-open-ink:var(--e-btn-ink); --hs-open-ico:var(--e-gold); --hs-plus:var(--e-gold); --hs-moon:var(--e-gold);
+      --hs-stamp-bg:var(--e-paper2); --hs-stamp-bd:var(--e-hair); --hs-stamp-ink:var(--e-mut); --hs-ok:var(--e-good);
+      font-family:var(--ug-font); background-color:var(--e-bg); background-image:none; }
+    :root[data-skin="elegant"] #start-overlay .start-card, :root[data-skin="elegant"] #newclass-overlay .nc-card, :root[data-skin="elegant"] #settings-overlay .about-card {
+      background-color:var(--e-paper); background-image:none; border:1px solid var(--e-hair); border-radius:22px; box-shadow:var(--e-sh); }
+    :root[data-skin="elegant"] #newclass-overlay .nc-card, :root[data-skin="elegant"] #settings-overlay .about-card { box-shadow:var(--e-pop); }
+    :root[data-skin="elegant"] #start-overlay h1, :root[data-skin="elegant"] #newclass-overlay h2, :root[data-skin="elegant"] #settings-overlay .about-head h2 { font-family:var(--e-serif); font-weight:600; letter-spacing:-.01em; color:var(--e-ink); }
+    :root[data-skin="elegant"] #start-overlay .hs-logo { background:var(--e-gold); border:none; box-shadow:none; }
+    :root[data-skin="elegant"] #start-overlay .hs-logo svg { color:#fffaf0; }
+    :root[data-skin="elegant"] #start-overlay .hs-sub { letter-spacing:.14em; font-weight:500; }
+    :root[data-skin="elegant"] #start-overlay .hs-live { background:color-mix(in srgb, var(--e-good) 16%, var(--e-paper)); border-color:color-mix(in srgb, var(--e-good) 35%, transparent); color:var(--e-good); }
+    :root[data-skin="elegant"] #start-overlay :is(.big-btn, #settings-open-btn, .lib-toggle, .lib-mini), :root[data-skin="elegant"] #newclass-overlay .nc-actions button, :root[data-skin="elegant"] #settings-overlay .set-tab {
+      border:1px solid var(--e-hair); box-shadow:var(--e-sh-s); font-weight:500; }
+    :root[data-skin="elegant"] #start-overlay .start-actions .big-btn, :root[data-skin="elegant"] #start-overlay .big-btn[data-ico] { border:1px solid var(--e-hair); box-shadow:var(--e-sh-s); background:var(--e-paper); color:var(--e-ink); border-radius:12px; font-weight:500; letter-spacing:.01em; }
+    :root[data-skin="elegant"] #start-overlay #start-open-btn, :root:not([data-theme="dark"])[data-skin="elegant"] #start-overlay #start-open-btn { background:var(--e-btn); color:var(--e-btn-ink); border-color:transparent; box-shadow:var(--e-sh-s); }
+    :root[data-skin="elegant"] #start-overlay #start-open-btn:hover { background:color-mix(in srgb, var(--e-btn) 88%, var(--e-paper)); }
+    :root[data-skin="elegant"] #start-overlay #start-new-btn:hover, :root[data-skin="elegant"] #start-overlay #settings-open-btn:hover, :root[data-skin="elegant"] #start-overlay .lib-toggle:hover { background:var(--e-paper2); }
+    :root[data-skin="elegant"] #start-overlay .lib-toggle.done, :root[data-skin="elegant"] #newclass-overlay .nc-actions button.primary { background:var(--e-btn); color:var(--e-btn-ink); }
+    :root[data-skin="elegant"] #start-overlay :is(.big-btn, #settings-open-btn, .lib-toggle):active { transform:scale(.97); box-shadow:var(--e-sh-s); }
+    :root[data-skin="elegant"] #start-overlay #settings-open-btn .ic { color:var(--e-ink); }
+    :root[data-skin="elegant"] #start-overlay .hs-sec-title, :root[data-skin="elegant"] #start-overlay .hs-term-lab, :root[data-skin="elegant"] #start-overlay .hs-term-name { font-weight:600; letter-spacing:.12em; }
+    :root[data-skin="elegant"] #start-overlay .hs-term-name select { background:var(--e-paper2); border:1px solid var(--e-hair); font-weight:600; }
+    :root[data-skin="elegant"] #start-overlay .hs-dot-live { border-color:transparent; }
+    :root[data-skin="elegant"] #start-overlay .lib-vsec .lib-file { border:1px solid var(--e-hair); box-shadow:var(--e-sh-s); border-radius:12px; }
+    :root[data-skin="elegant"] #start-overlay .lib-vsec .lib-file:hover { transform:translateY(-1px); box-shadow:var(--e-sh); }
+    :root[data-skin="elegant"] #start-overlay .lib-vsec .lib-file:active { transform:scale(.99); box-shadow:var(--e-sh-s); }
+    :root[data-skin="elegant"] #start-overlay .lib-vsec .lib-row.last .lib-file { box-shadow:var(--e-sh-s); outline:2px solid var(--e-gold); outline-offset:2px; }
+    :root[data-skin="elegant"] #start-overlay .hs-fn, :root[data-skin="elegant"] #start-overlay #start-help .m, :root[data-skin="elegant"] #start-overlay .hs-stamp { font-family:var(--ug-font); }
+    :root[data-skin="elegant"] #start-overlay .hs-fn { font-weight:500; letter-spacing:0; }
+    :root[data-skin="elegant"] #start-overlay .lib-vsec .lib-file .hs-fi { background:rgba(255,255,255,.22); }
+    :root[data-skin="elegant"] #start-overlay .lib-vsec-name .lib-dot { border:none; box-shadow:none; }
+    :root[data-skin="elegant"] #newclass-overlay :is(input, select, textarea), :root[data-skin="elegant"] .lib-hex, :root[data-skin="elegant"] .lib-term select { border:1px solid var(--e-hair); border-radius:10px; background:var(--e-paper2); }
+    :root[data-skin="elegant"] #newclass-overlay label { letter-spacing:.08em; font-weight:500; }
+    :root[data-skin="elegant"] #start-overlay .lib-sec, :root[data-skin="elegant"] .lib-sec { border:1px solid var(--e-hair); border-left-width:5px; border-radius:12px; }
+    :root[data-skin="elegant"] .lib-add, :root[data-skin="elegant"] .lib-add-sec { border:1px dashed var(--e-hair); border-radius:10px; }
+    :root[data-skin="elegant"] .lib-file { border:1px solid var(--e-hair); box-shadow:var(--e-sh-s); }
+    :root[data-skin="elegant"] #start-overlay .lib-end, :root[data-skin="elegant"] #start-overlay .lib-vsec, :root[data-skin="elegant"] .lib-end { border-top-color:var(--e-hair2); }
+    :root[data-skin="elegant"] #settings-overlay .about-head { border-bottom:1px solid var(--e-hair); }
+    :root[data-skin="elegant"] #settings-close-btn { background:var(--e-paper2); border:1px solid var(--e-hair); font-weight:500; }
+    :root[data-skin="elegant"] #settings-overlay .set-tab { border-radius:10px; }
+    :root[data-skin="elegant"] #settings-overlay .set-tab:active { transform:scale(.98); box-shadow:none; }
+    :root[data-skin="elegant"] .set-row { border:1px solid var(--e-hair); border-radius:14px; }
+    :root[data-skin="elegant"] .set-switch { border:1px solid var(--e-hair); background:var(--e-paper2); }
+    :root[data-skin="elegant"] .set-switch[aria-checked="true"] { background:var(--e-btn); border-color:transparent; }
+    :root[data-skin="elegant"] .set-theme { border:1px solid var(--e-hair); border-radius:16px; box-shadow:none; }
+    :root[data-skin="elegant"] .set-theme.on { border-color:var(--e-gold); box-shadow:0 0 0 1px var(--e-gold); }
+    :root[data-skin="elegant"] .set-theme > b { font-weight:600; }
+    :root[data-skin="elegant"] .set-h { font-weight:600; letter-spacing:.14em; }
+    :root[data-skin="elegant"] #about-body h3 { font-family:var(--e-serif); font-weight:600; color:var(--e-gold); }
+
+    /* ---------- Overview ---------- */
+    :root[data-skin="elegant"] #ov-container { --ov-card:var(--e-paper); --ov-mut:var(--e-mut); --ov-line:var(--e-hair); --ov-ink:var(--e-ink); }
+    :root[data-skin="elegant"] #ov-container :is(.ov-card, .ov-stat, .ov-top, .ov-att, .ov-stu, .ov-area) { border:1px solid var(--e-hair); box-shadow:var(--e-sh-s); }
+    :root[data-skin="elegant"] #ov-container .ov-stat { background:var(--nb-row); color:var(--e-ink); border-radius:14px; }
+    :root[data-skin="elegant"] #ov-container .ov-stat b, :root[data-skin="elegant"] #ov-container .ov-big, :root[data-skin="elegant"] #ov-container .ov-hd h3 { font-family:var(--e-serif); font-weight:600; }
+    :root[data-skin="elegant"] #ov-container .ov-stat span, :root[data-skin="elegant"] #ov-container .ov-h { font-weight:600; letter-spacing:.14em; }
+    :root[data-skin="elegant"] #ov-container .ov-card { border-radius:16px; }
+    :root[data-skin="elegant"] #ov-container .ov-top, :root[data-skin="elegant"] #ov-container .ov-stu { background:var(--nb-row); color:var(--e-ink); }
+    :root[data-skin="elegant"] #ov-container .ov-top.first { background:color-mix(in srgb, var(--e-gold) 28%, var(--e-paper)); }
+    :root[data-skin="elegant"] #ov-container .ov-stu.sel { background:var(--e-paper); outline:2px solid var(--e-gold); outline-offset:1px; }
+    :root[data-skin="elegant"] #ov-container .ov-stu:hover { transform:none; box-shadow:var(--e-sh); }
+    :root[data-skin="elegant"] #ov-container .ov-rank { background:var(--e-btn); color:var(--e-btn-ink); }
+    :root[data-skin="elegant"] #ov-container .ov-top.first .ov-rank { background:var(--e-gold); color:#fffaf0; }
+    :root[data-skin="elegant"] #ov-container .ov-stu .ov-rank { background:var(--e-btn) !important; color:var(--e-btn-ink) !important; }
+    :root[data-skin="elegant"] #ov-container :is(.ov-badge, .ov-chip) { border:1px solid color-mix(in srgb, var(--e-ink) 16%, transparent); color:#26221c; font-weight:600; }
+    :root[data-skin="elegant"] #ov-container :is(.ov-badge, .ov-chip, .ov-dots i, .ov-bar > span, .ov-sub .mini span, .ov-radar, .ov-leg i) { filter:saturate(.62) brightness(1.04); }
+    :root[data-skin="elegant"] #ov-container .ov-dots i { border-color:color-mix(in srgb, var(--e-ink) 40%, transparent); }
+    :root[data-skin="elegant"] #ov-container .ov-bar, :root[data-skin="elegant"] #ov-container .ov-sub .mini { border:1px solid var(--e-hair); }
+    :root[data-skin="elegant"] #ov-container .ov-bar > em { background:var(--e-ink); }
+    :root[data-skin="elegant"] #ov-container .ov-h i { border:none; }
+    :root[data-skin="elegant"] #ov-container .ov-note, :root[data-skin="elegant"] #ov-container .ov-insight { font-weight:500; }
+    :root[data-skin="elegant"] #ov-container .ov-share-class { letter-spacing:.01em; }
+    :root[data-skin="elegant"] #ov-container .ov-spark path, :root[data-skin="elegant"] #ov-container .ov-radar polygon[stroke="#0f172a"] { stroke:var(--e-ink); }
+    :root[data-skin="elegant"] #ov-container .ov-spark circle { stroke:var(--e-ink); }
+
   </style>
 </head>
 <body data-nb="attendance">
@@ -1645,9 +2004,9 @@
 <div id="start-overlay">
   <div class="hs-free" id="hs-free" aria-hidden="true"></div>
   <header class="hs-top">
-    <button id="theme-toggle-btn" type="button" aria-label="Switch between light and dark mode" data-ico="theme">🌙 Dark</button>
+    <span class="hs-sp" aria-hidden="true"></span>
     <div class="hs-live" id="hs-live"><i></i>Direct File Storage</div>
-    <button id="about-open-btn" type="button" data-ico="info">About</button>
+    <button id="settings-open-btn" type="button" aria-label="Settings" title="Settings" data-ico="gear" data-ico-only="1">⚙️</button>
   </header>
   <main class="hs-main">
   <div class="hs-cardwrap">
@@ -1664,7 +2023,7 @@
     <div id="lib-box" style="display:none;"></div>
     <footer class="hs-foot">
       <div class="start-error" id="start-error"></div>
-      <p id="start-help">Either pick your Excel grade sheet (<span class="m">Reach</span>, <span class="m">Race</span>, <span class="m">Run</span>, or <span class="m">Start</span> — the file name tells the app which one it is), or create your own from scratch using <b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> New class</b>. Everything you enter is saved straight into that file.</p>
+      <p id="start-help">Either pick your Excel grade sheet (<span class="m">Reach</span>, <span class="m">Race</span>, <span class="m">Run</span>, or <span class="m">Start</span> — the file name tells the app which one it is), or create your own from scratch using <b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> New class</b>.</p>
       <div class="start-note" id="start-note"></div>
       <div class="hs-stamp" id="hs-stamp"><span id="hs-build">App build: 2026-10-26 b18</span><span class="sep"></span><span class="hs-native" id="hs-native"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" x2="2" y1="12" y2="12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><line x1="6" x2="6.01" y1="16" y2="16"/><line x1="10" x2="10.01" y1="16" y2="16"/></svg> <span id="hs-native-txt">native file access: ON</span></span></div>
     </footer>
@@ -1712,13 +2071,41 @@
      It is normal HTML:  <h3>Title</h3>   <p>Paragraph</p>   <ul><li>Bullet</li></ul>
      Use <b>bold</b> for emphasis.  Green box: class="about-ok"   Red box: class="about-keep"
      ============================================================================================ -->
-<div id="about-overlay">
-  <div class="about-card" role="dialog" aria-modal="true" aria-labelledby="about-title">
+<div id="settings-overlay">
+  <div class="about-card" role="dialog" aria-modal="true" aria-labelledby="settings-title">
     <div class="about-head">
-      <h2 id="about-title">📘 About Ultimate Grader</h2>
-      <button id="about-close-btn" type="button" aria-label="Close">✕</button>
+      <h2 id="settings-title">Settings</h2>
+      <button id="settings-close-btn" type="button" aria-label="Close">✕</button>
     </div>
-    <div id="about-body"></div>
+    <div class="set-tabs" role="tablist">
+      <button type="button" class="set-tab active" role="tab" data-set="appearance" aria-selected="true">Appearance</button>
+      <button type="button" class="set-tab" role="tab" data-set="about" aria-selected="false">About</button>
+    </div>
+    <div class="set-panes" id="set-panes">
+      <section class="set-pane" id="set-appearance" role="tabpanel">
+        <p class="set-h" style="margin-top:14px">Mode</p>
+        <div class="set-row">
+          <div class="set-txt"><b>Dark mode</b><span>Easier on the eyes in low light</span></div>
+          <button id="theme-switch" class="set-switch" type="button" role="switch" aria-checked="false" aria-label="Dark mode"><i></i></button>
+        </div>
+        <p class="set-h">Theme</p>
+        <div class="set-themes">
+          <button type="button" class="set-theme" data-skin="classic" aria-pressed="false">
+            <span class="set-prev prev-classic" aria-hidden="true"><i class="a"></i><i class="b"></i><i class="c"></i><u><s></s><s></s></u></span>
+            <b>Classic</b><span class="d">Bold colours, chunky shadows</span>
+            <em class="chk" aria-hidden="true"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></em>
+          </button>
+          <button type="button" class="set-theme" data-skin="elegant" aria-pressed="false">
+            <span class="set-prev prev-elegant" aria-hidden="true"><i class="a"></i><i class="b"></i><i class="c"></i><u><s></s><s></s></u></span>
+            <b>Elegant</b><span class="d">Quiet, refined and minimal</span>
+            <em class="chk" aria-hidden="true"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></em>
+          </button>
+        </div>
+      </section>
+      <section class="set-pane" id="set-about" role="tabpanel" hidden>
+        <div id="about-body"></div>
+      </section>
+    </div>
   </div>
 </div>
 
@@ -1782,6 +2169,7 @@
   <button id="file-share-btn" data-ico="share">☁️ Share</button>
   <button id="file-folder-btn" style="display:none;" data-ico="folder">📁 Folder</button>
   <button id="file-switch-btn" title="Home screen" aria-label="Home screen" data-ico="home" data-ico-only="1">🏠</button>
+  <button id="file-settings-btn" title="Settings" aria-label="Settings" data-ico="gear" data-ico-only="1">⚙️</button>
 </div>
 
 
@@ -2827,14 +3215,22 @@ const Offline = (function () {
     }
     // ---- About page: fill it from the editable <template id="about-template"> and open / close it ----
     (function () {
-      const ov = $('about-overlay'), body = $('about-body');
+      const ov = $('settings-overlay'), body = $('about-body');
       body.innerHTML = $('about-template').innerHTML;
-      window.openAbout = function () { ov.style.display = 'flex'; body.scrollTop = 0; };
-      window.closeAbout = function () { ov.style.display = 'none'; };
-      window.isAboutOpen = function () { return ov.style.display === 'flex'; };
-      $('about-open-btn').addEventListener('click', window.openAbout);
-      $('about-close-btn').addEventListener('click', window.closeAbout);
-      ov.addEventListener('click', function (e) { if (e.target === ov) window.closeAbout(); });   // tap outside = close
+      function show(which) {
+        ov.querySelectorAll('.set-tab').forEach(function (b) { const on = b.getAttribute('data-set') === which; b.classList.toggle('active', on); b.setAttribute('aria-selected', on ? 'true' : 'false'); });
+        $('set-appearance').hidden = which !== 'appearance'; $('set-about').hidden = which !== 'about';
+        $('set-panes').scrollTop = 0;
+      }
+      window.openSettings = function (which) { show(which === 'about' ? 'about' : 'appearance'); ov.style.display = 'flex'; };
+      window.closeSettings = function () { ov.style.display = 'none'; };
+      window.isSettingsOpen = function () { return ov.style.display === 'flex'; };
+      window.openAbout = function () { window.openSettings('about'); };            // older names still work (the back-swipe guard uses them)
+      window.closeAbout = window.closeSettings; window.isAboutOpen = window.isSettingsOpen;
+      ['settings-open-btn', 'file-settings-btn'].forEach(function (id) { $(id).addEventListener('click', function () { window.openSettings('appearance'); }); });
+      $('settings-close-btn').addEventListener('click', window.closeSettings);
+      ov.addEventListener('click', function (e) { if (e.target === ov) window.closeSettings(); });   // tap outside = close
+      ov.querySelectorAll('.set-tab').forEach(function (b) { b.addEventListener('click', function () { show(b.getAttribute('data-set')); }); });
     })();
     $('start-open-btn').addEventListener('click', handleOpenClick);
     $('file-switch-btn').addEventListener('click', async function () {
@@ -4020,7 +4416,7 @@ const Offline = (function () {
     SHOW_LS_SUBTABS = Object.assign({}, v.showLsSubtabs);
     keypadProfiles = v.keypadProfiles;
     window.__variantLabel = v.label;
-    document.title = 'Ultimate Grader ' + v.label + ' V1.08';
+    document.title = 'Ultimate Grader ' + v.label + ' V3.4';
     document.documentElement.style.setProperty('--reading-cols', v.reading.cols.length);
 
     currentDictNo = 1; currentQuizNo = 1; currentQuizGroup = 0;
@@ -5738,7 +6134,8 @@ const Offline = (function () {
       plus: '<path d="M12 5v14M5 12h14"/>',
       moon: '<path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5z"/>',
       sun: '<circle cx="12" cy="12" r="3.8"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6 7 7M17 17l1.4 1.4M18.4 5.6 17 7M7 17l-1.4 1.4"/>',
-      info: '<circle cx="12" cy="12" r="8.5"/><path d="M12 11v5M12 8h.01"/>'
+      info: '<circle cx="12" cy="12" r="8.5"/><path d="M12 11v5M12 8h.01"/>',
+      gear: '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>'
     };
     var CFG = { childList: true, characterData: true, subtree: true };
     function pick(b, raw) {
@@ -5783,7 +6180,7 @@ const Offline = (function () {
     if (btn) btn.textContent = '📤 Share';
     var nat = document.getElementById('hs-native-txt');             // lets you confirm which version is installed
     if (nat) nat.textContent = 'native file access: ' + (window.UG_FILES_OK ? 'ON' : 'OFF (Share only)');
-    window.UG_shareBlob = async function (blob, fileName) {
+    window.UG_shareBlob = async function (blob, fileName, dialogTitle) {
       var P = window.Capacitor.Plugins;
       if (!P || !P.Filesystem || !P.Share) throw new Error('The Android share plugins are missing. Run: npx cap sync android');
       var b64 = await new Promise(function (res, rej) {
@@ -5795,7 +6192,7 @@ const Offline = (function () {
       var safe = String(fileName || 'GradeSheet.xlsx').replace(/[\\\/:*?"<>|]/g, '_');
       var saved = await P.Filesystem.writeFile({ path: safe, data: b64, directory: 'CACHE' });
       try {
-        await P.Share.share({ title: safe, dialogTitle: 'Share grade sheet', files: [saved.uri] });
+        await P.Share.share({ title: safe, dialogTitle: dialogTitle || 'Share grade sheet', files: [saved.uri] });
       } catch (e) {
         if (e && /cancel/i.test(String(e.message || e))) return;     // you closed the share sheet
         throw e;
@@ -5866,23 +6263,28 @@ window.UG_TEMPLATES = {
 };
 </script>
 <script>
-  // Light / dark switch on the home screen (the choice is remembered on this device)
+  // Appearance settings: light / dark mode and the colour theme ("skin"). Both are remembered on this device.
   (function () {
-    var btn = document.getElementById('theme-toggle-btn');
-    if (!btn) return;
-    function current() { return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light'; }
+    var root = document.documentElement, sw = document.getElementById('theme-switch'), cards = document.querySelectorAll('.set-theme');
+    function mode() { return root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light'; }
+    function skin() { return root.getAttribute('data-skin') === 'elegant' ? 'elegant' : 'classic'; }
     function paint() {
-      var dark = current() === 'dark';
-      btn.textContent = dark ? '☀️ Light' : '🌙 Dark';           // shows the mode you will switch to
-      btn.setAttribute('aria-pressed', dark ? 'true' : 'false');
+      var dark = mode() === 'dark', k = skin();
+      if (sw) sw.setAttribute('aria-checked', dark ? 'true' : 'false');
+      Array.prototype.forEach.call(cards, function (b) { var on = b.getAttribute('data-skin') === k; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); });
       var m = document.querySelector('meta[name="theme-color"]');
-      if (m) m.setAttribute('content', dark ? '#0f1623' : '#2563eb');
+      if (m) m.setAttribute('content', k === 'elegant' ? (dark ? '#14120f' : '#f4f1ea') : (dark ? '#0f1623' : '#2563eb'));
     }
-    btn.addEventListener('click', function () {
-      var next = current() === 'dark' ? 'light' : 'dark';
-      document.documentElement.setAttribute('data-theme', next);
-      try { localStorage.setItem('ug_theme', next); } catch (e) {}
+    if (sw) sw.addEventListener('click', function () {
+      var n = mode() === 'dark' ? 'light' : 'dark';
+      root.setAttribute('data-theme', n); try { localStorage.setItem('ug_theme', n); } catch (e) {}
       paint();
+    });
+    Array.prototype.forEach.call(cards, function (b) {
+      b.addEventListener('click', function () {
+        var n = b.getAttribute('data-skin'); root.setAttribute('data-skin', n); try { localStorage.setItem('ug_skin', n); } catch (e) {}
+        paint();
+      });
     });
     paint();
   })();
@@ -6179,6 +6581,319 @@ window.UG_TEMPLATES = {
       return '<svg class="ov-spark" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="xMinYMid meet" role="img" aria-label="Trend over time">' + half + '<path d="' + d + '" fill="none" stroke="#0f172a" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>' + dots + '</svg>';
     }
 
+    // ============================== SHARE AS AN IMAGE ==============================
+    // The picture is drawn straight onto a canvas (no internet, no extra library) and handed to the normal share sheet.
+    function isElegant() { return document.documentElement.getAttribute('data-skin') === 'elegant'; }
+    function tokens() {
+      if (isElegant()) return { el: true, bg: '#f4f1ea', card: '#fffdf9', ink: '#26221c', mut: '#8a8173', track: '#ebe5d9', line: 'rgba(74,56,30,.20)', lw: 1.5, rad: 18, sh: 0,
+        gold: '#a8844a', serif: 'Georgia, "Iowan Old Style", "Noto Serif", serif', sans: '"Inter", Roboto, "Segoe UI", "UG Persian", Arial, sans-serif', w: 600,
+        area: { attendance: '#c7899a', homework: '#94ae83', reading: '#7f9bc6', lis_spe: '#5fa39a', writing: '#cfab5d', quizzes: '#c2705f' },
+        lvl: ['#8fc3a0', '#cbdb9a', '#ecca78', '#e5a095'], cellA: .55 };
+      var sans = '"UG Latin", "UG Persian", "Segoe UI", Roboto, Arial, sans-serif';
+      return { el: false, bg: '#f1f5f9', card: '#ffffff', ink: '#0f172a', mut: '#64748b', track: '#e2e8f0', line: '#0f172a', lw: 3, rad: 18, sh: 6,
+        gold: '#a78bfa', serif: sans, sans: sans, w: 700, area: null, lvl: ['#4ade80', '#bef264', '#fbbf24', '#f87171'], cellA: .85 };
+    }
+    var ABBR = { attendance: 'Att', homework: 'HW', reading: 'Read', lis_spe: 'L&S', writing: 'Write', quizzes: 'Quiz' };
+    function lvlCol(T, v) { return T.lvl[v >= 85 ? 0 : v >= 70 ? 1 : v >= 55 ? 2 : 3]; }
+    function areaCol(T, a) { return (T.area && T.area[a.key]) || a.color; }
+    function rr(c, x, y, w, h, r) { r = Math.max(0, Math.min(r, w / 2, h / 2)); c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
+    function card(c, T, x, y, w, h, fill, r) {
+      r = r == null ? T.rad : r;
+      c.save();
+      if (T.el) { c.shadowColor = 'rgba(60,45,20,.12)'; c.shadowBlur = 26; c.shadowOffsetY = 9; }
+      else { rr(c, x + T.sh, y + T.sh, w, h, r); c.fillStyle = T.ink; c.fill(); }
+      rr(c, x, y, w, h, r); c.fillStyle = fill || T.card; c.fill(); c.restore();
+      c.save(); rr(c, x, y, w, h, r); c.lineWidth = T.lw; c.strokeStyle = T.line; c.stroke(); c.restore();
+    }
+    function F(T, size, w, serif) { return (w || T.w) + ' ' + size + 'px ' + (serif ? T.serif : T.sans); }
+    function tx(c, T, s, x, y, o) {
+      o = o || {}; var size = o.size || 24; s = String(s);
+      c.save(); c.textBaseline = 'alphabetic'; c.textAlign = o.align || 'left'; c.fillStyle = o.color || T.ink;
+      if ('letterSpacing' in c) c.letterSpacing = (o.ls || 0) + 'px';
+      if (o.max) {
+        for (;;) { c.font = F(T, size, o.w, o.serif); if (c.measureText(s).width <= o.max || size <= (o.min || size)) break; size -= 1; }
+        if (c.measureText(s).width > o.max) { while (s.length > 1 && c.measureText(s + '…').width > o.max) s = s.slice(0, -1); s += '…'; }
+      } else c.font = F(T, size, o.w, o.serif);
+      var wd = c.measureText(s).width; c.fillText(s, x, y); c.restore(); return wd;
+    }
+    function mw(c, T, s, size, w, serif) { c.save(); c.font = F(T, size, w, serif); if ('letterSpacing' in c) c.letterSpacing = '0px'; var v = c.measureText(String(s)).width; c.restore(); return v; }
+    function wrapC(c, T, s, max, size) {
+      c.save(); c.font = F(T, size, T.el ? 500 : 700); if ('letterSpacing' in c) c.letterSpacing = '0px';
+      var words = String(s).split(/\s+/), lines = [], cur = '';
+      words.forEach(function (w) { var t = cur ? cur + ' ' + w : w; if (c.measureText(t).width > max && cur) { lines.push(cur); cur = w; } else cur = t; });
+      if (cur) lines.push(cur); c.restore(); return lines;
+    }
+    function pill(c, T, rx, y, h, label, fill, size) {
+      var up = String(label).toUpperCase();
+      c.save(); c.font = F(T, size, T.w); if ('letterSpacing' in c) c.letterSpacing = '1px'; var w = c.measureText(up).width + 30; c.restore();
+      var x = rx - w; rr(c, x, y, w, h, h / 2); c.fillStyle = fill; c.fill();
+      if (!T.el) { c.lineWidth = 2.5; c.strokeStyle = T.ink; c.stroke(); }
+      tx(c, T, up, x + w / 2 + 0.5, y + h / 2 + size * 0.36, { size: size, align: 'center', ls: 1 });
+      return x;
+    }
+    function bar(c, T, x, y, w, h, v, col, ca) {
+      rr(c, x, y, w, h, h / 2); c.fillStyle = T.track; c.fill();
+      if (v > 0) { rr(c, x, y, Math.max(h, w * Math.min(100, v) / 100), h, h / 2); c.fillStyle = col; c.fill(); }
+      rr(c, x, y, w, h, h / 2); c.lineWidth = T.el ? 1.2 : 2.5; c.strokeStyle = T.el ? T.line : T.ink; c.stroke();
+      if (ca != null) { c.fillStyle = T.ink; c.fillRect(x + w * ca / 100 - 2, y - 6, 4, h + 12); }
+    }
+    function radarC(c, T, cx, cy, Rr, used, vals, cls, accent, ls) {
+      var n = used.length;
+      function pt(i, r) { var a = -Math.PI / 2 + 2 * Math.PI * i / n; return [cx + Math.cos(a) * r, cy + Math.sin(a) * r]; }
+      function poly(rad) { c.beginPath(); used.forEach(function (a, i) { var q = pt(i, rad(a)); i ? c.lineTo(q[0], q[1]) : c.moveTo(q[0], q[1]); }); c.closePath(); }
+      c.save(); c.strokeStyle = T.el ? 'rgba(74,56,30,.25)' : '#94a3b8';
+      [25, 50, 75, 100].forEach(function (p) { c.lineWidth = p === 100 ? 2 : 1; poly(function () { return Rr * p / 100; }); c.stroke(); });
+      c.lineWidth = 1; used.forEach(function (a, i) { var q = pt(i, Rr); c.beginPath(); c.moveTo(cx, cy); c.lineTo(q[0], q[1]); c.stroke(); });
+      c.setLineDash([9, 7]); c.lineWidth = 3; c.strokeStyle = T.mut; poly(function (a) { return Rr * (cls[a.key] || 0) / 100; }); c.stroke(); c.setLineDash([]);
+      poly(function (a) { return Rr * (vals[a.key] || 0) / 100; }); c.globalAlpha = .4; c.fillStyle = accent; c.fill(); c.globalAlpha = 1;
+      c.lineWidth = T.el ? 3 : 4; c.lineJoin = 'round'; c.strokeStyle = T.el ? T.gold : T.ink; c.stroke();
+      used.forEach(function (a, i) { var v = vals[a.key]; if (v == null) return; var q = pt(i, Rr * v / 100); c.beginPath(); c.arc(q[0], q[1], 7, 0, 7); c.fillStyle = areaCol(T, a); c.fill(); c.lineWidth = 3; c.strokeStyle = T.ink; c.stroke(); });
+      c.restore();
+      used.forEach(function (a, i) { var q = pt(i, Rr + 30), co = Math.cos(-Math.PI / 2 + 2 * Math.PI * i / n); tx(c, T, a.short || a.label, q[0], q[1] + 8, { size: ls, align: Math.abs(co) < .25 ? 'center' : co > 0 ? 'left' : 'right' }); });
+    }
+    function sparkC(c, T, x, y, w, h, pts, col) {
+      var px = 8, py = 8, X = function (i) { return x + px + (w - 2 * px) * i / (pts.length - 1); }, Y = function (v) { return y + h - py - (h - 2 * py) * v / 100; };
+      c.save(); c.setLineDash([6, 8]); c.lineWidth = 1.5; c.strokeStyle = T.mut; c.beginPath(); c.moveTo(x + px, Y(50)); c.lineTo(x + w - px, Y(50)); c.stroke(); c.setLineDash([]);
+      c.lineWidth = 3.5; c.lineJoin = 'round'; c.lineCap = 'round'; c.strokeStyle = T.ink; c.beginPath();
+      pts.forEach(function (p, i) { i ? c.lineTo(X(i), Y(p.v)) : c.moveTo(X(i), Y(p.v)); }); c.stroke();
+      pts.forEach(function (p, i) { c.beginPath(); c.arc(X(i), Y(p.v), i === pts.length - 1 ? 6.5 : 4.5, 0, 7); c.fillStyle = col; c.fill(); c.lineWidth = 2.5; c.strokeStyle = T.ink; c.stroke(); });
+      c.restore();
+    }
+    function clsName() {
+      var e = document.getElementById('file-name'), t = e ? e.textContent : '';
+      return t.replace(/^[^\p{L}\p{N}]+/u, '').replace(/\s+·.*$/, '').replace(/\.xlsx$/i, '').replace(/_+/g, ' ').trim();
+    }
+    function today() { try { return new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }); } catch (e) { return ''; } }
+    function foot(c, T, W, y) {
+      tx(c, T, 'Ultimate Grader  ·  all scores are out of 100', W / 2, y + 22, { size: 19, color: T.mut, align: 'center' });
+      return y + 70;
+    }
+
+    function buildStudent(c, T, D, s, W, H) {
+      var M = 44, IW = W - 2 * M, G = 26, y = M, P = 30;
+      c.fillStyle = T.bg; c.fillRect(0, 0, W, H);
+      tx(c, T, 'STUDENT REPORT', M, y + 16, { size: 19, ls: 4, color: T.mut });
+      tx(c, T, today(), W - M, y + 16, { size: 19, color: T.mut, align: 'right' });
+      y += 46;
+      var lv = level(s.overall), cn = clsName(), clsAvg = avg(D.ranked.map(function (x) { return x.overall; }));
+      card(c, T, M, y, IW, 214, T.card);
+      var lw = IW - 64 - 280;
+      tx(c, T, s.name, M + 32, y + 88, { size: 54, serif: true, max: lw, min: 26 });
+      if (cn) tx(c, T, cn, M + 32, y + 130, { size: 22, color: T.mut, max: lw, min: 15 });
+      tx(c, T, 'Rank ' + s.rank + ' of ' + D.ranked.length + '   ·   Class average ' + R(clsAvg), M + 32, y + 172, { size: 24, color: T.mut, max: lw, min: 15 });
+      tx(c, T, String(R(s.overall)), W - M - 34, y + 118, { size: 112, serif: true, align: 'right' });
+      tx(c, T, 'out of 100', W - M - 34, y + 148, { size: 20, color: T.mut, align: 'right' });
+      pill(c, T, W - M - 34, y + 164, 34, lv.t, lvlCol(T, s.overall), 17);
+      y += 214 + G;
+
+      var ar = D.used.filter(function (a) { return s.areas[a.key]; }), vals = {};
+      ar.forEach(function (a) { vals[a.key] = s.areas[a.key].avg; });
+      var sorted = ar.slice().sort(function (a, b) { return vals[b.key] - vals[a.key]; });
+
+      if (ar.length >= 3) {
+        var rh = 530; card(c, T, M, y, IW, rh, T.card);
+        tx(c, T, 'STRENGTHS AND WEAK SPOTS', M + P + 2, y + 52, { size: 19, ls: 3, color: T.mut });
+        radarC(c, T, W / 2, y + 276, 150, ar, vals, D.classAvg, T.el ? T.gold : '#a78bfa', 24);
+        var ly = y + rh - 36, fn = s.name.split(' ')[0], w1 = mw(c, T, fn, 21), w2 = mw(c, T, 'Class average', 21), tot = 26 + w1 + 50 + 44 + w2, lx = W / 2 - tot / 2;
+        c.save(); c.globalAlpha = .45; c.fillStyle = T.el ? T.gold : '#a78bfa'; c.fillRect(lx, ly - 14, 20, 16); c.globalAlpha = 1; c.lineWidth = 2.5; c.strokeStyle = T.el ? T.gold : T.ink; c.strokeRect(lx, ly - 14, 20, 16); c.restore();
+        tx(c, T, fn, lx + 30, ly, { size: 21, color: T.mut });
+        var dx = lx + 30 + w1 + 50; c.save(); c.setLineDash([7, 5]); c.lineWidth = 3; c.strokeStyle = T.mut; c.beginPath(); c.moveTo(dx, ly - 6); c.lineTo(dx + 34, ly - 6); c.stroke(); c.restore();
+        tx(c, T, 'Class average', dx + 44, ly, { size: 21, color: T.mut });
+        y += rh + G;
+      }
+      if (ar.length > 1) {
+        var best = sorted[0], worst = sorted[sorted.length - 1], hw = (IW - 20) / 2;
+        card(c, T, M, y, IW, 158, T.card);
+        tx(c, T, 'STRONGEST AREA', M + P, y + 46, { size: 17, ls: 3, color: T.mut });
+        tx(c, T, best.label + '  ' + R(vals[best.key]), M + P, y + 92, { size: 30, serif: true, max: hw - P - 14, min: 18 });
+        tx(c, T, 'Class average ' + R(D.classAvg[best.key]), M + P, y + 128, { size: 20, color: T.mut });
+        var rx = M + IW / 2 + 10;
+        tx(c, T, 'NEEDS ATTENTION', rx, y + 46, { size: 17, ls: 3, color: T.mut });
+        if (vals[worst.key] < 70) {
+          tx(c, T, worst.label + '  ' + R(vals[worst.key]), rx, y + 92, { size: 30, serif: true, max: hw - P - 14, min: 18 });
+          tx(c, T, 'Class average ' + R(D.classAvg[worst.key]), rx, y + 128, { size: 20, color: T.mut });
+        } else {
+          tx(c, T, 'No area is below 70', rx, y + 92, { size: 30, serif: true, max: hw - P - 14, min: 18 });
+          tx(c, T, 'Steady across the board', rx, y + 128, { size: 20, color: T.mut });
+        }
+        c.save(); c.fillStyle = T.line; c.fillRect(M + IW / 2 - 1, y + 28, 2, 102); c.restore();
+        y += 158 + G;
+      }
+      sorted.forEach(function (a) {
+        var r = s.areas[a.key], v = r.avg, ca = D.classAvg[a.key], col = areaCol(T, a), l = level(v), iw = IW - 2 * P;
+        var notes = wrapC(c, T, 'Class average ' + R(ca) + '.  ' + r.note, iw, 21);
+        var subs = r.subs.length > 1 ? r.subs : [], sp = r.pts.length >= 2;
+        var h = 124 + notes.length * 30 + (subs.length ? subs.length * 40 + 14 : 0) + (sp ? 96 : 0) + 22;
+        card(c, T, M, y, IW, h, T.card);
+        rr(c, M + P, y + 34, 24, 24, 7); c.fillStyle = col; c.fill(); if (!T.el) { c.lineWidth = 2.5; c.strokeStyle = T.ink; c.stroke(); }
+        var nw = tx(c, T, String(R(v)), M + IW - P, y + 62, { size: 46, serif: true, align: 'right' });
+        var bx = pill(c, T, M + IW - P - nw - 20, y + 30, 34, l.t, lvlCol(T, v), 16);
+        tx(c, T, a.label, M + P + 38, y + 58, { size: 30, max: bx - (M + P + 38) - 16, min: 18 });
+        bar(c, T, M + P, y + 86, iw, 22, v, col, ca);
+        var yy = y + 150;
+        notes.forEach(function (ln) { tx(c, T, ln, M + P, yy, { size: 21, color: T.mut, w: T.el ? 500 : 700 }); yy += 30; });
+        if (subs.length) {
+          yy += 4;
+          subs.forEach(function (x) {
+            tx(c, T, x.l, M + P, yy + 8, { size: 21, max: 250, min: 15 });
+            bar(c, T, M + P + 270, yy - 8, iw - 270 - 78, 14, x.v, lvlCol(T, x.v), null);
+            tx(c, T, String(R(x.v)), M + IW - P, yy + 8, { size: 22, align: 'right' });
+            yy += 40;
+          });
+          yy += 10;
+        }
+        if (sp) {
+          tx(c, T, 'TREND', M + P, yy + 8, { size: 15, ls: 3, color: T.mut });
+          sparkC(c, T, M + P, yy + 18, Math.min(iw, 560), 64, r.pts, col);
+        }
+        y += h + G;
+      });
+      y = foot(c, T, W, y);
+      return y;
+    }
+
+    function buildClass(c, T, D, _s, W, H) {
+      var M = 44, IW = W - 2 * M, G = 26, y = M, P = 30, n = D.ranked.length;
+      c.fillStyle = T.bg; c.fillRect(0, 0, W, H);
+      tx(c, T, 'CLASS OVERVIEW', M, y + 16, { size: 19, ls: 4, color: T.mut });
+      tx(c, T, today(), W - M, y + 16, { size: 19, color: T.mut, align: 'right' });
+      y += 46;
+      var cn = clsName(), clsAvg = avg(D.ranked.map(function (x) { return x.overall; }));
+      card(c, T, M, y, IW, 150, T.card);
+      tx(c, T, cn || 'Class overview', M + 32, y + 80, { size: 46, serif: true, max: IW - 64, min: 24 });
+      tx(c, T, 'Performance of the whole class  ·  scores out of 100', M + 32, y + 120, { size: 22, color: T.mut, max: IW - 64, min: 15 });
+      y += 150 + G;
+      var tw = (IW - 40) / 3, tiles = [[D.list.length, 'STUDENTS'], [R(clsAvg), 'CLASS AVERAGE'], [D.used.length, 'AREAS TRACKED']];
+      tiles.forEach(function (t, i) {
+        var x = M + i * (tw + 20); card(c, T, x, y, tw, 134, T.card);
+        tx(c, T, String(t[0]), x + tw / 2, y + 74, { size: 60, serif: true, align: 'center' });
+        tx(c, T, t[1], x + tw / 2 + 1.5, y + 112, { size: 16, ls: 3, color: T.mut, align: 'center' });
+      });
+      y += 134 + G;
+
+      // average per area
+      var h = 84 + D.used.length * 54 + 10;
+      card(c, T, M, y, IW, h, T.card);
+      tx(c, T, 'CLASS AVERAGE BY AREA', M + P + 2, y + 50, { size: 19, ls: 3, color: T.mut });
+      D.used.forEach(function (a, i) {
+        var ry = y + 84 + i * 54, v = D.classAvg[a.key];
+        tx(c, T, a.label, M + P, ry + 27, { size: 24, max: 270, min: 15 });
+        bar(c, T, M + P + 290, ry + 6, IW - 2 * P - 290 - 84, 24, v, areaCol(T, a), null);
+        tx(c, T, String(R(v)), M + IW - P, ry + 27, { size: 28, serif: true, align: 'right' });
+      });
+      y += h + G;
+
+      // top 3
+      h = 84 + Math.min(3, n) * 66 + 8;
+      card(c, T, M, y, IW, h, T.card);
+      tx(c, T, 'TOP OF THE CLASS', M + P + 2, y + 50, { size: 19, ls: 3, color: T.mut });
+      D.ranked.slice(0, 3).forEach(function (s, i) {
+        var ry = y + 80 + i * 66;
+        c.beginPath(); c.arc(M + P + 22, ry + 28, 22, 0, 7); c.fillStyle = i === 0 ? (T.el ? T.gold : '#fbbf24') : (T.el ? T.track : '#e2e8f0'); c.fill(); c.lineWidth = T.el ? 1.2 : 2.5; c.strokeStyle = T.el ? T.line : T.ink; c.stroke();
+        tx(c, T, String(s.rank), M + P + 22, ry + 36, { size: 22, align: 'center', color: T.el && i === 0 ? '#fffaf0' : T.ink });
+        tx(c, T, s.name, M + P + 62, ry + 37, { size: 28, max: IW - 2 * P - 62 - 90, min: 17 });
+        tx(c, T, String(R(s.overall)), M + IW - P, ry + 38, { size: 32, serif: true, align: 'right' });
+      });
+      y += h + G;
+
+      // need attention
+      var low = n >= 4 ? D.ranked.slice(-3).reverse() : [];
+      if (low.length) {
+        var rows = low.map(function (s) {
+          var wk = weakOf(s, D.used, D.classAvg), fine = s.overall >= 75, line;
+          if (fine) line = 'Still doing well overall. Nothing urgent.';
+          else if (!wk.length) line = 'No single area is below 70.';
+          else line = wk.map(function (w) { return (w.a.short || w.a.label) + ' ' + R(w.v) + (w.sub ? ' (' + w.sub.l + ' ' + R(w.sub.v) + ')' : ''); }).join('   ·   ');
+          return { s: s, fine: fine, lines: wrapC(c, T, line, IW - 2 * P, 21) };
+        });
+        h = 80; rows.forEach(function (r) { h += 62 + r.lines.length * 28 + 14; }); h += 6;
+        card(c, T, M, y, IW, h, T.card);
+        tx(c, T, 'NEED ATTENTION', M + P + 2, y + 50, { size: 19, ls: 3, color: T.mut });
+        var ry = y + 80;
+        rows.forEach(function (r) {
+          var lv = level(r.s.overall), sw = tx(c, T, String(R(r.s.overall)), M + IW - P, ry + 38, { size: 32, serif: true, align: 'right' });
+          var bx = pill(c, T, M + IW - P - sw - 18, ry + 10, 34, r.fine ? 'Lowest in class' : lv.t, r.fine ? lvlCol(T, 90) : lvlCol(T, r.s.overall), 15);
+          tx(c, T, r.s.name, M + P, ry + 37, { size: 28, max: bx - (M + P) - 16, min: 17 });
+          r.lines.forEach(function (ln, i) { tx(c, T, ln, M + P, ry + 70 + i * 28, { size: 21, color: T.mut, w: T.el ? 500 : 700 }); });
+          ry += 62 + r.lines.length * 28 + 14;
+        });
+        y += h + G;
+      }
+
+      // all students
+      var cols = D.used, ip = 24, innerW = IW - 2 * ip, rankW = 56, ovW = 100, aW = Math.min(94, Math.floor((innerW - rankW - ovW - 230) / Math.max(1, cols.length))), nameW = innerW - rankW - ovW - aW * cols.length;
+      var order = D.ranked.concat(D.list.filter(function (s) { return s.overall === null; })), RH = 54;
+      h = 84 + 46 + order.length * RH + 20;
+      card(c, T, M, y, IW, h, T.card);
+      tx(c, T, 'ALL STUDENTS', M + P + 2, y + 50, { size: 19, ls: 3, color: T.mut });
+      var x0 = M + ip, hy = y + 84;
+      tx(c, T, '#', x0 + rankW / 2, hy + 28, { size: 17, ls: 1, color: T.mut, align: 'center' });
+      tx(c, T, 'STUDENT', x0 + rankW, hy + 28, { size: 17, ls: 2, color: T.mut });
+      cols.forEach(function (a, i) { tx(c, T, (ABBR[a.key] || a.short || a.label).toUpperCase(), x0 + rankW + nameW + aW * i + aW / 2, hy + 28, { size: 16, ls: 1, color: T.mut, align: 'center' }); });
+      tx(c, T, 'TOTAL', x0 + innerW - ovW / 2, hy + 28, { size: 16, ls: 1, color: T.mut, align: 'center' });
+      c.save(); c.fillStyle = T.el ? T.line : T.ink; c.fillRect(x0, hy + 40, innerW, T.el ? 1.5 : 3); c.restore();
+      order.forEach(function (s, i) {
+        var ry = hy + 46 + i * RH;
+        if (i % 2 === 1) { c.save(); c.globalAlpha = T.el ? .5 : .55; c.fillStyle = T.track; rr(c, x0 - 8, ry + 2, innerW + 16, RH - 4, 10); c.fill(); c.restore(); }
+        tx(c, T, s.rank ? String(s.rank) : '–', x0 + rankW / 2, ry + 35, { size: 22, color: T.mut, align: 'center' });
+        tx(c, T, s.name, x0 + rankW, ry + 36, { size: 25, max: nameW - 12, min: 15 });
+        cols.forEach(function (a, j) {
+          var r = s.areas[a.key], cx = x0 + rankW + nameW + aW * j + aW / 2;
+          if (r) { c.save(); c.globalAlpha = T.cellA; rr(c, cx - aW / 2 + 6, ry + 8, aW - 12, RH - 16, 10); c.fillStyle = lvlCol(T, r.avg); c.fill(); c.restore(); }
+          tx(c, T, r ? String(R(r.avg)) : '–', cx, ry + 35, { size: 22, align: 'center', color: r ? T.ink : T.mut });
+        });
+        tx(c, T, s.overall === null ? '–' : String(R(s.overall)), x0 + innerW - ovW / 2, ry + 36, { size: 28, serif: true, align: 'center', color: s.overall === null ? T.mut : T.ink });
+      });
+      y += h + G;
+      return foot(c, T, W, y);
+    }
+
+    function makeImage(kind, D, s) {
+      var fl = [];
+      try { fl = [document.fonts.load('700 24px "UG Latin"'), document.fonts.load('700 24px "UG Persian"', 'ابپ')]; } catch (e) {}
+      return Promise.all(fl).catch(function () {}).then(function () {
+        var T = tokens(), W = 1080, S = 1.5, build = kind === 'class' ? buildClass : buildStudent;
+        var probe = document.createElement('canvas'); probe.width = 10; probe.height = 10;
+        var H = Math.ceil(build(probe.getContext('2d'), T, D, s, W, 100));
+        var cv = document.createElement('canvas'); cv.width = Math.round(W * S); cv.height = Math.round(H * S);
+        var c = cv.getContext('2d'); c.scale(S, S); build(c, T, D, s, W, H);
+        return new Promise(function (res, rej) { cv.toBlob(function (b) { b ? res(b) : rej(new Error('Could not make the image')); }, 'image/png'); });
+      });
+    }
+
+    // ---- hand the picture to the Android share sheet / the browser's share / a download ----
+    var toastEl = null, toastT = null;
+    function toast(m) {
+      if (!toastEl) { toastEl = document.createElement('div'); toastEl.style.cssText = 'position:fixed;left:50%;bottom:70px;transform:translateX(-50%);background:var(--toast-bg);color:var(--toast-fg);padding:10px 18px;border-radius:22px;font-size:14px;font-weight:bold;z-index:99999;opacity:0;pointer-events:none;transition:opacity .25s;max-width:90%;text-align:center'; document.body.appendChild(toastEl); }
+      toastEl.textContent = m; toastEl.style.opacity = '1'; clearTimeout(toastT); toastT = setTimeout(function () { toastEl.style.opacity = '0'; }, 2400);
+    }
+    function safeName(t) { return String(t).replace(/[\\\/:*?"<>|\r\n]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 90) || 'Report'; }
+    async function deliver(blob, fileName, title) {
+      if (window.UG_NATIVE && window.UG_shareBlob) { await window.UG_shareBlob(blob, fileName, 'Share ' + title); return; }
+      var file = null; try { file = new File([blob], fileName, { type: 'image/png' }); } catch (e) {}
+      if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+        try { await navigator.share({ files: [file], title: title }); return; }
+        catch (e) { if (e && e.name === 'AbortError') return; }
+      }
+      var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = fileName; document.body.appendChild(a); a.click();
+      setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 4000);
+      toast('Image saved to your downloads');
+    }
+    var sharing = false;
+    function shareNow(kind) {
+      if (sharing || !DATA) return;
+      var s = kind === 'student' ? DATA.list[sel] : null;
+      if (kind === 'student' && (!s || s.overall === null)) return;
+      if (kind === 'class' && !DATA.ranked.length) return;
+      sharing = true; toast('Preparing the image…');
+      var title = kind === 'class' ? 'class overview' : s.name, cn = clsName();
+      var file = safeName((kind === 'class' ? 'Class overview' : s.name) + (cn ? ' - ' + cn : '')) + '.png';
+      makeImage(kind, DATA, s).then(function (blob) { return deliver(blob, file, title); })
+        .catch(function (e) { toast('Could not share: ' + ((e && e.message) || e)); })
+        .then(function () { sharing = false; });
+    }
+    var SHARE_SVG = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="6" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="m8.1 10.9 7.8-3.8M8.1 13.1l7.8 3.8"/></svg>';
+
     // ---- views ----
     function dotsFor(s, used) { return '<span class="ov-dots">' + used.map(function (a) { var r = s.areas[a.key]; return '<i style="background:' + (r ? level(r.avg).c : '#e2e8f0') + '" title="' + esc(a.label) + '"></i>'; }).join('') + '</span>'; }
     function weakOf(s, used, classAvg) {
@@ -6189,43 +6904,44 @@ window.UG_TEMPLATES = {
     }
     function leftHtml(D) {
       var h = '', n = D.ranked.length;
-      h += '<div class="ov-stats"><div class="ov-stat"><b>' + D.list.length + '</b><span>Students</span></div><div class="ov-stat"><b>' + (n ? R(avg(D.ranked.map(function (s) { return s.overall; }))) + '%' : '–') + '</b><span>Class average</span></div><div class="ov-stat"><b>' + D.used.length + '</b><span>Areas tracked</span></div></div>';
+      if (n) h += '<button class="action-badge ov-share ov-share-class" data-ovshare="class" type="button">' + SHARE_SVG + '<span>Share class overview</span></button>';
+      h += '<div class="ov-stats"><div class="ov-stat"><b>' + D.list.length + '</b><span>Students</span></div><div class="ov-stat"><b>' + (n ? R(avg(D.ranked.map(function (s) { return s.overall; }))) : '–') + '</b><span>Class average</span></div><div class="ov-stat"><b>' + D.used.length + '</b><span>Areas tracked</span></div></div>';
       if (!n) return h + '<div class="ov-card ov-empty">No scores have been entered yet, so there is nothing to compare. Add some scores in the tabs and come back.</div>';
       h += '<div class="ov-card"><p class="ov-h"><i style="background:#fbbf24"></i>Top of the class</p>';
-      D.ranked.slice(0, 3).forEach(function (s, i) { h += '<button class="ov-top' + (i === 0 ? ' first' : '') + '" data-ov="' + s.idx + '"><span class="ov-rank">' + s.rank + '</span><span class="ov-nm">' + esc(s.name) + '</span><span class="ov-pct">' + R(s.overall) + '%</span></button>'; });
+      D.ranked.slice(0, 3).forEach(function (s, i) { h += '<button class="ov-top' + (i === 0 ? ' first' : '') + '" data-ov="' + s.idx + '"><span class="ov-rank">' + s.rank + '</span><span class="ov-nm">' + esc(s.name) + '</span><span class="ov-pct">' + R(s.overall) + '</span></button>'; });
       h += '</div>';
       var low = D.ranked.slice(-3).reverse(); if (n < 4) low = [];
       h += '<div class="ov-card"><p class="ov-h"><i style="background:#f87171"></i>Need attention</p>';
       if (!low.length) h += '<div class="ov-note">Needs at least four students with scores.</div>';
       low.forEach(function (s) {
         var lv = level(s.overall), wk = weakOf(s, D.used, D.classAvg), fine = s.overall >= 75;
-        h += '<button class="ov-att" data-ov="' + s.idx + '"><div class="ov-att-top"><span class="ov-nm" style="font-weight:800">' + esc(s.name) + '</span><span class="ov-badge" style="background:' + (fine ? '#bef264' : lv.c) + '">' + (fine ? 'Lowest in class' : lv.t) + '</span><span class="ov-pct">' + R(s.overall) + '%</span></div>';
+        h += '<button class="ov-att" data-ov="' + s.idx + '"><div class="ov-att-top"><span class="ov-nm" style="font-weight:800">' + esc(s.name) + '</span><span class="ov-badge" style="background:' + (fine ? '#bef264' : lv.c) + '">' + (fine ? 'Lowest in class' : lv.t) + '</span><span class="ov-pct">' + R(s.overall) + '</span></div>';
         if (fine) h += '<div class="ov-note">Still doing well overall. Nothing urgent.</div>';
-        else if (!wk.length) h += '<div class="ov-note">No single area is below 70%.</div>';
-        else wk.forEach(function (w) { h += '<span class="ov-chip" style="background:' + w.a.color + '">' + esc(w.a.short || w.a.label) + ' ' + R(w.v) + '%' + (w.sub ? ' · ' + esc(w.sub.l) + ' ' + R(w.sub.v) + '%' : '') + '</span>'; });
+        else if (!wk.length) h += '<div class="ov-note">No single area is below 70.</div>';
+        else wk.forEach(function (w) { h += '<span class="ov-chip" style="background:' + w.a.color + '">' + esc(w.a.short || w.a.label) + ' ' + R(w.v) + (w.sub ? ' · ' + esc(w.sub.l) + ' ' + R(w.sub.v) : '') + '</span>'; });
         h += '</button>';
       });
       h += '</div><div class="ov-card"><p class="ov-h"><i style="background:#a78bfa"></i>All students</p>';
-      D.list.forEach(function (s) { h += '<button class="ov-stu' + (sel === s.idx ? ' sel' : '') + '" data-ov="' + s.idx + '"><span class="ov-rank" style="background:#0f172a;color:#fff;width:28px;height:28px;font-size:13px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none">' + (s.rank || '–') + '</span><span class="ov-nm">' + esc(s.name) + '</span>' + dotsFor(s, D.used) + '<span class="ov-pct">' + (s.overall === null ? '–' : R(s.overall) + '%') + '</span></button>'; });
+      D.list.forEach(function (s) { h += '<button class="ov-stu' + (sel === s.idx ? ' sel' : '') + '" data-ov="' + s.idx + '"><span class="ov-rank" style="background:#0f172a;color:#fff;width:28px;height:28px;font-size:13px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none">' + (s.rank || '–') + '</span><span class="ov-nm">' + esc(s.name) + '</span>' + dotsFor(s, D.used) + '<span class="ov-pct">' + (s.overall === null ? '–' : R(s.overall)) + '</span></button>'; });
       return h + '</div>';
     }
     function rightHtml(D) {
       var s = D.list[sel]; if (!s) return '<div class="ov-card ov-empty">Pick a student to see their charts.</div>';
-      var h = '<button class="action-badge ov-back" data-ovback="1" type="button">← All students</button>';
+      var h = '<div class="ov-top-row"><button class="action-badge ov-back" data-ovback="1" type="button">← All students</button>' + (s.overall !== null ? '<button class="action-badge ov-share" data-ovshare="student" type="button">' + SHARE_SVG + '<span>Share</span></button>' : '') + '</div>';
       if (s.overall === null) return h + '<div class="ov-card ov-empty">' + esc(s.name) + ' has no scores yet.</div>';
       var lv = level(s.overall), vals = {}; D.used.forEach(function (a) { if (s.areas[a.key]) vals[a.key] = s.areas[a.key].avg; });
       var ar = D.used.filter(function (a) { return s.areas[a.key]; }), sorted = ar.slice().sort(function (a, b) { return s.areas[b.key].avg - s.areas[a.key].avg; });
-      h += '<div class="ov-card"><div class="ov-hd"><h3>' + esc(s.name) + '</h3><span class="ov-badge" style="background:' + lv.c + '">' + lv.t + '</span><span class="ov-big">' + R(s.overall) + '%</span></div>';
-      h += '<div class="ov-note">Rank ' + s.rank + ' of ' + D.ranked.length + ' · class average ' + R(avg(D.ranked.map(function (x) { return x.overall; }))) + '%</div></div>';
+      h += '<div class="ov-card"><div class="ov-hd"><h3>' + esc(s.name) + '</h3><span class="ov-badge" style="background:' + lv.c + '">' + lv.t + '</span><span class="ov-big">' + R(s.overall) + '</span></div>';
+      h += '<div class="ov-note">Rank ' + s.rank + ' of ' + D.ranked.length + ' · class average ' + R(avg(D.ranked.map(function (x) { return x.overall; }))) + '</div></div>';
       if (ar.length >= 3) h += '<div class="ov-card"><p class="ov-h">Strengths and weak spots</p>' + radar(ar, vals, D.classAvg, '#a78bfa') + '<div class="ov-leg"><span><i style="background:#a78bfa"></i>' + esc(s.name.split(' ')[0]) + '</span><span><i style="background:transparent;border-style:dashed"></i>Class average</span></div></div>';
       var best = sorted[0], worst = sorted[sorted.length - 1], ins = '';
-      if (ar.length > 1) { ins = 'Strongest area: <b>' + esc(best.label) + '</b> (' + R(vals[best.key]) + '%). '; if (vals[worst.key] < 70) ins += 'Needs attention: <b>' + esc(worst.label) + '</b> (' + R(vals[worst.key]) + '%, class average ' + R(D.classAvg[worst.key]) + '%).'; else ins += 'No area is below 70%.'; }
+      if (ar.length > 1) { ins = 'Strongest area: <b>' + esc(best.label) + '</b> (' + R(vals[best.key]) + '). '; if (vals[worst.key] < 70) ins += 'Needs attention: <b>' + esc(worst.label) + '</b> (' + R(vals[worst.key]) + ', class average ' + R(D.classAvg[worst.key]) + ').'; else ins += 'No area is below 70.'; }
       if (ins) h += '<div class="ov-card"><p class="ov-h">In short</p><div class="ov-insight">' + ins + '</div></div>';
       sorted.forEach(function (a) {
         var r = s.areas[a.key], v = r.avg, l = level(v), ca = D.classAvg[a.key];
-        h += '<div class="ov-area"><div class="ov-area-top"><i style="width:14px;height:14px;border-radius:4px;border:2px solid var(--nb-line);background:' + a.color + '"></i><b>' + esc(a.label) + '</b><span class="ov-badge" style="background:' + l.c + '">' + l.t + '</span><span class="ov-pct">' + R(v) + '%</span></div>';
-        h += '<div class="ov-bar"><span style="width:' + v + '%;background:' + a.color + '"></span><em style="left:calc(' + ca + '% - 1px)" title="Class average"></em></div><div class="ov-note">The black marker is the class average (' + R(ca) + '%). ' + esc(r.note) + '</div>';
-        r.subs.length > 1 && r.subs.forEach(function (x) { h += '<div class="ov-sub"><span>' + esc(x.l) + '</span><span class="mini"><span style="width:' + x.v + '%;background:' + level(x.v).c + '"></span></span><span>' + R(x.v) + '%</span></div>'; });
+        h += '<div class="ov-area"><div class="ov-area-top"><i style="width:14px;height:14px;border-radius:4px;border:2px solid var(--nb-line);background:' + a.color + '"></i><b>' + esc(a.label) + '</b><span class="ov-badge" style="background:' + l.c + '">' + l.t + '</span><span class="ov-pct">' + R(v) + '</span></div>';
+        h += '<div class="ov-bar"><span style="width:' + v + '%;background:' + a.color + '"></span><em style="left:calc(' + ca + '% - 1px)" title="Class average"></em></div><div class="ov-note">The black marker is the class average (' + R(ca) + '). ' + esc(r.note) + '</div>';
+        r.subs.length > 1 && r.subs.forEach(function (x) { h += '<div class="ov-sub"><span>' + esc(x.l) + '</span><span class="mini"><span style="width:' + x.v + '%;background:' + level(x.v).c + '"></span></span><span>' + R(x.v) + '</span></div>'; });
         h += spark(r.pts, a.color) + '</div>';
       });
       return h;
@@ -6236,6 +6952,7 @@ window.UG_TEMPLATES = {
       box.innerHTML = '<div class="ov-grid"><div class="ov-left">' + leftHtml(DATA) + '</div><div class="ov-right">' + rightHtml(DATA) + '</div></div>';
     }
     box.addEventListener('click', function (e) {
+      var sh = e.target.closest('[data-ovshare]'); if (sh) { shareNow(sh.getAttribute('data-ovshare')); return; }
       var b = e.target.closest('[data-ov],[data-ovback]'); if (!b) return;
       if (b.hasAttribute('data-ovback')) sel = null; else sel = Number(b.getAttribute('data-ov'));
       render(); box.scrollIntoView({ block: 'start' });
