@@ -107,7 +107,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <link rel="icon" href="icon-256.png">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>Ultimate Grader V1.10</title>
+  <title>Ultimate Grader V1.11</title>
   <style>
     :root {
       --bg: #f0f2f5;
@@ -1719,6 +1719,9 @@
     .set-theme.on .pv b { opacity:.55; }
 
 
+    #ov-lang .ov-lang-btn { display:block; width:100%; margin-top:10px; padding:15px 12px; font-size:17px; text-align:center; cursor:pointer; }
+
+
     /* =====================================================================================================
        ELEGANT THEME  (Settings > Appearance > Elegant).  Same layout, same sizes, same buttons as Classic -
        only the look changes: warm paper, hairline borders, soft shadows, refined serif titles, muted colours.
@@ -2046,7 +2049,7 @@
     <div id="lib-box" style="display:none;"></div>
     <footer class="hs-foot">
       <div class="start-error" id="start-error"></div>
-      <p id="start-help">Either pick your Excel grade sheet (<span class="m">Reach</span>, <span class="m">Race</span>, <span class="m">Run</span>, or <span class="m">Start</span> — the file name tells the app which one it is), or create your own from scratch using <b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> New class</b>. Everything you enter is saved straight into that file.</p>
+      <p id="start-help">Either pick your Excel grade sheet (<span class="m">Reach</span>, <span class="m">Race</span>, <span class="m">Run</span>, or <span class="m">Start</span> — the file name tells the app which one it is), or create your own from scratch using <b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> New class</b>.</p>
       <div class="start-note" id="start-note"></div>
       <div class="hs-stamp" id="hs-stamp"><span id="hs-build">App build: 2026-10-26 b18</span><span class="sep"></span><span class="hs-native" id="hs-native"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" x2="2" y1="12" y2="12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><line x1="6" x2="6.01" y1="16" y2="16"/><line x1="10" x2="10.01" y1="16" y2="16"/></svg> <span id="hs-native-txt">native file access: ON</span></span></div>
     </footer>
@@ -4456,7 +4459,7 @@ const Offline = (function () {
     SHOW_LS_SUBTABS = Object.assign({}, v.showLsSubtabs);
     keypadProfiles = v.keypadProfiles;
     window.__variantLabel = v.label;
-    document.title = 'Ultimate Grader ' + v.label + ' V1.10';
+    document.title = 'Ultimate Grader ' + v.label + ' V1.11';
     document.documentElement.style.setProperty('--reading-cols', v.reading.cols.length);
 
     currentDictNo = 1; currentQuizNo = 1; currentQuizGroup = 0;
@@ -6547,7 +6550,8 @@ window.UG_TEMPLATES = {
       { key: 'writing',    label: 'Writing',    color: '#fbbf24' },
       { key: 'homework',   label: 'Homework',   color: '#a3e635' },
       { key: 'attendance', label: 'Attendance', color: '#f472b6' },
-      { key: 'quizzes',    label: 'Quizzes',    color: '#ef4444' }
+      { key: 'grammar',    tab: 'quizzes', label: 'Grammar Quizzes',    color: '#ef4444' },
+      { key: 'vocabulary', tab: 'quizzes', label: 'Vocabulary Quizzes', color: '#fb7185' }
     ];
     // CLASS ACTIVITY SCORE: weights (out of 100) for every level. Attendance and Quizzes are NOT in it - they are shown separately.
     // To change a weight later, edit the numbers here (each level should add up to 100).
@@ -6566,7 +6570,7 @@ window.UG_TEMPLATES = {
     function R(v) { return Math.round(v); }
 
     // ---- caches (they fill lazily, one per tab) ----
-    function cacheOf(k) { return { attendance: attCache, homework: hwCache, reading: readingCache, lis_spe: lsCache, listening: lsCache, speaking: lsCache, writing: writingCache, quizzes: quizCache }[k]; }
+    function cacheOf(k) { return { attendance: attCache, homework: hwCache, reading: readingCache, lis_spe: lsCache, listening: lsCache, speaking: lsCache, writing: writingCache, quizzes: quizCache, grammar: quizCache, vocabulary: quizCache }[k]; }
     var LOAD = {
       attendance: ['getAttendanceData', function (d) { attCache = d; if (d && d.sessionList && d.sessionList.length) { var done = d.doneSessions || [], nx = d.sessionList.find(function (n) { return done.indexOf(n) === -1; }); d.activeSession = nx !== undefined ? nx : d.sessionList[d.sessionList.length - 1]; } }],
       homework:   ['getAppData', function (d) { hwCache = d; if (d && d.sessionList && d.sessionList.length) d.activeSession = d.sessionList[0]; }],
@@ -6586,50 +6590,83 @@ window.UG_TEMPLATES = {
 
     // ---- per-area calculators: return { avg, pts:[{l,v}], subs:[{l,v}], note } or null ----
     function getSt(cache, i, name) { if (!cache || !cache.students) return null; var s = cache.students[i]; if (s && s.name === name) return s; return cache.students.filter(function (x) { return x.name === name; })[0] || s || null; }
-    function lsCalc(c, st, keys, pre) {
+    // ---- how each skill average is built: weights of its parts, per level (parts that have no scores yet are left out and the rest are re-weighted) ----
+    var SUBW = {
+      reach: { reading: { r: 23, rc: 32, sum: 45 }, speaking: { s: 20, dw: 45, dec: 30, conv: 5 }, writing: { sq: 25, nh: 10, num: 65 } },
+      race:  { reading: { r: 23, rc: 32, sum: 45 }, speaking: { s: 45, dec: 45, conv: 10 },         writing: { sq: 65, nh: 10, num: 25 } },
+      run34: { reading: { r: 40, rc: 60 },          speaking: { s: 90, conv: 10 },                   writing: { sq: 70, nh: 5, num: 25 } },
+      start: { reading: { r: 100 },                 speaking: { s: 90, conv: 10 },                   writing: { nh: 35, num: 65 } },
+      run12: { reading: { r: 100 },                 speaking: { s: 90, conv: 10 },                   writing: { nh: 35, num: 65 } }
+    };
+    function sw(area, k) { var m = (SUBW[activeVariantKey] || SUBW.reach)[area]; return (m && m[k]) || 0; }
+    function wmean(items) {
+      var s = 0, w = 0, n = 0, p = 0; items.forEach(function (x) { if (x.v === null || x.v === undefined) return; n++; p += x.v; if (x.w > 0) { s += x.v * x.w; w += x.w; } });
+      return w ? s / w : (n ? p / n : null);
+    }
+    function lsCalc(c, st, keys, pre, area) {
       if (!c || !st || !keys.length) return null;
       var acc = {}, pts = [];
-      (c.sessionList || []).forEach(function (n) { var o = (st.allSessions && st.allSessions[n]) || {}, vs = []; keys.forEach(function (k) { var x = num(o[k[0]] && o[k[0]].score); if (x !== null) { vs.push(x); (acc[k[0]] = acc[k[0]] || []).push(x); } }); if (vs.length) pts.push({ l: pre + n, v: avg(vs) }); });
+      (c.sessionList || []).forEach(function (n) {
+        var o = (st.allSessions && st.allSessions[n]) || {}, it = [];
+        keys.forEach(function (k) { var x = num(o[k[0]] && o[k[0]].score); if (x !== null) { (acc[k[0]] = acc[k[0]] || []).push(x); it.push({ v: x, w: area ? sw(area, k[0]) : 1 }); } });
+        var v = wmean(it); if (v !== null) pts.push({ l: pre + n, v: v });
+      });
       if (!pts.length) return null;
-      return { avg: avg(pts.map(function (p) { return p.v; })), pts: pts, subs: keys.filter(function (k) { return acc[k[0]]; }).map(function (k) { return { l: k[1], v: avg(acc[k[0]]) }; }), note: pts.length + ' sessions evaluated' };
+      var subs = keys.filter(function (k) { return acc[k[0]]; }).map(function (k) { return { l: k[1], v: avg(acc[k[0]]), w: area ? sw(area, k[0]) : 0 }; });
+      return { avg: wmean(subs.map(function (x) { return { v: x.v, w: area ? x.w : 1 }; })), pts: pts, subs: subs, note: pts.length + ' sessions evaluated', nd: ['ls', pts.length] };
     }
+    function quizCalc(gk) {
+      return function (c, st) {
+        if (!c || !st) return null; var g = quizCfg().groups.filter(function (x) { return x.key === gk; })[0]; if (!g) return null;
+        var pts = []; for (var n = 1; n <= g.count; n++) { var x = num(st.quiz && st.quiz[gk] && st.quiz[gk][n]); if (x !== null) pts.push({ l: 'Q' + n, v: x }); }
+        if (!pts.length) return null;
+        return { avg: avg(pts.map(function (p) { return p.v; })), pts: pts, subs: [], note: pts.length + ' quizzes', nd: ['qz', pts.length] };
+      };
+    }
+    var RLBL = { r: 'Fluency', rc: 'Comprehension', sum: 'Summary' };
     var CALC = {
       attendance: function (c, st) {
         var done = (c && c.doneSessions) || []; if (!st || !done.length) return null;
         var pts = [], ab = 0, la = 0;
         done.slice().sort(function (a, b) { return a - b; }).forEach(function (n) { var o = st.allSessions && st.allSessions[n], v = o ? o.status : ''; if (v === 'A') { ab++; pts.push({ l: 'S' + n, v: 0 }); } else if (v === 'L') { la++; pts.push({ l: 'S' + n, v: 50 }); } else pts.push({ l: 'S' + n, v: 100 }); });
-        return { avg: avg(pts.map(function (p) { return p.v; })), pts: pts, subs: [], note: ab + ' absent · ' + la + ' late · out of ' + done.length + ' finished sessions' };
+        return { avg: avg(pts.map(function (p) { return p.v; })), pts: pts, subs: [], note: ab + ' absent · ' + la + ' late · out of ' + done.length + ' finished sessions', nd: ['att', done.length, ab, la] };
       },
       homework: function (c, st) {
         if (!c || !st) return null; var pts = [], missed = 0;
         (c.sessionList || []).forEach(function (n) { var o = st.allSessions && st.allSessions[n], v = o ? o.score : ''; if (v === 'A') { missed++; return; } var x = num(v); if (x !== null) pts.push({ l: 'HW' + n, v: x }); });
-        if (!pts.length) return null; return { avg: avg(pts.map(function (p) { return p.v; })), pts: pts, subs: [], note: pts.length + ' homework scored' + (missed ? ' · absent on ' + missed : '') };
+        if (!pts.length) return null; return { avg: avg(pts.map(function (p) { return p.v; })), pts: pts, subs: [], note: pts.length + ' homework scored' + (missed ? ' · absent on ' + missed : ''), nd: ['hw', pts.length, missed] };
       },
       reading: function (c, st) {
         if (!c || !st) return null; var cols = readingCfg().cols, acc = {}, pts = [];
-        (c.sessionList || []).forEach(function (n) { var o = (st.allSessions && st.allSessions[n]) || {}, vs = []; cols.forEach(function (k) { var x = num(o[k] && o[k].score); if (x !== null) { vs.push(x); (acc[k] = acc[k] || []).push(x); } }); if (vs.length) pts.push({ l: 'R' + n, v: avg(vs) }); });
+        (c.sessionList || []).forEach(function (n) {
+          var o = (st.allSessions && st.allSessions[n]) || {}, it = [];
+          cols.forEach(function (k) { var x = num(o[k] && o[k].score); if (x !== null) { (acc[k] = acc[k] || []).push(x); it.push({ v: x, w: sw('reading', k) }); } });
+          var v = wmean(it); if (v !== null) pts.push({ l: 'R' + n, v: v });
+        });
         if (!pts.length) return null;
-        return { avg: avg(pts.map(function (p) { return p.v; })), pts: pts, subs: cols.filter(function (k) { return acc[k]; }).map(function (k) { return { l: READING_LABELS[k].long, v: avg(acc[k]) }; }), note: pts.length + ' reading evaluations' };
+        var subs = cols.filter(function (k) { return acc[k]; }).map(function (k) { return { l: RLBL[k] || k, v: avg(acc[k]), w: sw('reading', k) }; });
+        return { avg: wmean(subs), pts: pts, subs: subs, note: pts.length + ' reading evaluations', nd: ['rd', pts.length] };
       },
-      listening: function (c, st) { return lsCalc(c, st, SHOW_LS_SUBTABS.eval ? [['l', 'Listening']] : [], 'L'); },
+      listening: function (c, st) { return lsCalc(c, st, SHOW_LS_SUBTABS.eval ? [['l', 'Listening']] : [], 'L', null); },
       speaking: function (c, st) {
-        var keys = []; if (SHOW_LS_SUBTABS.eval) keys.push(['s', 'Speaking']); if (SHOW_LS_SUBTABS.describing) keys.push(['dec', 'Describing']); if (SHOW_LS_SUBTABS.dwork) keys.push(['dw', 'D-Work']); if (SHOW_LS_SUBTABS.conversation) keys.push(['conv', 'Conversation']);
-        return lsCalc(c, st, keys, 'S');
+        var keys = []; if (SHOW_LS_SUBTABS.eval) keys.push(['s', 'Speaking Evaluation']); if (SHOW_LS_SUBTABS.dwork) keys.push(['dw', 'Dictionary Work']); if (SHOW_LS_SUBTABS.describing) keys.push(['dec', 'Describing']); if (SHOW_LS_SUBTABS.conversation) keys.push(['conv', 'Conversation']);
+        return lsCalc(c, st, keys, 'S', 'speaking');
       },
       writing: function (c, st) {
-        if (!c || !st) return null; var wc = writingCfg(), acc = { m: [], nh: [], d: [] }, pts = [];
-        (c.sessionList || []).forEach(function (n) { var vs = [], m = num(st.allSessions && st.allSessions[n] && st.allSessions[n].score); if (m !== null) { vs.push(m); acc.m.push(m); } if (wc.nh) { var h = num(st.nh && st.nh[n] && st.nh[n].score); if (h !== null) { vs.push(h); acc.nh.push(h); } } if (vs.length) pts.push({ l: 'W' + n, v: avg(vs) }); });
-        var nt = numTabCfg(); for (var n = 1; n <= (nt.count || 0); n++) { var d = num(st.dict && st.dict[n]); if (d !== null) { acc.d.push(d); pts.push({ l: nt.short + n, v: d }); } }
-        if (!pts.length) return null; var subs = [];
-        if (acc.m.length) subs.push({ l: wc.short || 'S&Q', v: avg(acc.m) }); if (acc.nh.length) subs.push({ l: 'N&H', v: avg(acc.nh) }); if (acc.d.length) subs.push({ l: nt.label, v: avg(acc.d) });
-        return { avg: avg(subs.map(function (x) { return x.v; })), pts: pts, subs: subs, note: pts.length + ' writing scores' };
+        if (!c || !st) return null; var wc = writingCfg(), nt = numTabCfg(), mainKey = wc.nh ? 'sq' : 'nh', acc = { sq: [], nh: [], num: [] }, pts = [];
+        (c.sessionList || []).forEach(function (n) {
+          var it = [], m = num(st.allSessions && st.allSessions[n] && st.allSessions[n].score); if (m !== null) { acc[mainKey].push(m); it.push({ v: m, w: sw('writing', mainKey) }); }
+          if (wc.nh) { var h = num(st.nh && st.nh[n] && st.nh[n].score); if (h !== null) { acc.nh.push(h); it.push({ v: h, w: sw('writing', 'nh') }); } }
+          var v = wmean(it); if (v !== null) pts.push({ l: 'W' + n, v: v });
+        });
+        for (var n = 1; n <= (nt.count || 0); n++) { var d = num(st.dict && st.dict[n]); if (d !== null) { acc.num.push(d); pts.push({ l: nt.short + n, v: d }); } }
+        if (!pts.length) return null;
+        var LB = { sq: 'Sentence & Question Making', nh: 'Neatness & Handwriting', num: nt.label }, subs = [];
+        ['sq', 'nh', 'num'].forEach(function (k) { if (acc[k].length) subs.push({ l: LB[k], v: avg(acc[k]), w: sw('writing', k) }); });
+        return { avg: wmean(subs), pts: pts, subs: subs, note: pts.length + ' writing scores', nd: ['wr', pts.length] };
       },
-      quizzes: function (c, st) {
-        if (!c || !st) return null; var gs = quizCfg().groups, subs = [], byN = {}, maxN = 0;
-        gs.forEach(function (g) { var vs = []; for (var n = 1; n <= g.count; n++) { var x = num(st.quiz && st.quiz[g.key] && st.quiz[g.key][n]); if (x !== null) { vs.push(x); (byN[n] = byN[n] || []).push(x); maxN = Math.max(maxN, n); } } if (vs.length) subs.push({ l: g.label, v: avg(vs) }); });
-        if (!subs.length) return null; var pts = []; for (var n = 1; n <= maxN; n++) if (byN[n]) pts.push({ l: 'Q' + n, v: avg(byN[n]) });
-        return { avg: avg(subs.map(function (x) { return x.v; })), pts: pts, subs: subs, note: pts.length + ' quizzes' };
-      }
+      grammar: quizCalc('g'),
+      vocabulary: quizCalc('v')
     };
 
     function compute() {
@@ -6672,16 +6709,54 @@ window.UG_TEMPLATES = {
     // ============================== SHARE AS AN IMAGE ==============================
     // The picture is drawn straight onto a canvas (no internet, no extra library) and handed to the normal share sheet.
     function isElegant() { return document.documentElement.getAttribute('data-skin') === 'elegant'; }
-    function tokens() {
+    function tokens0() {
       if (isElegant()) return { el: true, bg: '#f4f1ea', card: '#fffdf9', ink: '#26221c', mut: '#8a8173', track: '#ebe5d9', line: 'rgba(74,56,30,.20)', lw: 1.5, rad: 18, sh: 0,
         gold: '#a8844a', serif: 'Georgia, "Iowan Old Style", "Noto Serif", serif', sans: '"Inter", Roboto, "Segoe UI", "UG Persian", Arial, sans-serif', w: 600,
-        area: { attendance: '#c7899a', homework: '#94ae83', reading: '#7f9bc6', listening: '#5fa39a', speaking: '#74b3c4', writing: '#cfab5d', quizzes: '#c2705f' },
+        area: { attendance: '#c7899a', homework: '#94ae83', reading: '#7f9bc6', listening: '#5fa39a', speaking: '#74b3c4', writing: '#cfab5d', grammar: '#c2705f', vocabulary: '#d28f7f' },
         lvl: ['#8fc3a0', '#cbdb9a', '#ecca78', '#e5a095'], cellA: .55 };
       var sans = '"UG Latin", "UG Persian", "Segoe UI", Roboto, Arial, sans-serif';
       return { el: false, bg: '#f1f5f9', card: '#ffffff', ink: '#0f172a', mut: '#64748b', track: '#e2e8f0', line: '#0f172a', lw: 3, rad: 18, sh: 6,
         gold: '#a78bfa', serif: sans, sans: sans, w: 700, area: null, lvl: ['#4ade80', '#bef264', '#fbbf24', '#f87171'], cellA: .85 };
     }
-    var ABBR = { attendance: 'Att', homework: 'HW', reading: 'Read', listening: 'Listen', speaking: 'Speak', writing: 'Write', quizzes: 'Quiz' };
+    function tokens(fa) {
+      var T = tokens0(); T.fa = !!fa;
+      if (fa) { var f = '"UG Persian", "Vazirmatn", "Noto Naskh Arabic", Tahoma, "Segoe UI", Arial, sans-serif'; T.sans = f; T.serif = f; T.w = 700; }
+      return T;
+    }
+    var FDIG = '۰۱۲۳۴۵۶۷۸۹';
+    function fd(T, s) { s = String(s); return T.fa ? s.replace(/[0-9]/g, function (d) { return FDIG.charAt(d); }) : s; }
+    var FA = {
+      'STUDENT REPORT': 'گزارش عملکرد دانش‌آموز', 'CLASS OVERVIEW': 'گزارش عملکرد کلاس', 'class activity score': 'نمره فعالیت کلاسی',
+      'STRENGTHS AND WEAK SPOTS': 'نقاط قوت و ضعف', 'STRONGEST AREA': 'قوی‌ترین مهارت', 'NEEDS ATTENTION': 'نیازمند توجه', 'NEED ATTENTION': 'نیازمند توجه',
+      'No area is below 70': 'هیچ مهارتی زیر ۷۰ نیست', 'Steady across the board': 'عملکرد یکنواخت و پایدار', 'TREND': 'روند', 'weight': 'وزن', 'Class average': 'میانگین کلاس',
+      'SHOWN SEPARATELY  ·  NOT PART OF THE CLASS ACTIVITY SCORE': 'جداگانه  ·  بدون تأثیر در نمره فعالیت کلاسی',
+      'SHOWN SEPARATELY  ·  NOT IN THE ACTIVITY SCORE': 'جداگانه  ·  بدون تأثیر در نمره فعالیت',
+      'Performance of the whole class  ·  scores out of 100': 'عملکرد کل کلاس  ·  نمره‌ها از ۱۰۰',
+      'STUDENTS': 'تعداد دانش‌آموزان', 'ACTIVITY AVERAGE': 'میانگین فعالیت کلاسی', 'AREAS SCORED': 'مهارت‌های نمره‌دار',
+      'CLASS AVERAGE BY AREA': 'میانگین کلاس در هر مهارت', 'TOP OF THE CLASS': 'نفرات برتر کلاس', 'ALL STUDENTS': 'همه دانش‌آموزان', 'STUDENT': 'دانش‌آموز', 'SCORE': 'نمره',
+      'Class overview': 'گزارش کلاس', 'Still doing well overall. Nothing urgent.': 'در مجموع عملکرد خوبی دارد؛ نگرانی خاصی نیست.',
+      'No single area is below 70.': 'هیچ مهارتی زیر ۷۰ نیست.', 'Lowest in class': 'پایین‌ترین در کلاس',
+      'Excellent': 'عالی', 'Good': 'خوب', 'Needs work': 'نیازمند تلاش', 'Critical': 'ضعیف',
+      'Listening': 'شنیداری', 'Speaking': 'گفتاری', 'Reading': 'خواندن', 'Writing': 'نوشتن', 'Homework': 'تکلیف', 'Attendance': 'حضور و غیاب',
+      'Grammar Quizzes': 'آزمونک‌های گرامر', 'Vocabulary Quizzes': 'آزمونک‌های واژگان',
+      'Fluency': 'روان‌خوانی', 'Comprehension': 'درک مطلب', 'Summary': 'خلاصه‌نویسی', 'Speaking Evaluation': 'ارزیابی گفتاری', 'Describing': 'توصیف تصویر',
+      'Dictionary Work': 'کار با فرهنگ لغت', 'Conversation': 'مکالمه', 'Sentence & Question Making': 'جمله‌سازی و سؤال‌سازی', 'Neatness & Handwriting': 'نظم و خوشنویسی',
+      'Dictation': 'دیکته', 'Composition': 'انشا',
+      'Att': 'حضور', 'HW': 'تکلیف', 'Read': 'خواندن', 'Listen': 'شنیداری', 'Speak': 'گفتاری', 'Write': 'نوشتن', 'Gram': 'گرامر', 'Vocab': 'واژگان',
+      'Ultimate Grader  ·  all scores are out of 100': 'Ultimate Grader  ·  همه نمره‌ها از ۱۰۰ است'
+    };
+    function tr(T, k) { return T.fa ? (FA[k] || k) : k; }
+    function faNote(r) {
+      var d = r.nd || [], k = d[0];
+      if (k === 'att') return d[2] + ' غیبت  ·  ' + d[3] + ' تأخیر  ·  از ' + d[1] + ' جلسه برگزارشده';
+      if (k === 'hw') return d[1] + ' تکلیف نمره‌دهی شد' + (d[2] ? '  ·  غایب در ' + d[2] + ' جلسه' : '');
+      if (k === 'rd') return d[1] + ' ارزیابی خواندن';
+      if (k === 'ls') return d[1] + ' جلسه ارزیابی شد';
+      if (k === 'wr') return d[1] + ' نمره نوشتن';
+      if (k === 'qz') return d[1] + ' آزمونک';
+      return '';
+    }
+    var ABBR = { attendance: 'Att', homework: 'HW', reading: 'Read', listening: 'Listen', speaking: 'Speak', writing: 'Write', grammar: 'Gram', vocabulary: 'Vocab' };
     function lvlCol(T, v) { return T.lvl[v >= 85 ? 0 : v >= 70 ? 1 : v >= 55 ? 2 : 3]; }
     function areaCol(T, a) { return (T.area && T.area[a.key]) || a.color; }
     function rr(c, x, y, w, h, r) { r = Math.max(0, Math.min(r, w / 2, h / 2)); c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
@@ -6693,27 +6768,30 @@ window.UG_TEMPLATES = {
       rr(c, x, y, w, h, r); c.fillStyle = fill || T.card; c.fill(); c.restore();
       c.save(); rr(c, x, y, w, h, r); c.lineWidth = T.lw; c.strokeStyle = T.line; c.stroke(); c.restore();
     }
-    function F(T, size, w, serif) { return (w || T.w) + ' ' + size + 'px ' + (serif ? T.serif : T.sans); }
+    function F(T, size, w, serif) { return (T.fa ? 700 : (w || T.w)) + ' ' + (T.fa ? Math.round(size * 1.1) : size) + 'px ' + (serif ? T.serif : T.sans); }
     function tx(c, T, s, x, y, o) {
-      o = o || {}; var size = o.size || 24; s = String(s);
+      o = o || {}; var size = o.size || 24; s = fd(T, s);
       c.save(); c.textBaseline = 'alphabetic'; c.textAlign = o.align || 'left'; c.fillStyle = o.color || T.ink;
-      if ('letterSpacing' in c) c.letterSpacing = (o.ls || 0) + 'px';
+      if ('letterSpacing' in c) c.letterSpacing = (T.fa ? 0 : (o.ls || 0)) + 'px';
       if (o.max) {
         for (;;) { c.font = F(T, size, o.w, o.serif); if (c.measureText(s).width <= o.max || size <= (o.min || size)) break; size -= 1; }
         if (c.measureText(s).width > o.max) { while (s.length > 1 && c.measureText(s + '…').width > o.max) s = s.slice(0, -1); s += '…'; }
       } else c.font = F(T, size, o.w, o.serif);
-      var wd = c.measureText(s).width; c.fillText(s, x, y); c.restore(); return wd;
+      var wd = c.measureText(s).width;
+      if (T.fa) { c.direction = 'rtl'; var al = c.textAlign; c.textAlign = al === 'left' ? 'right' : al === 'right' ? 'left' : al; c.translate(x, y); c.scale(-1, 1); c.fillText(s, 0, 0); }   // the picture is mirrored for Farsi; text is flipped back so letters read normally
+      else c.fillText(s, x, y);
+      c.restore(); return wd;
     }
-    function mw(c, T, s, size, w, serif) { c.save(); c.font = F(T, size, w, serif); if ('letterSpacing' in c) c.letterSpacing = '0px'; var v = c.measureText(String(s)).width; c.restore(); return v; }
+    function mw(c, T, s, size, w, serif) { c.save(); c.font = F(T, size, w, serif); if ('letterSpacing' in c) c.letterSpacing = '0px'; var v = c.measureText(fd(T, s)).width; c.restore(); return v; }
     function wrapC(c, T, s, max, size) {
       c.save(); c.font = F(T, size, T.el ? 500 : 700); if ('letterSpacing' in c) c.letterSpacing = '0px';
-      var words = String(s).split(/\s+/), lines = [], cur = '';
+      var words = fd(T, s).split(/\s+/), lines = [], cur = '';
       words.forEach(function (w) { var t = cur ? cur + ' ' + w : w; if (c.measureText(t).width > max && cur) { lines.push(cur); cur = w; } else cur = t; });
       if (cur) lines.push(cur); c.restore(); return lines;
     }
     function pill(c, T, rx, y, h, label, fill, size) {
-      var up = String(label).toUpperCase();
-      c.save(); c.font = F(T, size, T.w); if ('letterSpacing' in c) c.letterSpacing = '1px'; var w = c.measureText(up).width + 30; c.restore();
+      var up = fd(T, T.fa ? label : String(label).toUpperCase());
+      c.save(); c.font = F(T, size, T.w); if ('letterSpacing' in c) c.letterSpacing = T.fa ? '0px' : '1px'; var w = c.measureText(up).width + 30; c.restore();
       var x = rx - w; rr(c, x, y, w, h, h / 2); c.fillStyle = fill; c.fill();
       if (!T.el) { c.lineWidth = 2.5; c.strokeStyle = T.ink; c.stroke(); }
       tx(c, T, up, x + w / 2 + 0.5, y + h / 2 + size * 0.36, { size: size, align: 'center', ls: 1 });
@@ -6737,7 +6815,7 @@ window.UG_TEMPLATES = {
       c.lineWidth = T.el ? 3 : 4; c.lineJoin = 'round'; c.strokeStyle = T.el ? T.gold : T.ink; c.stroke();
       used.forEach(function (a, i) { var v = vals[a.key]; if (v == null) return; var q = pt(i, Rr * v / 100); c.beginPath(); c.arc(q[0], q[1], 7, 0, 7); c.fillStyle = areaCol(T, a); c.fill(); c.lineWidth = 3; c.strokeStyle = T.ink; c.stroke(); });
       c.restore();
-      used.forEach(function (a, i) { var q = pt(i, Rr + 30), co = Math.cos(-Math.PI / 2 + 2 * Math.PI * i / n); tx(c, T, a.short || a.label, q[0], q[1] + 8, { size: ls, align: Math.abs(co) < .25 ? 'center' : co > 0 ? 'left' : 'right' }); });
+      used.forEach(function (a, i) { var q = pt(i, Rr + 30), co = Math.cos(-Math.PI / 2 + 2 * Math.PI * i / n); tx(c, T, tr(T, a.short || a.label), q[0], q[1] + 8, { size: ls, align: Math.abs(co) < .25 ? 'center' : co > 0 ? 'left' : 'right' }); });
     }
     function sparkC(c, T, x, y, w, h, pts, col) {
       var px = 8, py = 8, X = function (i) { return x + px + (w - 2 * px) * i / (pts.length - 1); }, Y = function (v) { return y + h - py - (h - 2 * py) * v / 100; };
@@ -6751,27 +6829,28 @@ window.UG_TEMPLATES = {
       var e = document.getElementById('file-name'), t = e ? e.textContent : '';
       return t.replace(/^[^\p{L}\p{N}]+/u, '').replace(/\s+·.*$/, '').replace(/\.xlsx$/i, '').replace(/_+/g, ' ').trim();
     }
-    function today() { try { return new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }); } catch (e) { return ''; } }
+    function today(T) { try { return new Date().toLocaleDateString(T && T.fa ? 'fa-IR' : undefined, { year: 'numeric', month: 'short', day: 'numeric' }); } catch (e) { return ''; } }
     function foot(c, T, W, y) {
-      tx(c, T, 'Ultimate Grader  ·  all scores are out of 100', W / 2, y + 22, { size: 19, color: T.mut, align: 'center' });
+      tx(c, T, tr(T, 'Ultimate Grader  ·  all scores are out of 100'), W / 2, y + 22, { size: 19, color: T.mut, align: 'center' });
       return y + 70;
     }
 
     function buildStudent(c, T, D, s, W, H) {
       var M = 44, IW = W - 2 * M, G = 26, y = M, P = 30;
       c.fillStyle = T.bg; c.fillRect(0, 0, W, H);
-      tx(c, T, 'STUDENT REPORT', M, y + 16, { size: 19, ls: 4, color: T.mut });
-      tx(c, T, today(), W - M, y + 16, { size: 19, color: T.mut, align: 'right' });
+      if (T.fa) { c.translate(W, 0); c.scale(-1, 1); }
+      tx(c, T, tr(T, 'STUDENT REPORT'), M, y + 16, { size: 19, ls: 4, color: T.mut });
+      tx(c, T, today(T), W - M, y + 16, { size: 19, color: T.mut, align: 'right' });
       y += 46;
       var lv = level(s.overall), cn = clsName(), clsAvg = avg(D.ranked.map(function (x) { return x.overall; }));
       card(c, T, M, y, IW, 214, T.card);
       var lw = IW - 64 - 280;
       tx(c, T, s.name, M + 32, y + 88, { size: 54, serif: true, max: lw, min: 26 });
       if (cn) tx(c, T, cn, M + 32, y + 130, { size: 22, color: T.mut, max: lw, min: 15 });
-      tx(c, T, 'Rank ' + s.rank + ' of ' + D.ranked.length + '   ·   Class average ' + R(clsAvg), M + 32, y + 172, { size: 24, color: T.mut, max: lw, min: 15 });
+      tx(c, T, (T.fa ? 'رتبه ' + s.rank + ' از ' + D.ranked.length + '   ·   میانگین کلاس ' + R(clsAvg) : 'Rank ' + s.rank + ' of ' + D.ranked.length + '   ·   Class average ' + R(clsAvg)), M + 32, y + 172, { size: 24, color: T.mut, max: lw, min: 15 });
       tx(c, T, String(R(s.overall)), W - M - 34, y + 118, { size: 112, serif: true, align: 'right' });
-      tx(c, T, 'class activity score', W - M - 34, y + 148, { size: 20, color: T.mut, align: 'right' });
-      pill(c, T, W - M - 34, y + 164, 34, lv.t, lvlCol(T, s.overall), 17);
+      tx(c, T, tr(T, 'class activity score'), W - M - 34, y + 148, { size: 20, color: T.mut, align: 'right' });
+      pill(c, T, W - M - 34, y + 164, 34, tr(T, lv.t), lvlCol(T, s.overall), 17);
       y += 214 + G;
 
       var ar = D.scored.filter(function (a) { return s.areas[a.key]; }), ex = D.extra.filter(function (a) { return s.areas[a.key]; }), vals = {};
@@ -6780,51 +6859,51 @@ window.UG_TEMPLATES = {
 
       if (ar.length >= 3) {
         var rh = 530; card(c, T, M, y, IW, rh, T.card);
-        tx(c, T, 'STRENGTHS AND WEAK SPOTS', M + P + 2, y + 52, { size: 19, ls: 3, color: T.mut });
+        tx(c, T, tr(T, 'STRENGTHS AND WEAK SPOTS'), M + P + 2, y + 52, { size: 19, ls: 3, color: T.mut });
         radarC(c, T, W / 2, y + 276, 150, ar, vals, D.classAvg, T.el ? T.gold : '#a78bfa', 24);
-        var ly = y + rh - 36, fn = s.name.split(' ')[0], w1 = mw(c, T, fn, 21), w2 = mw(c, T, 'Class average', 21), tot = 26 + w1 + 50 + 44 + w2, lx = W / 2 - tot / 2;
+        var ly = y + rh - 36, fn = s.name.split(' ')[0], w1 = mw(c, T, fn, 21), w2 = mw(c, T, tr(T, 'Class average'), 21), tot = 26 + w1 + 50 + 44 + w2, lx = W / 2 - tot / 2;
         c.save(); c.globalAlpha = .45; c.fillStyle = T.el ? T.gold : '#a78bfa'; c.fillRect(lx, ly - 14, 20, 16); c.globalAlpha = 1; c.lineWidth = 2.5; c.strokeStyle = T.el ? T.gold : T.ink; c.strokeRect(lx, ly - 14, 20, 16); c.restore();
         tx(c, T, fn, lx + 30, ly, { size: 21, color: T.mut });
         var dx = lx + 30 + w1 + 50; c.save(); c.setLineDash([7, 5]); c.lineWidth = 3; c.strokeStyle = T.mut; c.beginPath(); c.moveTo(dx, ly - 6); c.lineTo(dx + 34, ly - 6); c.stroke(); c.restore();
-        tx(c, T, 'Class average', dx + 44, ly, { size: 21, color: T.mut });
+        tx(c, T, tr(T, 'Class average'), dx + 44, ly, { size: 21, color: T.mut });
         y += rh + G;
       }
       if (ar.length > 1) {
         var best = sorted[0], worst = sorted[sorted.length - 1], hw = (IW - 20) / 2;
         card(c, T, M, y, IW, 158, T.card);
-        tx(c, T, 'STRONGEST AREA', M + P, y + 46, { size: 17, ls: 3, color: T.mut });
-        tx(c, T, best.label + '  ' + R(vals[best.key]), M + P, y + 92, { size: 30, serif: true, max: hw - P - 14, min: 18 });
-        tx(c, T, 'Class average ' + R(D.classAvg[best.key]), M + P, y + 128, { size: 20, color: T.mut });
+        tx(c, T, tr(T, 'STRONGEST AREA'), M + P, y + 46, { size: 17, ls: 3, color: T.mut });
+        tx(c, T, tr(T, best.label) + '  ' + R(vals[best.key]), M + P, y + 92, { size: 30, serif: true, max: hw - P - 14, min: 18 });
+        tx(c, T, tr(T, 'Class average') + ' ' + R(D.classAvg[best.key]), M + P, y + 128, { size: 20, color: T.mut });
         var rx = M + IW / 2 + 10;
-        tx(c, T, 'NEEDS ATTENTION', rx, y + 46, { size: 17, ls: 3, color: T.mut });
+        tx(c, T, tr(T, 'NEEDS ATTENTION'), rx, y + 46, { size: 17, ls: 3, color: T.mut });
         if (vals[worst.key] < 70) {
-          tx(c, T, worst.label + '  ' + R(vals[worst.key]), rx, y + 92, { size: 30, serif: true, max: hw - P - 14, min: 18 });
-          tx(c, T, 'Class average ' + R(D.classAvg[worst.key]), rx, y + 128, { size: 20, color: T.mut });
+          tx(c, T, tr(T, worst.label) + '  ' + R(vals[worst.key]), rx, y + 92, { size: 30, serif: true, max: hw - P - 14, min: 18 });
+          tx(c, T, tr(T, 'Class average') + ' ' + R(D.classAvg[worst.key]), rx, y + 128, { size: 20, color: T.mut });
         } else {
-          tx(c, T, 'No area is below 70', rx, y + 92, { size: 30, serif: true, max: hw - P - 14, min: 18 });
-          tx(c, T, 'Steady across the board', rx, y + 128, { size: 20, color: T.mut });
+          tx(c, T, tr(T, 'No area is below 70'), rx, y + 92, { size: 30, serif: true, max: hw - P - 14, min: 18 });
+          tx(c, T, tr(T, 'Steady across the board'), rx, y + 128, { size: 20, color: T.mut });
         }
         c.save(); c.fillStyle = T.line; c.fillRect(M + IW / 2 - 1, y + 28, 2, 102); c.restore();
         y += 158 + G;
       }
       var drawArea = function (a) {
         var r = s.areas[a.key], v = r.avg, ca = D.classAvg[a.key], col = areaCol(T, a), l = level(v), iw = IW - 2 * P, wt = wOf(a.key);
-        var notes = wrapC(c, T, 'Class average ' + R(ca) + '.  ' + r.note, iw, 21);
+        var notes = wrapC(c, T, T.fa ? 'میانگین کلاس ' + R(ca) + '.  ' + faNote(r) : 'Class average ' + R(ca) + '.  ' + r.note, iw, 21);
         var subs = r.subs.length > 1 ? r.subs : [], sp = r.pts.length >= 2;
         var h = 124 + notes.length * 30 + (subs.length ? subs.length * 40 + 14 : 0) + (sp ? 96 : 0) + 22;
         card(c, T, M, y, IW, h, T.card);
         rr(c, M + P, y + 34, 24, 24, 7); c.fillStyle = col; c.fill(); if (!T.el) { c.lineWidth = 2.5; c.strokeStyle = T.ink; c.stroke(); }
         var nw = tx(c, T, String(R(v)), M + IW - P, y + 62, { size: 46, serif: true, align: 'right' });
-        var bx = pill(c, T, M + IW - P - nw - 20, y + 30, 34, l.t, lvlCol(T, v), 16);
-        var lw0 = tx(c, T, a.label, M + P + 38, y + 58, { size: 30, max: bx - (M + P + 38) - 16 - (wt ? 130 : 0), min: 18 });
-        if (wt) tx(c, T, 'weight ' + wt, M + P + 38 + lw0 + 16, y + 58, { size: 19, color: T.mut, w: T.el ? 500 : 700 });
+        var bx = pill(c, T, M + IW - P - nw - 20, y + 30, 34, tr(T, l.t), lvlCol(T, v), 16);
+        var lw0 = tx(c, T, tr(T, a.label), M + P + 38, y + 58, { size: 30, max: bx - (M + P + 38) - 16 - (wt ? 130 : 0), min: 18 });
+        if (wt) tx(c, T, tr(T, 'weight') + ' ' + wt, M + P + 38 + lw0 + 16, y + 58, { size: 19, color: T.mut, w: T.el ? 500 : 700 });
         bar(c, T, M + P, y + 86, iw, 22, v, col, ca);
         var yy = y + 150;
         notes.forEach(function (ln) { tx(c, T, ln, M + P, yy, { size: 21, color: T.mut, w: T.el ? 500 : 700 }); yy += 30; });
         if (subs.length) {
           yy += 4;
           subs.forEach(function (x) {
-            tx(c, T, x.l, M + P, yy + 8, { size: 21, max: 250, min: 15 });
+            tx(c, T, tr(T, x.l) + (x.w ? '  ·  ' + x.w + '%' : ''), M + P, yy + 8, { size: 21, max: 255, min: 13 });
             bar(c, T, M + P + 270, yy - 8, iw - 270 - 78, 14, x.v, lvlCol(T, x.v), null);
             tx(c, T, String(R(x.v)), M + IW - P, yy + 8, { size: 22, align: 'right' });
             yy += 40;
@@ -6832,14 +6911,14 @@ window.UG_TEMPLATES = {
           yy += 10;
         }
         if (sp) {
-          tx(c, T, 'TREND', M + P, yy + 8, { size: 15, ls: 3, color: T.mut });
+          tx(c, T, tr(T, 'TREND'), M + P, yy + 8, { size: 15, ls: 3, color: T.mut });
           sparkC(c, T, M + P, yy + 18, Math.min(iw, 560), 64, r.pts, col);
         }
         y += h + G;
       };
       sorted.forEach(drawArea);
       if (ex.length) {
-        tx(c, T, 'SHOWN SEPARATELY  ·  NOT PART OF THE CLASS ACTIVITY SCORE', M + 4, y + 18, { size: 17, ls: 3, color: T.mut, max: IW - 8, min: 12 });
+        tx(c, T, tr(T, 'SHOWN SEPARATELY  ·  NOT PART OF THE CLASS ACTIVITY SCORE'), M + 4, y + 18, { size: 17, ls: 3, color: T.mut, max: IW - 8, min: 12 });
         y += 46; ex.forEach(drawArea);
       }
       y = foot(c, T, W, y);
@@ -6849,36 +6928,37 @@ window.UG_TEMPLATES = {
     function buildClass(c, T, D, _s, W, H) {
       var M = 44, IW = W - 2 * M, G = 26, y = M, P = 30, n = D.ranked.length;
       c.fillStyle = T.bg; c.fillRect(0, 0, W, H);
-      tx(c, T, 'CLASS OVERVIEW', M, y + 16, { size: 19, ls: 4, color: T.mut });
-      tx(c, T, today(), W - M, y + 16, { size: 19, color: T.mut, align: 'right' });
+      if (T.fa) { c.translate(W, 0); c.scale(-1, 1); }
+      tx(c, T, tr(T, 'CLASS OVERVIEW'), M, y + 16, { size: 19, ls: 4, color: T.mut });
+      tx(c, T, today(T), W - M, y + 16, { size: 19, color: T.mut, align: 'right' });
       y += 46;
       var cn = clsName(), clsAvg = avg(D.ranked.map(function (x) { return x.overall; }));
       card(c, T, M, y, IW, 150, T.card);
-      tx(c, T, cn || 'Class overview', M + 32, y + 80, { size: 46, serif: true, max: IW - 64, min: 24 });
-      tx(c, T, 'Performance of the whole class  ·  scores out of 100', M + 32, y + 120, { size: 22, color: T.mut, max: IW - 64, min: 15 });
+      tx(c, T, cn || tr(T, 'Class overview'), M + 32, y + 80, { size: 46, serif: true, max: IW - 64, min: 24 });
+      tx(c, T, tr(T, 'Performance of the whole class  ·  scores out of 100'), M + 32, y + 120, { size: 22, color: T.mut, max: IW - 64, min: 15 });
       y += 150 + G;
       var tw = (IW - 40) / 3, tiles = [[D.list.length, 'STUDENTS'], [R(clsAvg), 'ACTIVITY AVERAGE'], [D.scored.length, 'AREAS SCORED']];
       tiles.forEach(function (t, i) {
         var x = M + i * (tw + 20); card(c, T, x, y, tw, 134, T.card);
         tx(c, T, String(t[0]), x + tw / 2, y + 74, { size: 60, serif: true, align: 'center' });
-        tx(c, T, t[1], x + tw / 2 + 1.5, y + 112, { size: 16, ls: 3, color: T.mut, align: 'center' });
+        tx(c, T, tr(T, t[1]), x + tw / 2 + 1.5, y + 112, { size: 16, ls: 3, color: T.mut, align: 'center' });
       });
       y += 134 + G;
 
       // average per area
       var rowsB = D.extra, h = 84 + D.scored.length * 54 + (rowsB.length ? 52 + rowsB.length * 54 : 0) + 10;
       card(c, T, M, y, IW, h, T.card);
-      tx(c, T, 'CLASS AVERAGE BY AREA', M + P + 2, y + 50, { size: 19, ls: 3, color: T.mut });
+      tx(c, T, tr(T, 'CLASS AVERAGE BY AREA'), M + P + 2, y + 50, { size: 19, ls: 3, color: T.mut });
       var areaRow = function (a, ry) {
-        var v = D.classAvg[a.key], wt = wOf(a.key), lw0 = tx(c, T, a.label, M + P, ry + 27, { size: 24, max: wt ? 190 : 270, min: 15 });
-        if (wt) tx(c, T, 'weight ' + wt, M + P + lw0 + 12, ry + 27, { size: 16, color: T.mut, w: T.el ? 500 : 700 });
+        var v = D.classAvg[a.key], wt = wOf(a.key), lw0 = tx(c, T, tr(T, a.label), M + P, ry + 27, { size: 24, max: wt ? 190 : 270, min: 15 });
+        if (wt) tx(c, T, tr(T, 'weight') + ' ' + wt, M + P + lw0 + 12, ry + 27, { size: 16, color: T.mut, w: T.el ? 500 : 700 });
         bar(c, T, M + P + 290, ry + 6, IW - 2 * P - 290 - 84, 24, v, areaCol(T, a), null);
         tx(c, T, String(R(v)), M + IW - P, ry + 27, { size: 28, serif: true, align: 'right' });
       };
       D.scored.forEach(function (a, i) { areaRow(a, y + 84 + i * 54); });
       if (rowsB.length) {
         var by = y + 84 + D.scored.length * 54;
-        tx(c, T, 'SHOWN SEPARATELY  ·  NOT IN THE ACTIVITY SCORE', M + P + 2, by + 22, { size: 15, ls: 3, color: T.mut });
+        tx(c, T, tr(T, 'SHOWN SEPARATELY  ·  NOT IN THE ACTIVITY SCORE'), M + P + 2, by + 22, { size: 15, ls: 3, color: T.mut });
         rowsB.forEach(function (a, i) { areaRow(a, by + 40 + i * 54); });
       }
       y += h + G;
@@ -6886,7 +6966,7 @@ window.UG_TEMPLATES = {
       // top 3
       h = 84 + Math.min(3, n) * 66 + 8;
       card(c, T, M, y, IW, h, T.card);
-      tx(c, T, 'TOP OF THE CLASS', M + P + 2, y + 50, { size: 19, ls: 3, color: T.mut });
+      tx(c, T, tr(T, 'TOP OF THE CLASS'), M + P + 2, y + 50, { size: 19, ls: 3, color: T.mut });
       D.ranked.slice(0, 3).forEach(function (s, i) {
         var ry = y + 80 + i * 66;
         c.beginPath(); c.arc(M + P + 22, ry + 28, 22, 0, 7); c.fillStyle = i === 0 ? (T.el ? T.gold : '#fbbf24') : (T.el ? T.track : '#e2e8f0'); c.fill(); c.lineWidth = T.el ? 1.2 : 2.5; c.strokeStyle = T.el ? T.line : T.ink; c.stroke();
@@ -6901,18 +6981,18 @@ window.UG_TEMPLATES = {
       if (low.length) {
         var rows = low.map(function (s) {
           var wk = weakOf(s, D.scored, D.classAvg), fine = s.overall >= 75, line;
-          if (fine) line = 'Still doing well overall. Nothing urgent.';
-          else if (!wk.length) line = 'No single area is below 70.';
-          else line = wk.map(function (w) { return (w.a.short || w.a.label) + ' ' + R(w.v) + (w.sub ? ' (' + w.sub.l + ' ' + R(w.sub.v) + ')' : ''); }).join('   ·   ');
+          if (fine) line = tr(T, 'Still doing well overall. Nothing urgent.');
+          else if (!wk.length) line = tr(T, 'No single area is below 70.');
+          else line = wk.map(function (w) { return tr(T, w.a.short || w.a.label) + ' ' + R(w.v) + (w.sub ? ' (' + tr(T, w.sub.l) + ' ' + R(w.sub.v) + ')' : ''); }).join('   ·   ');
           return { s: s, fine: fine, lines: wrapC(c, T, line, IW - 2 * P, 21) };
         });
         h = 80; rows.forEach(function (r) { h += 62 + r.lines.length * 28 + 14; }); h += 6;
         card(c, T, M, y, IW, h, T.card);
-        tx(c, T, 'NEED ATTENTION', M + P + 2, y + 50, { size: 19, ls: 3, color: T.mut });
+        tx(c, T, tr(T, 'NEED ATTENTION'), M + P + 2, y + 50, { size: 19, ls: 3, color: T.mut });
         var ry = y + 80;
         rows.forEach(function (r) {
           var lv = level(r.s.overall), sw = tx(c, T, String(R(r.s.overall)), M + IW - P, ry + 38, { size: 32, serif: true, align: 'right' });
-          var bx = pill(c, T, M + IW - P - sw - 18, ry + 10, 34, r.fine ? 'Lowest in class' : lv.t, r.fine ? lvlCol(T, 90) : lvlCol(T, r.s.overall), 15);
+          var bx = pill(c, T, M + IW - P - sw - 18, ry + 10, 34, r.fine ? tr(T, 'Lowest in class') : tr(T, lv.t), r.fine ? lvlCol(T, 90) : lvlCol(T, r.s.overall), 15);
           tx(c, T, r.s.name, M + P, ry + 37, { size: 28, max: bx - (M + P) - 16, min: 17 });
           r.lines.forEach(function (ln, i) { tx(c, T, ln, M + P, ry + 70 + i * 28, { size: 21, color: T.mut, w: T.el ? 500 : 700 }); });
           ry += 62 + r.lines.length * 28 + 14;
@@ -6927,12 +7007,12 @@ window.UG_TEMPLATES = {
       var order = D.ranked.concat(D.list.filter(function (s) { return s.overall === null; })), RH = 54;
       h = 84 + 46 + order.length * RH + 20;
       card(c, T, M, y, IW, h, T.card);
-      tx(c, T, 'ALL STUDENTS', M + P + 2, y + 50, { size: 19, ls: 3, color: T.mut });
+      tx(c, T, tr(T, 'ALL STUDENTS'), M + P + 2, y + 50, { size: 19, ls: 3, color: T.mut });
       hy = y + 84;
       tx(c, T, '#', x0 + rankW / 2, hy + 28, { size: 17, ls: 1, color: T.mut, align: 'center' });
-      tx(c, T, 'STUDENT', x0 + rankW, hy + 28, { size: 17, ls: 2, color: T.mut });
-      cols.forEach(function (a, i) { tx(c, T, (ABBR[a.key] || a.short || a.label).toUpperCase(), colX(i), hy + 28, { size: 16, ls: 1, color: T.mut, align: 'center' }); });
-      tx(c, T, 'SCORE', totX(), hy + 28, { size: 16, ls: 1, color: T.ink, align: 'center' });
+      tx(c, T, tr(T, 'STUDENT'), x0 + rankW, hy + 28, { size: 17, ls: 2, color: T.mut });
+      cols.forEach(function (a, i) { tx(c, T, (T.fa ? tr(T, ABBR[a.key] || a.short || a.label) : (ABBR[a.key] || a.short || a.label).toUpperCase()), colX(i), hy + 28, { size: 16, ls: 1, color: T.mut, align: 'center' }); });
+      tx(c, T, tr(T, 'SCORE'), totX(), hy + 28, { size: 16, ls: 1, color: T.ink, align: 'center' });
       if (D.extra.length) { c.save(); c.fillStyle = T.line; c.fillRect(x0 + rankW + nameW + aW * SC + ovW + 2, hy + 6, 1.5, 34 + order.length * RH + 6); c.restore(); }
       c.save(); c.fillStyle = T.el ? T.line : T.ink; c.fillRect(x0, hy + 40, innerW, T.el ? 1.5 : 3); c.restore();
       order.forEach(function (s, i) {
@@ -6951,11 +7031,11 @@ window.UG_TEMPLATES = {
       return foot(c, T, W, y);
     }
 
-    function makeImage(kind, D, s) {
+    function makeImage(kind, D, s, lang) {
       var fl = [];
       try { fl = [document.fonts.load('700 24px "UG Latin"'), document.fonts.load('700 24px "UG Persian"', 'ابپ')]; } catch (e) {}
       return Promise.all(fl).catch(function () {}).then(function () {
-        var T = tokens(), W = 1080, S = 1.5, build = kind === 'class' ? buildClass : buildStudent;
+        var T = tokens(lang === 'fa'), W = 1080, S = 1.5, build = kind === 'class' ? buildClass : buildStudent;
         var probe = document.createElement('canvas'); probe.width = 10; probe.height = 10;
         var H = Math.ceil(build(probe.getContext('2d'), T, D, s, W, 100));
         var cv = document.createElement('canvas'); cv.width = Math.round(W * S); cv.height = Math.round(H * S);
@@ -6983,15 +7063,32 @@ window.UG_TEMPLATES = {
       toast('Image saved to your downloads');
     }
     var sharing = false;
-    function shareNow(kind) {
+    function askLang(cb) {
+      var m = document.getElementById('ov-lang');
+      if (!m) {
+        m = document.createElement('div'); m.id = 'ov-lang'; m.className = 'modal';
+        m.innerHTML = '<div class="modal-content" style="max-width:420px"><div class="modal-header"><h3>Share as an image</h3><button class="close-btn" type="button" aria-label="Close">✕</button></div>' +
+          '<p class="ov-note" style="margin:6px 0 14px">Choose the language of the picture.</p>' +
+          '<button type="button" class="action-badge ov-lang-btn" data-l="en">English</button>' +
+          '<button type="button" class="action-badge ov-lang-btn" data-l="fa" dir="rtl">فارسی (Farsi)</button></div>';
+        document.body.appendChild(m);
+        m.addEventListener('click', function (e) {
+          var b = e.target.closest('.ov-lang-btn'), x = e.target.closest('.close-btn');
+          if (b) { m.style.display = 'none'; var f = m._cb; m._cb = null; if (f) f(b.getAttribute('data-l')); }
+          else if (x || e.target === m) m.style.display = 'none';
+        });
+      }
+      m._cb = cb; m.style.display = 'flex';
+    }
+    function shareNow(kind, lang) {
       if (sharing || !DATA) return;
       var s = kind === 'student' ? DATA.list[sel] : null;
       if (kind === 'student' && (!s || s.overall === null)) return;
       if (kind === 'class' && !DATA.ranked.length) return;
-      sharing = true; toast('Preparing the image…');
+      sharing = true; toast(lang === 'fa' ? 'در حال ساخت تصویر…' : 'Preparing the image…');
       var title = kind === 'class' ? 'class overview' : s.name, cn = clsName();
-      var file = safeName((kind === 'class' ? 'Class overview' : s.name) + (cn ? ' - ' + cn : '')) + '.png';
-      makeImage(kind, DATA, s).then(function (blob) { return deliver(blob, file, title); })
+      var file = safeName((kind === 'class' ? 'Class overview' : s.name) + (cn ? ' - ' + cn : '') + (lang === 'fa' ? ' (Farsi)' : '')) + '.png';
+      makeImage(kind, DATA, s, lang).then(function (blob) { return deliver(blob, file, title); })
         .catch(function (e) { toast('Could not share: ' + ((e && e.message) || e)); })
         .then(function () { sharing = false; });
     }
@@ -7041,7 +7138,7 @@ window.UG_TEMPLATES = {
       var r = s.areas[a.key], v = r.avg, l = level(v), ca = D.classAvg[a.key], w = wOf(a.key), h = '';
       h += '<div class="ov-area"><div class="ov-area-top"><i style="width:14px;height:14px;border-radius:4px;border:2px solid var(--nb-line);background:' + a.color + '"></i><b>' + esc(a.label) + '</b>' + (w ? '<span class="ov-wt">weight ' + w + '</span>' : '') + '<span class="ov-badge" style="background:' + l.c + '">' + l.t + '</span><span class="ov-pct">' + R(v) + '</span></div>';
       h += '<div class="ov-bar"><span style="width:' + v + '%;background:' + a.color + '"></span><em style="left:calc(' + ca + '% - 1px)" title="Class average"></em></div><div class="ov-note">The black marker is the class average (' + R(ca) + '). ' + esc(r.note) + '</div>';
-      r.subs.length > 1 && r.subs.forEach(function (x) { h += '<div class="ov-sub"><span>' + esc(x.l) + '</span><span class="mini"><span style="width:' + x.v + '%;background:' + level(x.v).c + '"></span></span><span>' + R(x.v) + '</span></div>'; });
+      r.subs.length > 1 && r.subs.forEach(function (x) { h += '<div class="ov-sub"><span>' + esc(x.l) + (x.w ? ' · ' + x.w + '%' : '') + '</span><span class="mini"><span style="width:' + x.v + '%;background:' + level(x.v).c + '"></span></span><span>' + R(x.v) + '</span></div>'; });
       return h + spark(r.pts, a.color) + '</div>';
     }
     function rightHtml(D) {
@@ -7067,7 +7164,7 @@ window.UG_TEMPLATES = {
       box.innerHTML = '<div class="ov-grid"><div class="ov-left">' + leftHtml(DATA) + '</div><div class="ov-right">' + rightHtml(DATA) + '</div></div>';
     }
     box.addEventListener('click', function (e) {
-      var sh = e.target.closest('[data-ovshare]'); if (sh) { shareNow(sh.getAttribute('data-ovshare')); return; }
+      var sh = e.target.closest('[data-ovshare]'); if (sh) { var kind = sh.getAttribute('data-ovshare'); askLang(function (lang) { shareNow(kind, lang); }); return; }
       var b = e.target.closest('[data-ov],[data-ovback]'); if (!b) return;
       if (b.hasAttribute('data-ovback')) sel = null; else sel = Number(b.getAttribute('data-ov'));
       render(); box.scrollIntoView({ block: 'start' });
