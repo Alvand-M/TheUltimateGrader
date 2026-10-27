@@ -107,7 +107,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <link rel="icon" href="icon-256.png">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>Ultimate Grader V3.4</title>
+  <title>Ultimate Grader V1.10</title>
   <style>
     :root {
       --bg: #f0f2f5;
@@ -1695,6 +1695,30 @@
     @media (max-width:420px) { .set-themes { gap:9px; } .set-prev { height:78px; } }
 
 
+    /* ---- keypads sit at the bottom of the screen (easier to reach); size and style unchanged ---- */
+    .modal { align-items:flex-end; padding-bottom:max(10px, env(safe-area-inset-bottom)); }
+    /* ---- Classic: the NR button shows when it is on ---- */
+    body[data-nb] .nr-pill.on { background:#d97706; color:#ffffff; border-color:var(--nb-line); }
+    /* ---- Overview: weights and the separate section ---- */
+    #ov-container .ov-wt { flex:none; font-size:11px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; color:var(--ov-mut); }
+    #ov-container .ov-sep { margin:18px 2px 10px; font-size:12px; font-weight:900; letter-spacing:.1em; text-transform:uppercase; color:var(--ov-mut); }
+    #ov-container .ov-ex { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:6px 2px; }
+    #ov-container .ov-exn { display:flex; align-items:center; gap:8px; font-weight:800; }
+    #ov-container .ov-exn i { width:12px; height:12px; border-radius:50%; border:2px solid var(--nb-line); display:inline-block; }
+    #ov-container .ov-wts { margin-bottom:6px; }
+
+
+    /* ---- Settings > Keypad ---- */
+    .set-note { margin:0 0 14px; font-size:13px; line-height:1.5; color:var(--h-sub); font-weight:500; }
+    .set-prev.pv { box-sizing:border-box; display:grid; gap:6px; padding:14px; align-content:center; background:var(--h-btn2); }
+    .set-prev.pv b { display:block; position:static; margin:0; border-radius:6px; background:var(--h-ink); opacity:.2; border:none; }
+    .set-prev.pv-kp { grid-template-columns:repeat(5,1fr); }
+    .set-prev.pv-kp b { height:18px; }
+    .set-prev.pv-np { grid-template-columns:repeat(3,1fr); padding:10px 36px; gap:5px; }
+    .set-prev.pv-np b { height:15px; }
+    .set-theme.on .pv b { opacity:.55; }
+
+
     /* =====================================================================================================
        ELEGANT THEME  (Settings > Appearance > Elegant).  Same layout, same sizes, same buttons as Classic -
        only the look changes: warm paper, hairline borders, soft shadows, refined serif titles, muted colours.
@@ -2005,7 +2029,6 @@
   <div class="hs-free" id="hs-free" aria-hidden="true"></div>
   <header class="hs-top">
     <span class="hs-sp" aria-hidden="true"></span>
-    <div class="hs-live" id="hs-live"><i></i>Direct File Storage</div>
     <button id="settings-open-btn" type="button" aria-label="Settings" title="Settings" data-ico="gear" data-ico-only="1">⚙️</button>
   </header>
   <main class="hs-main">
@@ -2023,7 +2046,7 @@
     <div id="lib-box" style="display:none;"></div>
     <footer class="hs-foot">
       <div class="start-error" id="start-error"></div>
-      <p id="start-help">Either pick your Excel grade sheet (<span class="m">Reach</span>, <span class="m">Race</span>, <span class="m">Run</span>, or <span class="m">Start</span> — the file name tells the app which one it is), or create your own from scratch using <b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> New class</b>.</p>
+      <p id="start-help">Either pick your Excel grade sheet (<span class="m">Reach</span>, <span class="m">Race</span>, <span class="m">Run</span>, or <span class="m">Start</span> — the file name tells the app which one it is), or create your own from scratch using <b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> New class</b>. Everything you enter is saved straight into that file.</p>
       <div class="start-note" id="start-note"></div>
       <div class="hs-stamp" id="hs-stamp"><span id="hs-build">App build: 2026-10-26 b18</span><span class="sep"></span><span class="hs-native" id="hs-native"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" x2="2" y1="12" y2="12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><line x1="6" x2="6.01" y1="16" y2="16"/><line x1="10" x2="10.01" y1="16" y2="16"/></svg> <span id="hs-native-txt">native file access: ON</span></span></div>
     </footer>
@@ -2079,6 +2102,7 @@
     </div>
     <div class="set-tabs" role="tablist">
       <button type="button" class="set-tab active" role="tab" data-set="appearance" aria-selected="true">Appearance</button>
+      <button type="button" class="set-tab" role="tab" data-set="keypad" aria-selected="false">Keypad</button>
       <button type="button" class="set-tab" role="tab" data-set="about" aria-selected="false">About</button>
     </div>
     <div class="set-panes" id="set-panes">
@@ -2098,6 +2122,22 @@
           <button type="button" class="set-theme" data-skin="elegant" aria-pressed="false">
             <span class="set-prev prev-elegant" aria-hidden="true"><i class="a"></i><i class="b"></i><i class="c"></i><u><s></s><s></s></u></span>
             <b>Elegant</b><span class="d">Quiet, refined and minimal</span>
+            <em class="chk" aria-hidden="true"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></em>
+          </button>
+        </div>
+      </section>
+      <section class="set-pane" id="set-keypad" role="tabpanel" hidden>
+        <p class="set-h" style="margin-top:14px">Default for evaluations</p>
+        <p class="set-note">Pick what opens first on every evaluation keypad: Reading, Listening &amp; Speaking, Describing, Dictionary Work, Conversation and Writing. You can still switch any time with the button at the top of the keypad. Homework and Attendance are not affected.</p>
+        <div class="set-themes">
+          <button type="button" class="set-theme" data-pad="keypad" aria-pressed="false">
+            <span class="set-prev pv pv-kp" aria-hidden="true"><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b></span>
+            <b>Keypad</b><span class="d">The 5-row score keypad</span>
+            <em class="chk" aria-hidden="true"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></em>
+          </button>
+          <button type="button" class="set-theme" data-pad="numpad" aria-pressed="false">
+            <span class="set-prev pv pv-np" aria-hidden="true"><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b></span>
+            <b>Numpad</b><span class="d">Type the number directly</span>
             <em class="chk" aria-hidden="true"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></em>
           </button>
         </div>
@@ -3219,7 +3259,7 @@ const Offline = (function () {
       body.innerHTML = $('about-template').innerHTML;
       function show(which) {
         ov.querySelectorAll('.set-tab').forEach(function (b) { const on = b.getAttribute('data-set') === which; b.classList.toggle('active', on); b.setAttribute('aria-selected', on ? 'true' : 'false'); });
-        $('set-appearance').hidden = which !== 'appearance'; $('set-about').hidden = which !== 'about';
+        ov.querySelectorAll('.set-pane').forEach(function (p) { p.hidden = p.id !== 'set-' + which; });
         $('set-panes').scrollTop = 0;
       }
       window.openSettings = function (which) { show(which === 'about' ? 'about' : 'appearance'); ov.style.display = 'flex'; };
@@ -4416,7 +4456,7 @@ const Offline = (function () {
     SHOW_LS_SUBTABS = Object.assign({}, v.showLsSubtabs);
     keypadProfiles = v.keypadProfiles;
     window.__variantLabel = v.label;
-    document.title = 'Ultimate Grader ' + v.label + ' V3.4';
+    document.title = 'Ultimate Grader ' + v.label + ' V1.10';
     document.documentElement.style.setProperty('--reading-cols', v.reading.cols.length);
 
     currentDictNo = 1; currentQuizNo = 1; currentQuizGroup = 0;
@@ -4467,6 +4507,14 @@ const Offline = (function () {
   let nrDual = false;                                              // true while the Listening & Speaking keypad is open
   // Pad switch (evaluation keypads only): 'keypad' = the usual 5-row keypad, 'numpad' = regular numpad
   let padMode = 'keypad';
+  let hwLastDone = null;           // the last finished session the Homework tab was last pointed at
+  function hwSyncDefault() {
+    if (!attCache || !attCache.doneSessions || !hwCache || !hwCache.sessionList) return;
+    const done = attCache.doneSessions, m = done.length ? Math.max.apply(null, done) : 0;
+    if (m === hwLastDone) return; hwLastDone = m;
+    let t = hwCache.sessionList[0]; hwCache.sessionList.forEach(function (n) { if (n <= m - 1) t = n; });
+    hwCache.activeSession = t;
+  }
   let npActive = 'single';                                        // which field the numpad types into: 'single', or 'l' / 's' on Listening & Speaking
   let npBuf = { single: '', l: '', s: '' };                       // what has been typed per field
   let npTouched = { single: false, l: false, s: false };          // true once a key was pressed on that field
@@ -4549,7 +4597,7 @@ const Offline = (function () {
       document.getElementById('hw-finalize-container').style.display = 'none';
     }
     
-    if (mode === 'homework' && hwCache) renderViews();
+    if (mode === 'homework' && hwCache) { hwSyncDefault(); renderViews(); }
     else if (mode === 'attendance' && attCache) renderViews();
     else if (mode === 'reading' && readingCache) renderViews();
     else if (mode === 'lis_spe' && lsCache) renderViews();
@@ -4648,7 +4696,18 @@ const Offline = (function () {
         .withSuccessHandler(data => { 
           hwCache = data; 
           if (!activeSessionNum && hwCache && hwCache.sessionList && hwCache.sessionList.length > 0) {
-            hwCache.activeSession = hwCache.sessionList[0]; 
+            // open on the homework that is checked in the current session = one below the last session marked as finished (session 7 finished -> homework 6)
+            const pick = function (att) {
+              const done = (att && att.doneSessions) || [], list = hwCache.sessionList;
+              let t = list[0];
+              if (done.length) { const m = Math.max.apply(null, done); list.forEach(function (n) { if (n <= m - 1) t = n; }); }
+              hwCache.activeSession = t; hwLastDone = done.length ? Math.max.apply(null, done) : 0;
+            };
+            if (attCache && attCache.doneSessions) { pick(attCache); renderViews(); }
+            else {
+              google.script.run.withSuccessHandler(function (att) { pick(att); renderViews(); }).withFailureHandler(function () { pick(null); renderViews(); }).getAttendanceData(null);
+            }
+            return;
           }
           renderViews(); 
         })
@@ -5459,7 +5518,7 @@ const Offline = (function () {
       npOrig.s = sessObj.s ? sessObj.s.score : '';
       document.getElementById('pad-btn').style.display = '';
       // A score that was typed (no keypad marks behind it) reopens on the numpad, so it is not lost
-      padMode = (padHoldsTypedScore('l') || padHoldsTypedScore('s')) ? 'numpad' : 'keypad';
+      padMode = padOpensNumpad(['l', 's']) ? 'numpad' : 'keypad';
       if (padMode === 'numpad') fillPadBuffers();
       applyPadModeUI();
       renderPadBody();
@@ -5505,7 +5564,7 @@ const Offline = (function () {
       refreshNRBtn();
       npOrig.single = subData.score;
       document.getElementById('pad-btn').style.display = '';
-      padMode = padHoldsTypedScore('single') ? 'numpad' : 'keypad';
+      padMode = padOpensNumpad(['single']) ? 'numpad' : 'keypad';
       if (padMode === 'numpad') fillPadBuffers();
       applyPadModeUI();
       renderPadBody();
@@ -5518,6 +5577,11 @@ const Offline = (function () {
   //  Keypad mode is the original 5-row keypad and is untouched. Numpad mode types one
   //  number per field (Listening and Speaking separately) and saves it with no keypad marks.
   // ==========================================================================
+  function padOpensNumpad(keys) {
+    if (keys.some(function (k) { return padHoldsTypedScore(k); })) return true;
+    var hasMarks = keys.some(function (k) { return Object.keys(padMarks(k)).length > 0; });
+    return !!(window.UG_padDefault && window.UG_padDefault() === 'numpad' && !hasMarks);
+  }
   function padNR(key) { return key === 'l' ? currentNRL : key === 's' ? currentNRS : currentNR; }
   function padMarks(key) { return key === 'l' ? currentModalMarksL : key === 's' ? currentModalMarksS : currentModalMarks; }
   function padIsNum(v) {
@@ -6265,7 +6329,7 @@ window.UG_TEMPLATES = {
 <script>
   // Appearance settings: light / dark mode and the colour theme ("skin"). Both are remembered on this device.
   (function () {
-    var root = document.documentElement, sw = document.getElementById('theme-switch'), cards = document.querySelectorAll('.set-theme');
+    var root = document.documentElement, sw = document.getElementById('theme-switch'), cards = document.querySelectorAll('.set-theme[data-skin]');
     function mode() { return root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light'; }
     function skin() { return root.getAttribute('data-skin') === 'elegant' ? 'elegant' : 'classic'; }
     function paint() {
@@ -6292,12 +6356,21 @@ window.UG_TEMPLATES = {
 <script>
   // home screen: show the green "Direct File Storage" pill and the native-access note only where they are true
   (function () {
-    var live = document.getElementById('hs-live'), nat = document.getElementById('hs-native');
-    var direct = !!(window.UG_FILES_OK || ('showOpenFilePicker' in window));
-    if (live && direct) live.classList.add('on');
-    if (nat && !window.UG_NATIVE) nat.style.display = 'none';
-    var sep = document.querySelector('#hs-stamp .sep');
-    if (sep && !window.UG_NATIVE) sep.style.display = 'none';
+    var nat = document.getElementById('hs-native'), sep = document.querySelector('#hs-stamp .sep');
+    var bad = !!(window.UG_NATIVE && !window.UG_FILES_OK);          // only worth showing when the Android file plugin is NOT working
+    if (nat && !bad) nat.style.display = 'none';
+    if (sep && !bad) sep.style.display = 'none';
+  })();
+</script>
+<script>
+  // Default keypad for evaluations (Settings > Keypad); remembered on this device
+  (function () {
+    function get() { try { return localStorage.getItem('ug_pad') === 'numpad' ? 'numpad' : 'keypad'; } catch (e) { return 'keypad'; } }
+    window.UG_padDefault = get;
+    var cards = document.querySelectorAll('.set-theme[data-pad]');
+    function paint() { var k = get(); Array.prototype.forEach.call(cards, function (b) { var on = b.getAttribute('data-pad') === k; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); }); }
+    Array.prototype.forEach.call(cards, function (b) { b.addEventListener('click', function () { try { localStorage.setItem('ug_pad', b.getAttribute('data-pad')); } catch (e) {} paint(); }); });
+    paint();
   })();
 </script>
 <script>
@@ -6468,13 +6541,24 @@ window.UG_TEMPLATES = {
     var box = document.getElementById('ov-container'); if (!box) return;
     var ovOn = false, sel = null, DATA = null;
     var AREAS = [
-      { key: 'attendance', label: 'Attendance', color: '#f472b6' },
-      { key: 'homework',   label: 'Homework',   color: '#a3e635' },
+      { key: 'listening',  tab: 'lis_spe', label: 'Listening',  color: '#2dd4aa' },
+      { key: 'speaking',   tab: 'lis_spe', label: 'Speaking',   color: '#38bdf8' },
       { key: 'reading',    label: 'Reading',    color: '#60a5fa' },
-      { key: 'lis_spe',    label: 'Listening & Speaking', short: 'Lis & Spe', color: '#2dd4aa' },
       { key: 'writing',    label: 'Writing',    color: '#fbbf24' },
+      { key: 'homework',   label: 'Homework',   color: '#a3e635' },
+      { key: 'attendance', label: 'Attendance', color: '#f472b6' },
       { key: 'quizzes',    label: 'Quizzes',    color: '#ef4444' }
     ];
+    // CLASS ACTIVITY SCORE: weights (out of 100) for every level. Attendance and Quizzes are NOT in it - they are shown separately.
+    // To change a weight later, edit the numbers here (each level should add up to 100).
+    var WEIGHTS = {
+      start: { listening: 15, speaking: 25, reading: 20, writing: 25, homework: 15 },
+      run12: { listening: 15, speaking: 25, reading: 20, writing: 25, homework: 15 },
+      run34: { listening: 13, speaking: 24, reading: 23, writing: 25, homework: 15 },
+      race:  { listening: 13, speaking: 27, reading: 25, writing: 20, homework: 15 },
+      reach: { listening: 12, speaking: 25, reading: 23, writing: 25, homework: 15 }
+    };
+    function wOf(k) { var w = WEIGHTS[activeVariantKey] || WEIGHTS.reach; return w[k] || 0; }
     function num(v) { if (v === '' || v === undefined || v === null) return null; var n = Number(v); return isNaN(n) ? null : Math.max(0, Math.min(100, n)); }
     function avg(a) { return a.length ? a.reduce(function (x, y) { return x + y; }, 0) / a.length : null; }
     function esc(t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
@@ -6482,7 +6566,7 @@ window.UG_TEMPLATES = {
     function R(v) { return Math.round(v); }
 
     // ---- caches (they fill lazily, one per tab) ----
-    function cacheOf(k) { return { attendance: attCache, homework: hwCache, reading: readingCache, lis_spe: lsCache, writing: writingCache, quizzes: quizCache }[k]; }
+    function cacheOf(k) { return { attendance: attCache, homework: hwCache, reading: readingCache, lis_spe: lsCache, listening: lsCache, speaking: lsCache, writing: writingCache, quizzes: quizCache }[k]; }
     var LOAD = {
       attendance: ['getAttendanceData', function (d) { attCache = d; if (d && d.sessionList && d.sessionList.length) { var done = d.doneSessions || [], nx = d.sessionList.find(function (n) { return done.indexOf(n) === -1; }); d.activeSession = nx !== undefined ? nx : d.sessionList[d.sessionList.length - 1]; } }],
       homework:   ['getAppData', function (d) { hwCache = d; if (d && d.sessionList && d.sessionList.length) d.activeSession = d.sessionList[0]; }],
@@ -6492,16 +6576,23 @@ window.UG_TEMPLATES = {
       quizzes:    ['getQuizData', function (d) { quizCache = d; }]
     };
     function ensureLoaded(done) {
-      var need = AREAS.filter(function (a) { return SHOW_TABS[a.key] && !cacheOf(a.key); }), left = need.length;
+      var seen = {}, need = AREAS.filter(function (a) { var tb = a.tab || a.key; if (!SHOW_TABS[tb] || cacheOf(a.key) || seen[tb]) return false; seen[tb] = 1; return true; }), left = need.length;
       if (!left) return done();
       need.forEach(function (a) {
         var fin = function () { if (--left === 0) done(); };
-        try { google.script.run.withSuccessHandler(function (d) { LOAD[a.key][1](d); fin(); }).withFailureHandler(fin)[LOAD[a.key][0]](null); } catch (e) { fin(); }
+        try { google.script.run.withSuccessHandler(function (d) { LOAD[a.tab || a.key][1](d); fin(); }).withFailureHandler(fin)[LOAD[a.tab || a.key][0]](null); } catch (e) { fin(); }
       });
     }
 
     // ---- per-area calculators: return { avg, pts:[{l,v}], subs:[{l,v}], note } or null ----
     function getSt(cache, i, name) { if (!cache || !cache.students) return null; var s = cache.students[i]; if (s && s.name === name) return s; return cache.students.filter(function (x) { return x.name === name; })[0] || s || null; }
+    function lsCalc(c, st, keys, pre) {
+      if (!c || !st || !keys.length) return null;
+      var acc = {}, pts = [];
+      (c.sessionList || []).forEach(function (n) { var o = (st.allSessions && st.allSessions[n]) || {}, vs = []; keys.forEach(function (k) { var x = num(o[k[0]] && o[k[0]].score); if (x !== null) { vs.push(x); (acc[k[0]] = acc[k[0]] || []).push(x); } }); if (vs.length) pts.push({ l: pre + n, v: avg(vs) }); });
+      if (!pts.length) return null;
+      return { avg: avg(pts.map(function (p) { return p.v; })), pts: pts, subs: keys.filter(function (k) { return acc[k[0]]; }).map(function (k) { return { l: k[1], v: avg(acc[k[0]]) }; }), note: pts.length + ' sessions evaluated' };
+    }
     var CALC = {
       attendance: function (c, st) {
         var done = (c && c.doneSessions) || []; if (!st || !done.length) return null;
@@ -6520,13 +6611,10 @@ window.UG_TEMPLATES = {
         if (!pts.length) return null;
         return { avg: avg(pts.map(function (p) { return p.v; })), pts: pts, subs: cols.filter(function (k) { return acc[k]; }).map(function (k) { return { l: READING_LABELS[k].long, v: avg(acc[k]) }; }), note: pts.length + ' reading evaluations' };
       },
-      lis_spe: function (c, st) {
-        if (!c || !st) return null; var keys = [];
-        if (SHOW_LS_SUBTABS.eval) keys.push(['l', 'Listening'], ['s', 'Speaking']); if (SHOW_LS_SUBTABS.describing) keys.push(['dec', 'Describing']); if (SHOW_LS_SUBTABS.dwork) keys.push(['dw', 'D-Work']); if (SHOW_LS_SUBTABS.conversation) keys.push(['conv', 'Conversation']);
-        var acc = {}, pts = [];
-        (c.sessionList || []).forEach(function (n) { var o = (st.allSessions && st.allSessions[n]) || {}, vs = []; keys.forEach(function (k) { var x = num(o[k[0]] && o[k[0]].score); if (x !== null) { vs.push(x); (acc[k[0]] = acc[k[0]] || []).push(x); } }); if (vs.length) pts.push({ l: 'LS' + n, v: avg(vs) }); });
-        if (!pts.length) return null;
-        return { avg: avg(pts.map(function (p) { return p.v; })), pts: pts, subs: keys.filter(function (k) { return acc[k[0]]; }).map(function (k) { return { l: k[1], v: avg(acc[k[0]]) }; }), note: pts.length + ' sessions evaluated' };
+      listening: function (c, st) { return lsCalc(c, st, SHOW_LS_SUBTABS.eval ? [['l', 'Listening']] : [], 'L'); },
+      speaking: function (c, st) {
+        var keys = []; if (SHOW_LS_SUBTABS.eval) keys.push(['s', 'Speaking']); if (SHOW_LS_SUBTABS.describing) keys.push(['dec', 'Describing']); if (SHOW_LS_SUBTABS.dwork) keys.push(['dw', 'D-Work']); if (SHOW_LS_SUBTABS.conversation) keys.push(['conv', 'Conversation']);
+        return lsCalc(c, st, keys, 'S');
       },
       writing: function (c, st) {
         if (!c || !st) return null; var wc = writingCfg(), acc = { m: [], nh: [], d: [] }, pts = [];
@@ -6545,18 +6633,18 @@ window.UG_TEMPLATES = {
     };
 
     function compute() {
-      var avail = AREAS.filter(function (a) { return SHOW_TABS[a.key] && cacheOf(a.key) && cacheOf(a.key).students; });
+      var avail = AREAS.filter(function (a) { return SHOW_TABS[a.tab || a.key] && cacheOf(a.key) && cacheOf(a.key).students; });
       var baseCache = null; avail.forEach(function (a) { if (!baseCache) baseCache = cacheOf(a.key); });
       var list = (baseCache ? baseCache.students : []).map(function (b, i) {
-        var o = { name: b.name, idx: i, areas: {} }, vals = [];
-        avail.forEach(function (a) { var r = CALC[a.key](cacheOf(a.key), getSt(cacheOf(a.key), i, b.name)); if (r && r.avg !== null) { o.areas[a.key] = r; vals.push(r.avg); } });
-        o.overall = vals.length ? avg(vals) : null; return o;
+        var o = { name: b.name, idx: i, areas: {} }, sw = 0, tw = 0;
+        avail.forEach(function (a) { var r = CALC[a.key](cacheOf(a.key), getSt(cacheOf(a.key), i, b.name)); if (r && r.avg !== null) { o.areas[a.key] = r; var wt = wOf(a.key); if (wt) { sw += wt * r.avg; tw += wt; } } });
+        o.overall = tw ? sw / tw : null; return o;      // weighted; a category with no scores yet is simply left out of the weighing
       });
       var used = avail.filter(function (a) { return list.some(function (s) { return s.areas[a.key]; }); });
       var classAvg = {}; used.forEach(function (a) { var v = list.filter(function (s) { return s.areas[a.key]; }).map(function (s) { return s.areas[a.key].avg; }); classAvg[a.key] = avg(v); });
       var ranked = list.filter(function (s) { return s.overall !== null; }).sort(function (a, b) { return b.overall - a.overall; });
       ranked.forEach(function (s, i) { s.rank = i + 1; });
-      return { list: list, used: used, classAvg: classAvg, ranked: ranked };
+      return { list: list, used: used, scored: used.filter(function (a) { return wOf(a.key) > 0; }), extra: used.filter(function (a) { return !wOf(a.key); }), classAvg: classAvg, ranked: ranked };
     }
 
     // ---- SVG charts ----
@@ -6587,13 +6675,13 @@ window.UG_TEMPLATES = {
     function tokens() {
       if (isElegant()) return { el: true, bg: '#f4f1ea', card: '#fffdf9', ink: '#26221c', mut: '#8a8173', track: '#ebe5d9', line: 'rgba(74,56,30,.20)', lw: 1.5, rad: 18, sh: 0,
         gold: '#a8844a', serif: 'Georgia, "Iowan Old Style", "Noto Serif", serif', sans: '"Inter", Roboto, "Segoe UI", "UG Persian", Arial, sans-serif', w: 600,
-        area: { attendance: '#c7899a', homework: '#94ae83', reading: '#7f9bc6', lis_spe: '#5fa39a', writing: '#cfab5d', quizzes: '#c2705f' },
+        area: { attendance: '#c7899a', homework: '#94ae83', reading: '#7f9bc6', listening: '#5fa39a', speaking: '#74b3c4', writing: '#cfab5d', quizzes: '#c2705f' },
         lvl: ['#8fc3a0', '#cbdb9a', '#ecca78', '#e5a095'], cellA: .55 };
       var sans = '"UG Latin", "UG Persian", "Segoe UI", Roboto, Arial, sans-serif';
       return { el: false, bg: '#f1f5f9', card: '#ffffff', ink: '#0f172a', mut: '#64748b', track: '#e2e8f0', line: '#0f172a', lw: 3, rad: 18, sh: 6,
         gold: '#a78bfa', serif: sans, sans: sans, w: 700, area: null, lvl: ['#4ade80', '#bef264', '#fbbf24', '#f87171'], cellA: .85 };
     }
-    var ABBR = { attendance: 'Att', homework: 'HW', reading: 'Read', lis_spe: 'L&S', writing: 'Write', quizzes: 'Quiz' };
+    var ABBR = { attendance: 'Att', homework: 'HW', reading: 'Read', listening: 'Listen', speaking: 'Speak', writing: 'Write', quizzes: 'Quiz' };
     function lvlCol(T, v) { return T.lvl[v >= 85 ? 0 : v >= 70 ? 1 : v >= 55 ? 2 : 3]; }
     function areaCol(T, a) { return (T.area && T.area[a.key]) || a.color; }
     function rr(c, x, y, w, h, r) { r = Math.max(0, Math.min(r, w / 2, h / 2)); c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
@@ -6682,12 +6770,12 @@ window.UG_TEMPLATES = {
       if (cn) tx(c, T, cn, M + 32, y + 130, { size: 22, color: T.mut, max: lw, min: 15 });
       tx(c, T, 'Rank ' + s.rank + ' of ' + D.ranked.length + '   ·   Class average ' + R(clsAvg), M + 32, y + 172, { size: 24, color: T.mut, max: lw, min: 15 });
       tx(c, T, String(R(s.overall)), W - M - 34, y + 118, { size: 112, serif: true, align: 'right' });
-      tx(c, T, 'out of 100', W - M - 34, y + 148, { size: 20, color: T.mut, align: 'right' });
+      tx(c, T, 'class activity score', W - M - 34, y + 148, { size: 20, color: T.mut, align: 'right' });
       pill(c, T, W - M - 34, y + 164, 34, lv.t, lvlCol(T, s.overall), 17);
       y += 214 + G;
 
-      var ar = D.used.filter(function (a) { return s.areas[a.key]; }), vals = {};
-      ar.forEach(function (a) { vals[a.key] = s.areas[a.key].avg; });
+      var ar = D.scored.filter(function (a) { return s.areas[a.key]; }), ex = D.extra.filter(function (a) { return s.areas[a.key]; }), vals = {};
+      D.used.forEach(function (a) { if (s.areas[a.key]) vals[a.key] = s.areas[a.key].avg; });
       var sorted = ar.slice().sort(function (a, b) { return vals[b.key] - vals[a.key]; });
 
       if (ar.length >= 3) {
@@ -6719,8 +6807,8 @@ window.UG_TEMPLATES = {
         c.save(); c.fillStyle = T.line; c.fillRect(M + IW / 2 - 1, y + 28, 2, 102); c.restore();
         y += 158 + G;
       }
-      sorted.forEach(function (a) {
-        var r = s.areas[a.key], v = r.avg, ca = D.classAvg[a.key], col = areaCol(T, a), l = level(v), iw = IW - 2 * P;
+      var drawArea = function (a) {
+        var r = s.areas[a.key], v = r.avg, ca = D.classAvg[a.key], col = areaCol(T, a), l = level(v), iw = IW - 2 * P, wt = wOf(a.key);
         var notes = wrapC(c, T, 'Class average ' + R(ca) + '.  ' + r.note, iw, 21);
         var subs = r.subs.length > 1 ? r.subs : [], sp = r.pts.length >= 2;
         var h = 124 + notes.length * 30 + (subs.length ? subs.length * 40 + 14 : 0) + (sp ? 96 : 0) + 22;
@@ -6728,7 +6816,8 @@ window.UG_TEMPLATES = {
         rr(c, M + P, y + 34, 24, 24, 7); c.fillStyle = col; c.fill(); if (!T.el) { c.lineWidth = 2.5; c.strokeStyle = T.ink; c.stroke(); }
         var nw = tx(c, T, String(R(v)), M + IW - P, y + 62, { size: 46, serif: true, align: 'right' });
         var bx = pill(c, T, M + IW - P - nw - 20, y + 30, 34, l.t, lvlCol(T, v), 16);
-        tx(c, T, a.label, M + P + 38, y + 58, { size: 30, max: bx - (M + P + 38) - 16, min: 18 });
+        var lw0 = tx(c, T, a.label, M + P + 38, y + 58, { size: 30, max: bx - (M + P + 38) - 16 - (wt ? 130 : 0), min: 18 });
+        if (wt) tx(c, T, 'weight ' + wt, M + P + 38 + lw0 + 16, y + 58, { size: 19, color: T.mut, w: T.el ? 500 : 700 });
         bar(c, T, M + P, y + 86, iw, 22, v, col, ca);
         var yy = y + 150;
         notes.forEach(function (ln) { tx(c, T, ln, M + P, yy, { size: 21, color: T.mut, w: T.el ? 500 : 700 }); yy += 30; });
@@ -6747,7 +6836,12 @@ window.UG_TEMPLATES = {
           sparkC(c, T, M + P, yy + 18, Math.min(iw, 560), 64, r.pts, col);
         }
         y += h + G;
-      });
+      };
+      sorted.forEach(drawArea);
+      if (ex.length) {
+        tx(c, T, 'SHOWN SEPARATELY  ·  NOT PART OF THE CLASS ACTIVITY SCORE', M + 4, y + 18, { size: 17, ls: 3, color: T.mut, max: IW - 8, min: 12 });
+        y += 46; ex.forEach(drawArea);
+      }
       y = foot(c, T, W, y);
       return y;
     }
@@ -6763,7 +6857,7 @@ window.UG_TEMPLATES = {
       tx(c, T, cn || 'Class overview', M + 32, y + 80, { size: 46, serif: true, max: IW - 64, min: 24 });
       tx(c, T, 'Performance of the whole class  ·  scores out of 100', M + 32, y + 120, { size: 22, color: T.mut, max: IW - 64, min: 15 });
       y += 150 + G;
-      var tw = (IW - 40) / 3, tiles = [[D.list.length, 'STUDENTS'], [R(clsAvg), 'CLASS AVERAGE'], [D.used.length, 'AREAS TRACKED']];
+      var tw = (IW - 40) / 3, tiles = [[D.list.length, 'STUDENTS'], [R(clsAvg), 'ACTIVITY AVERAGE'], [D.scored.length, 'AREAS SCORED']];
       tiles.forEach(function (t, i) {
         var x = M + i * (tw + 20); card(c, T, x, y, tw, 134, T.card);
         tx(c, T, String(t[0]), x + tw / 2, y + 74, { size: 60, serif: true, align: 'center' });
@@ -6772,15 +6866,21 @@ window.UG_TEMPLATES = {
       y += 134 + G;
 
       // average per area
-      var h = 84 + D.used.length * 54 + 10;
+      var rowsB = D.extra, h = 84 + D.scored.length * 54 + (rowsB.length ? 52 + rowsB.length * 54 : 0) + 10;
       card(c, T, M, y, IW, h, T.card);
       tx(c, T, 'CLASS AVERAGE BY AREA', M + P + 2, y + 50, { size: 19, ls: 3, color: T.mut });
-      D.used.forEach(function (a, i) {
-        var ry = y + 84 + i * 54, v = D.classAvg[a.key];
-        tx(c, T, a.label, M + P, ry + 27, { size: 24, max: 270, min: 15 });
+      var areaRow = function (a, ry) {
+        var v = D.classAvg[a.key], wt = wOf(a.key), lw0 = tx(c, T, a.label, M + P, ry + 27, { size: 24, max: wt ? 190 : 270, min: 15 });
+        if (wt) tx(c, T, 'weight ' + wt, M + P + lw0 + 12, ry + 27, { size: 16, color: T.mut, w: T.el ? 500 : 700 });
         bar(c, T, M + P + 290, ry + 6, IW - 2 * P - 290 - 84, 24, v, areaCol(T, a), null);
         tx(c, T, String(R(v)), M + IW - P, ry + 27, { size: 28, serif: true, align: 'right' });
-      });
+      };
+      D.scored.forEach(function (a, i) { areaRow(a, y + 84 + i * 54); });
+      if (rowsB.length) {
+        var by = y + 84 + D.scored.length * 54;
+        tx(c, T, 'SHOWN SEPARATELY  ·  NOT IN THE ACTIVITY SCORE', M + P + 2, by + 22, { size: 15, ls: 3, color: T.mut });
+        rowsB.forEach(function (a, i) { areaRow(a, by + 40 + i * 54); });
+      }
       y += h + G;
 
       // top 3
@@ -6800,7 +6900,7 @@ window.UG_TEMPLATES = {
       var low = n >= 4 ? D.ranked.slice(-3).reverse() : [];
       if (low.length) {
         var rows = low.map(function (s) {
-          var wk = weakOf(s, D.used, D.classAvg), fine = s.overall >= 75, line;
+          var wk = weakOf(s, D.scored, D.classAvg), fine = s.overall >= 75, line;
           if (fine) line = 'Still doing well overall. Nothing urgent.';
           else if (!wk.length) line = 'No single area is below 70.';
           else line = wk.map(function (w) { return (w.a.short || w.a.label) + ' ' + R(w.v) + (w.sub ? ' (' + w.sub.l + ' ' + R(w.sub.v) + ')' : ''); }).join('   ·   ');
@@ -6821,16 +6921,19 @@ window.UG_TEMPLATES = {
       }
 
       // all students
-      var cols = D.used, ip = 24, innerW = IW - 2 * ip, rankW = 56, ovW = 100, aW = Math.min(94, Math.floor((innerW - rankW - ovW - 230) / Math.max(1, cols.length))), nameW = innerW - rankW - ovW - aW * cols.length;
+      var cols = D.scored.concat(D.extra), SC = D.scored.length, ip = 24, innerW = IW - 2 * ip, rankW = 56, ovW = 100, aW = Math.min(94, Math.floor((innerW - rankW - ovW - 230) / Math.max(1, cols.length))), nameW = innerW - rankW - ovW - aW * cols.length;
+      var colX = function (j) { return x0 + rankW + nameW + aW * j + (j >= SC ? ovW : 0) + aW / 2; }, totX = function () { return x0 + rankW + nameW + aW * SC + ovW / 2; };
+      var x0 = M + ip, hy;
       var order = D.ranked.concat(D.list.filter(function (s) { return s.overall === null; })), RH = 54;
       h = 84 + 46 + order.length * RH + 20;
       card(c, T, M, y, IW, h, T.card);
       tx(c, T, 'ALL STUDENTS', M + P + 2, y + 50, { size: 19, ls: 3, color: T.mut });
-      var x0 = M + ip, hy = y + 84;
+      hy = y + 84;
       tx(c, T, '#', x0 + rankW / 2, hy + 28, { size: 17, ls: 1, color: T.mut, align: 'center' });
       tx(c, T, 'STUDENT', x0 + rankW, hy + 28, { size: 17, ls: 2, color: T.mut });
-      cols.forEach(function (a, i) { tx(c, T, (ABBR[a.key] || a.short || a.label).toUpperCase(), x0 + rankW + nameW + aW * i + aW / 2, hy + 28, { size: 16, ls: 1, color: T.mut, align: 'center' }); });
-      tx(c, T, 'TOTAL', x0 + innerW - ovW / 2, hy + 28, { size: 16, ls: 1, color: T.mut, align: 'center' });
+      cols.forEach(function (a, i) { tx(c, T, (ABBR[a.key] || a.short || a.label).toUpperCase(), colX(i), hy + 28, { size: 16, ls: 1, color: T.mut, align: 'center' }); });
+      tx(c, T, 'SCORE', totX(), hy + 28, { size: 16, ls: 1, color: T.ink, align: 'center' });
+      if (D.extra.length) { c.save(); c.fillStyle = T.line; c.fillRect(x0 + rankW + nameW + aW * SC + ovW + 2, hy + 6, 1.5, 34 + order.length * RH + 6); c.restore(); }
       c.save(); c.fillStyle = T.el ? T.line : T.ink; c.fillRect(x0, hy + 40, innerW, T.el ? 1.5 : 3); c.restore();
       order.forEach(function (s, i) {
         var ry = hy + 46 + i * RH;
@@ -6838,11 +6941,11 @@ window.UG_TEMPLATES = {
         tx(c, T, s.rank ? String(s.rank) : '–', x0 + rankW / 2, ry + 35, { size: 22, color: T.mut, align: 'center' });
         tx(c, T, s.name, x0 + rankW, ry + 36, { size: 25, max: nameW - 12, min: 15 });
         cols.forEach(function (a, j) {
-          var r = s.areas[a.key], cx = x0 + rankW + nameW + aW * j + aW / 2;
+          var r = s.areas[a.key], cx = colX(j);
           if (r) { c.save(); c.globalAlpha = T.cellA; rr(c, cx - aW / 2 + 6, ry + 8, aW - 12, RH - 16, 10); c.fillStyle = lvlCol(T, r.avg); c.fill(); c.restore(); }
           tx(c, T, r ? String(R(r.avg)) : '–', cx, ry + 35, { size: 22, align: 'center', color: r ? T.ink : T.mut });
         });
-        tx(c, T, s.overall === null ? '–' : String(R(s.overall)), x0 + innerW - ovW / 2, ry + 36, { size: 28, serif: true, align: 'center', color: s.overall === null ? T.mut : T.ink });
+        tx(c, T, s.overall === null ? '–' : String(R(s.overall)), totX(), ry + 36, { size: 28, serif: true, align: 'center', color: s.overall === null ? T.mut : T.ink });
       });
       y += h + G;
       return foot(c, T, W, y);
@@ -6905,7 +7008,7 @@ window.UG_TEMPLATES = {
     function leftHtml(D) {
       var h = '', n = D.ranked.length;
       if (n) h += '<button class="action-badge ov-share ov-share-class" data-ovshare="class" type="button">' + SHARE_SVG + '<span>Share class overview</span></button>';
-      h += '<div class="ov-stats"><div class="ov-stat"><b>' + D.list.length + '</b><span>Students</span></div><div class="ov-stat"><b>' + (n ? R(avg(D.ranked.map(function (s) { return s.overall; }))) : '–') + '</b><span>Class average</span></div><div class="ov-stat"><b>' + D.used.length + '</b><span>Areas tracked</span></div></div>';
+      h += '<div class="ov-stats"><div class="ov-stat"><b>' + D.list.length + '</b><span>Students</span></div><div class="ov-stat"><b>' + (n ? R(avg(D.ranked.map(function (s) { return s.overall; }))) : '–') + '</b><span>Class activity avg</span></div><div class="ov-stat"><b>' + D.scored.length + '</b><span>Areas scored</span></div></div>';
       if (!n) return h + '<div class="ov-card ov-empty">No scores have been entered yet, so there is nothing to compare. Add some scores in the tabs and come back.</div>';
       h += '<div class="ov-card"><p class="ov-h"><i style="background:#fbbf24"></i>Top of the class</p>';
       D.ranked.slice(0, 3).forEach(function (s, i) { h += '<button class="ov-top' + (i === 0 ? ' first' : '') + '" data-ov="' + s.idx + '"><span class="ov-rank">' + s.rank + '</span><span class="ov-nm">' + esc(s.name) + '</span><span class="ov-pct">' + R(s.overall) + '</span></button>'; });
@@ -6914,7 +7017,7 @@ window.UG_TEMPLATES = {
       h += '<div class="ov-card"><p class="ov-h"><i style="background:#f87171"></i>Need attention</p>';
       if (!low.length) h += '<div class="ov-note">Needs at least four students with scores.</div>';
       low.forEach(function (s) {
-        var lv = level(s.overall), wk = weakOf(s, D.used, D.classAvg), fine = s.overall >= 75;
+        var lv = level(s.overall), wk = weakOf(s, D.scored, D.classAvg), fine = s.overall >= 75;
         h += '<button class="ov-att" data-ov="' + s.idx + '"><div class="ov-att-top"><span class="ov-nm" style="font-weight:800">' + esc(s.name) + '</span><span class="ov-badge" style="background:' + (fine ? '#bef264' : lv.c) + '">' + (fine ? 'Lowest in class' : lv.t) + '</span><span class="ov-pct">' + R(s.overall) + '</span></div>';
         if (fine) h += '<div class="ov-note">Still doing well overall. Nothing urgent.</div>';
         else if (!wk.length) h += '<div class="ov-note">No single area is below 70.</div>';
@@ -6922,28 +7025,40 @@ window.UG_TEMPLATES = {
         h += '</button>';
       });
       h += '</div><div class="ov-card"><p class="ov-h"><i style="background:#a78bfa"></i>All students</p>';
-      D.list.forEach(function (s) { h += '<button class="ov-stu' + (sel === s.idx ? ' sel' : '') + '" data-ov="' + s.idx + '"><span class="ov-rank" style="background:#0f172a;color:#fff;width:28px;height:28px;font-size:13px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none">' + (s.rank || '–') + '</span><span class="ov-nm">' + esc(s.name) + '</span>' + dotsFor(s, D.used) + '<span class="ov-pct">' + (s.overall === null ? '–' : R(s.overall)) + '</span></button>'; });
-      return h + '</div>';
+      D.list.forEach(function (s) { h += '<button class="ov-stu' + (sel === s.idx ? ' sel' : '') + '" data-ov="' + s.idx + '"><span class="ov-rank" style="background:#0f172a;color:#fff;width:28px;height:28px;font-size:13px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none">' + (s.rank || '–') + '</span><span class="ov-nm">' + esc(s.name) + '</span>' + dotsFor(s, D.scored) + '<span class="ov-pct">' + (s.overall === null ? '–' : R(s.overall)) + '</span></button>'; });
+      h += '</div>';
+      if (D.extra.length) {
+        h += '<div class="ov-card"><p class="ov-h"><i style="background:#94a3b8"></i>Shown separately</p>';
+        D.extra.forEach(function (a) { h += '<div class="ov-ex"><span class="ov-exn"><i style="background:' + a.color + '"></i>' + esc(a.label) + '</span><span class="ov-pct">' + R(D.classAvg[a.key]) + '</span></div>'; });
+        h += '<div class="ov-note">Class averages. These do not change the class activity score.</div></div>';
+      }
+      h += '<div class="ov-card"><p class="ov-h"><i style="background:#cbd5e1"></i>How the score is made</p><div class="ov-wts">';
+      AREAS.filter(function (a) { return wOf(a.key) > 0; }).forEach(function (a) { h += '<span class="ov-chip" style="background:' + a.color + '">' + esc(a.label) + ' ' + wOf(a.key) + '</span>'; });
+      h += '</div><div class="ov-note">Class activity score = weighted average of these categories (weights add up to 100). A category with no scores yet is left out until it has some.</div></div>';
+      return h;
+    }
+    function areaCard(a, s, D) {
+      var r = s.areas[a.key], v = r.avg, l = level(v), ca = D.classAvg[a.key], w = wOf(a.key), h = '';
+      h += '<div class="ov-area"><div class="ov-area-top"><i style="width:14px;height:14px;border-radius:4px;border:2px solid var(--nb-line);background:' + a.color + '"></i><b>' + esc(a.label) + '</b>' + (w ? '<span class="ov-wt">weight ' + w + '</span>' : '') + '<span class="ov-badge" style="background:' + l.c + '">' + l.t + '</span><span class="ov-pct">' + R(v) + '</span></div>';
+      h += '<div class="ov-bar"><span style="width:' + v + '%;background:' + a.color + '"></span><em style="left:calc(' + ca + '% - 1px)" title="Class average"></em></div><div class="ov-note">The black marker is the class average (' + R(ca) + '). ' + esc(r.note) + '</div>';
+      r.subs.length > 1 && r.subs.forEach(function (x) { h += '<div class="ov-sub"><span>' + esc(x.l) + '</span><span class="mini"><span style="width:' + x.v + '%;background:' + level(x.v).c + '"></span></span><span>' + R(x.v) + '</span></div>'; });
+      return h + spark(r.pts, a.color) + '</div>';
     }
     function rightHtml(D) {
       var s = D.list[sel]; if (!s) return '<div class="ov-card ov-empty">Pick a student to see their charts.</div>';
       var h = '<div class="ov-top-row"><button class="action-badge ov-back" data-ovback="1" type="button">← All students</button>' + (s.overall !== null ? '<button class="action-badge ov-share" data-ovshare="student" type="button">' + SHARE_SVG + '<span>Share</span></button>' : '') + '</div>';
       if (s.overall === null) return h + '<div class="ov-card ov-empty">' + esc(s.name) + ' has no scores yet.</div>';
       var lv = level(s.overall), vals = {}; D.used.forEach(function (a) { if (s.areas[a.key]) vals[a.key] = s.areas[a.key].avg; });
-      var ar = D.used.filter(function (a) { return s.areas[a.key]; }), sorted = ar.slice().sort(function (a, b) { return s.areas[b.key].avg - s.areas[a.key].avg; });
+      var ex = D.extra.filter(function (a) { return s.areas[a.key]; });
+      var ar = D.scored.filter(function (a) { return s.areas[a.key]; }), sorted = ar.slice().sort(function (a, b) { return s.areas[b.key].avg - s.areas[a.key].avg; });
       h += '<div class="ov-card"><div class="ov-hd"><h3>' + esc(s.name) + '</h3><span class="ov-badge" style="background:' + lv.c + '">' + lv.t + '</span><span class="ov-big">' + R(s.overall) + '</span></div>';
-      h += '<div class="ov-note">Rank ' + s.rank + ' of ' + D.ranked.length + ' · class average ' + R(avg(D.ranked.map(function (x) { return x.overall; }))) + '</div></div>';
+      h += '<div class="ov-note">Rank ' + s.rank + ' of ' + D.ranked.length + ' · class average ' + R(avg(D.ranked.map(function (x) { return x.overall; }))) + '<br>Class activity score, weighted by category</div></div>';
       if (ar.length >= 3) h += '<div class="ov-card"><p class="ov-h">Strengths and weak spots</p>' + radar(ar, vals, D.classAvg, '#a78bfa') + '<div class="ov-leg"><span><i style="background:#a78bfa"></i>' + esc(s.name.split(' ')[0]) + '</span><span><i style="background:transparent;border-style:dashed"></i>Class average</span></div></div>';
       var best = sorted[0], worst = sorted[sorted.length - 1], ins = '';
       if (ar.length > 1) { ins = 'Strongest area: <b>' + esc(best.label) + '</b> (' + R(vals[best.key]) + '). '; if (vals[worst.key] < 70) ins += 'Needs attention: <b>' + esc(worst.label) + '</b> (' + R(vals[worst.key]) + ', class average ' + R(D.classAvg[worst.key]) + ').'; else ins += 'No area is below 70.'; }
       if (ins) h += '<div class="ov-card"><p class="ov-h">In short</p><div class="ov-insight">' + ins + '</div></div>';
-      sorted.forEach(function (a) {
-        var r = s.areas[a.key], v = r.avg, l = level(v), ca = D.classAvg[a.key];
-        h += '<div class="ov-area"><div class="ov-area-top"><i style="width:14px;height:14px;border-radius:4px;border:2px solid var(--nb-line);background:' + a.color + '"></i><b>' + esc(a.label) + '</b><span class="ov-badge" style="background:' + l.c + '">' + l.t + '</span><span class="ov-pct">' + R(v) + '</span></div>';
-        h += '<div class="ov-bar"><span style="width:' + v + '%;background:' + a.color + '"></span><em style="left:calc(' + ca + '% - 1px)" title="Class average"></em></div><div class="ov-note">The black marker is the class average (' + R(ca) + '). ' + esc(r.note) + '</div>';
-        r.subs.length > 1 && r.subs.forEach(function (x) { h += '<div class="ov-sub"><span>' + esc(x.l) + '</span><span class="mini"><span style="width:' + x.v + '%;background:' + level(x.v).c + '"></span></span><span>' + R(x.v) + '</span></div>'; });
-        h += spark(r.pts, a.color) + '</div>';
-      });
+      sorted.forEach(function (a) { h += areaCard(a, s, D); });
+      if (ex.length) { h += '<p class="ov-sep">Shown separately · not part of the class activity score</p>'; ex.forEach(function (a) { h += areaCard(a, s, D); }); }
       return h;
     }
     function render() {
