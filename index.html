@@ -107,7 +107,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <link rel="icon" href="icon-256.png">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>Ultimate Grader V1.11</title>
+  <title>Ultimate Grader V1.16</title>
   <style>
     :root {
       --bg: #f0f2f5;
@@ -1244,7 +1244,7 @@
     [data-ico] { display: inline-flex; align-items: center; justify-content: center; gap: .5em; }
     [data-ico] .ic { width: 1.25em; height: 1.25em; flex: none; }
     [data-ico] .tx { display: block; line-height: 1.2; }
-    #file-switch-btn, #file-settings-btn { padding-left: 11px; padding-right: 11px; }
+    #file-switch-btn, #file-settings-btn, #file-cal-btn, #file-rem-btn { padding-left: 11px; padding-right: 11px; }
     #start-overlay .big-btn[data-ico] { display: flex; width: 100%; }
 
     /* ---- text centred by cap height / x-height: identical on every phone and tablet (needs a current Android WebView) ---- */
@@ -1722,6 +1722,9 @@
     #ov-lang .ov-lang-btn { display:block; width:100%; margin-top:10px; padding:15px 12px; font-size:17px; text-align:center; cursor:pointer; }
 
 
+    :root[data-skin="elegant"] #motion-row { display:none; }
+
+
     /* =====================================================================================================
        ELEGANT THEME  (Settings > Appearance > Elegant).  Same layout, same sizes, same buttons as Classic -
        only the look changes: warm paper, hairline borders, soft shadows, refined serif titles, muted colours.
@@ -2023,6 +2026,179 @@
     :root[data-skin="elegant"] #ov-container .ov-spark path, :root[data-skin="elegant"] #ov-container .ov-radar polygon[stroke="#0f172a"] { stroke:var(--e-ink); }
     :root[data-skin="elegant"] #ov-container .ov-spark circle { stroke:var(--e-ink); }
 
+    /* ===== TERM CALENDAR, REMINDERS AND LATENESS (added b19) ===== */
+    #cal-overlay { position: fixed; inset: 0; z-index: 10060; background: var(--scrim); display: none; justify-content: center; }
+    #cal-overlay .cal-card { background: var(--bg-ffffff); color: var(--text); width: 100%; max-width: 640px; height: 100%; display: flex; flex-direction: column; overflow: hidden; }
+    .cal-head { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 2px solid var(--border); }
+    .cal-head h2 { margin: 0; font-size: 18px; flex: none; }
+    .cal-head select { flex: 1; min-width: 0; padding: 8px 8px; font-size: 14px; font-weight: 700; border: 2px solid var(--border); border-radius: 10px; background: var(--card-bg); color: var(--text); font-family: inherit; }
+    .cal-x { flex: none; width: 38px; height: 38px; border-radius: 10px; border: 2px solid var(--border); background: var(--card-bg); color: var(--text); font-size: 18px; cursor: pointer; }
+    #cal-tabs { display: flex; border-bottom: 2px solid var(--border); }
+    #cal-tabs button { flex: 1; padding: 11px 4px; font-size: 14px; font-weight: 700; background: none; border: 0; border-bottom: 4px solid transparent; color: var(--secondary); cursor: pointer; font-family: inherit; }
+    #cal-tabs button.on { color: var(--text); border-bottom-color: var(--primary); }
+    #cal-body { flex: 1; overflow-y: auto; padding: 12px 12px 40px; -webkit-overflow-scrolling: touch; }
+    .cal-box { border: 2px solid var(--border); border-radius: 12px; padding: 10px 12px; margin-bottom: 10px; background: var(--card-bg); }
+    .cal-box.warn { border-color: var(--warning); }
+    .cb-t { font-weight: 800; font-size: 14px; margin-bottom: 8px; }
+    .cb-t small, .cf-row small, .ct-line small { font-weight: 500; color: var(--secondary); font-size: 12px; }
+    .ct-h { font-weight: 800; font-size: 15px; margin-bottom: 6px; }
+    .ct-none { color: var(--secondary); font-size: 14px; line-height: 1.45; }
+    .ct-line { display: block; font-size: 14.5px; line-height: 1.4; padding: 4px 0; }
+    .ct-dot { display: inline-block; width: 11px; height: 11px; border-radius: 50%; margin-right: 7px; vertical-align: baseline; }
+    .cal-today { border-color: var(--primary); }
+    .cal-key { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 4px 2px 10px; font-size: 12.5px; font-weight: 700; }
+    .cal-key .ck i { display: inline-block; width: 11px; height: 11px; border-radius: 3px; background: var(--gc); margin-right: 5px; }
+    .cal-key small { font-weight: 500; color: var(--secondary); }
+    .cal-grid { display: grid; gap: 5px; align-items: stretch; }
+    .cg-h { text-align: center; color: #fff; border-radius: 9px; padding: 7px 2px; font-size: 14px; }
+    .cg-n { display: flex; align-items: center; justify-content: center; font-style: normal; font-weight: 800; font-size: 13px; color: var(--secondary); }
+    .cg-n.mark { color: var(--primary); }
+    .cg-c { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; padding: 6px 2px; border: 2px solid var(--border); border-radius: 9px; background: var(--card-bg); color: var(--text); font-family: inherit; cursor: pointer; position: relative; line-height: 1.15; }
+    .cg-c em { font-style: normal; font-size: 10.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--secondary); }
+    .cg-c span { font-size: 13.5px; font-weight: 800; }
+    .cg-c.empty { color: var(--secondary); cursor: default; }
+    .cg-c.past { opacity: .5; }
+    .cg-c.today { outline: 3px solid var(--primary); outline-offset: 1px; opacity: 1; }
+    .cg-c.mark { border-color: var(--primary); }
+    .cg-c.moved::after { content: '✎'; position: absolute; top: 1px; right: 4px; font-size: 10px; color: var(--warning); }
+    .cg-c.out { border-color: var(--danger); }
+    .cal-foot { font-size: 12.5px; line-height: 1.45; color: var(--secondary); margin: 8px 2px 0; }
+    .cal-link { display: block; width: 100%; margin-top: 10px; padding: 11px; font-size: 14px; font-weight: 700; border: 2px dashed var(--border); border-radius: 10px; background: none; color: var(--text); cursor: pointer; font-family: inherit; }
+    .cal-big { display: block; width: 100%; padding: 13px; font-size: 15px; font-weight: 800; border: 2px solid var(--text); border-radius: 12px; background: var(--primary); color: #fff; cursor: pointer; font-family: inherit; }
+    .cal-big.alt { background: var(--card-bg); color: var(--text); }
+    .cal-big.sm { width: auto; padding: 9px 16px; font-size: 14px; }
+    .cal-btnrow { display: flex; gap: 8px; margin-top: 4px; }
+    .cm-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .cm-head b { flex: 1; text-align: center; font-size: 16px; }
+    .cm-head button { padding: 8px 14px; font-size: 18px; font-weight: 800; border: 2px solid var(--border); border-radius: 10px; background: var(--card-bg); color: var(--text); cursor: pointer; font-family: inherit; }
+    .cm-head .cm-today { font-size: 13px; }
+    .cm-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+    .cm-dn { font-style: normal; text-align: center; font-size: 11px; font-weight: 800; color: var(--secondary); padding: 3px 0; }
+    .cm-d { min-height: 52px; padding: 3px 2px 4px; border: 2px solid var(--border); border-radius: 9px; background: var(--card-bg); color: var(--text); display: flex; flex-direction: column; align-items: center; gap: 2px; font-family: inherit; cursor: pointer; }
+    .cm-d span { font-size: 12px; font-weight: 700; color: var(--secondary); }
+    .cm-d u { text-decoration: none; min-width: 22px; padding: 2px 5px; border-radius: 8px; color: #fff; font-size: 12px; font-weight: 800; line-height: 1.2; }
+    .cm-d.today { outline: 3px solid var(--primary); outline-offset: 1px; }
+    .cm-d.sel { border-color: var(--text); }
+    .cm-d.hol { background: repeating-linear-gradient(135deg, transparent 0 5px, color-mix(in srgb, var(--danger) 16%, transparent) 5px 10px); }
+    .cg-c.makeup { border-color: var(--primary); background: color-mix(in srgb, var(--primary) 12%, var(--card-bg)); }
+    .cg-c.makeup::after { content: '★'; position: absolute; top: 1px; right: 4px; font-size: 11px; color: var(--primary); font-weight: bold; }
+    .cm-d u.makeup { outline: 2px solid var(--text); box-shadow: 0 0 0 1px #fff; }
+    .cm-d u.makeup::after { content: '★'; font-size: 8px; margin-left: 1px; vertical-align: 1px; }
+    .cf-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 7px 0; font-size: 14px; font-weight: 600; }
+    .cf-btn { padding: 8px 12px; font-size: 13.5px; font-weight: 800; border: 2px solid var(--border); border-radius: 10px; background: var(--card-bg); color: var(--text); cursor: pointer; font-family: inherit; }
+    .cf-cnt { display: inline-flex; align-items: center; gap: 10px; }
+    .cf-cnt b { min-width: 26px; text-align: center; font-size: 17px; }
+    .cf-cnt button { width: 38px; height: 38px; font-size: 20px; font-weight: 800; border: 2px solid var(--border); border-radius: 10px; background: var(--card-bg); color: var(--text); cursor: pointer; }
+    .cf-time { padding: 8px 10px; font-size: 14px; border: 2px solid var(--border); border-radius: 10px; background: var(--card-bg); color: var(--text); font-family: inherit; }
+    .cal-seg { display: flex; flex-wrap: wrap; gap: 6px; }
+    .cal-seg button { padding: 9px 12px; font-size: 13.5px; font-weight: 800; border: 2px solid var(--border); border-radius: 10px; background: var(--card-bg); color: var(--text); cursor: pointer; font-family: inherit; }
+    .cal-seg button.on { background: var(--primary); color: #fff; border-color: var(--text); }
+    .ch-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 7px 0; border-top: 1px solid var(--border); font-size: 14px; }
+    .ch-row:first-of-type { border-top: 0; }
+    .ch-row small { color: var(--secondary); font-size: 12.5px; }
+    .cal-sw { margin-bottom: 8px; }
+    .cs-line { font-size: 13.5px; line-height: 1.5; font-weight: 600; }
+    .cs-line.ok { color: var(--success); }
+    .cs-line.bad { color: var(--warning); }
+    .cc-add { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+    .cc-add input[type=text] { width: 100%; box-sizing: border-box; padding: 10px; font-size: 15px; border: 2px solid var(--border); border-radius: 10px; background: var(--card-bg); color: var(--text); font-family: inherit; }
+    .cc-r { display: flex; gap: 8px; align-items: center; }
+    #cal-picker, #cal-sheet { position: fixed; inset: 0; z-index: 10070; background: var(--scrim); display: none; align-items: center; justify-content: center; padding: 14px; box-sizing: border-box; }
+    #cal-sheet { z-index: 10075; align-items: flex-end; }
+    #cal-picker-card, #cal-sheet-card { background: var(--bg-ffffff); color: var(--text); width: 100%; max-width: 380px; border-radius: 16px; padding: 14px; box-shadow: 0 8px 32px rgba(0,0,0,.3); box-sizing: border-box; border: 2px solid var(--border); }
+    #cal-sheet-card { max-width: 520px; }
+    .cp-head { display: flex; align-items: center; gap: 4px; }
+    .cp-head b { flex: 1; text-align: center; font-size: 16px; }
+    .cp-head button { width: 38px; height: 38px; font-size: 18px; font-weight: 800; border: 2px solid var(--border); border-radius: 10px; background: var(--card-bg); color: var(--text); cursor: pointer; }
+    .cp-title { text-align: center; font-size: 12.5px; color: var(--secondary); margin: 6px 0 8px; font-weight: 600; }
+    .cp-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+    .cp-dn { font-style: normal; text-align: center; font-size: 11px; font-weight: 800; color: var(--secondary); }
+    .cp-d { padding: 9px 0; font-size: 15px; font-weight: 700; border: 2px solid transparent; border-radius: 9px; background: var(--card-bg); color: var(--text); cursor: pointer; font-family: inherit; }
+    .cp-d.today { border-color: var(--primary); }
+    .cp-d.on { background: var(--primary); color: #fff; }
+    .cp-foot { display: flex; gap: 8px; margin-top: 12px; }
+    .cp-foot button { flex: 1; padding: 11px; font-size: 14px; font-weight: 800; border: 2px solid var(--border); border-radius: 10px; background: var(--card-bg); color: var(--text); cursor: pointer; font-family: inherit; }
+    .cs-title { font-weight: 800; font-size: 16px; }
+    .cs-sub { font-size: 13px; color: var(--secondary); line-height: 1.45; margin: 4px 0 10px; }
+    .cs-btn { display: block; width: 100%; margin-top: 8px; padding: 13px 12px; font-size: 14.5px; font-weight: 700; text-align: left; border: 2px solid var(--border); border-radius: 12px; background: var(--card-bg); color: var(--text); cursor: pointer; font-family: inherit; }
+    .cs-btn.cancel { text-align: center; color: var(--secondary); }
+    #cal-toast { position: fixed; left: 10px; right: 10px; top: 10px; z-index: 10090; display: none; padding: 12px 14px; border-radius: 14px; background: var(--primary); color: #fff; box-shadow: 0 6px 24px rgba(0,0,0,.35); cursor: pointer; }
+    #cal-toast b { display: block; font-size: 15px; }
+    #cal-toast span { display: block; font-size: 13px; margin-top: 2px; opacity: .95; }
+    .att-dateline { margin: 0 0 10px; padding: 9px 12px; border: 2px solid var(--nb-line, var(--border)); border-radius: 12px; background: var(--card-bg); color: var(--text); font-size: 14px; font-weight: 700; }
+    .att-today { display: inline-block; margin-left: 8px; padding: 1px 7px; border-radius: 8px; background: var(--primary); color: #fff; font-size: 11px; font-weight: 800; letter-spacing: .05em; vertical-align: 1px; }
+    .score-badge.has-late { position: relative; }
+    .late-corner { position: absolute; top: -8px; right: -6px; min-width: 20px; padding: 1px 5px; border-radius: 10px; background: var(--warning); color: #fff; font-size: 11px; font-weight: 800; line-height: 1.35; box-shadow: 0 1px 3px rgba(0,0,0,.35); text-box: normal; }
+    .late-sup { margin-left: 2px; font-size: 10px; color: var(--warning); }
+    .master-table th.late-tot-th, .master-table td.late-tot { text-align: center; font-weight: 800; white-space: nowrap; }
+    .late-box { margin-top: 12px; padding: 12px; border: 2px solid var(--nb-line, var(--border)); border-radius: 14px; background: var(--card-bg); color: var(--text); }
+    .late-title { font-weight: 800; font-size: 15px; }
+    .late-src { display: block; margin-top: 2px; font-size: 12px; font-weight: 600; color: var(--secondary); }
+    .late-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 14px; font-weight: 700; }
+    .late-row input[type=time] { flex: 1; min-width: 0; padding: 9px 10px; font-size: 16px; border: 2px solid var(--border); border-radius: 10px; background: var(--bg-ffffff); color: var(--text); font-family: inherit; }
+    .late-row button, .late-step button { padding: 10px 12px; font-size: 15px; font-weight: 800; border: 2px solid var(--nb-line, var(--border)); border-radius: 10px; background: var(--bg-ffffff); color: var(--text); cursor: pointer; font-family: inherit; }
+    .late-step { display: flex; gap: 6px; margin-top: 10px; }
+    .late-step button { flex: 1; padding: 12px 4px; }
+    .late-step .late-val { flex: 2.2; background: var(--warning); color: #fff; font-size: 18px; }
+    .late-hint { margin-top: 8px; font-size: 12px; color: var(--secondary); font-weight: 600; }
+
+    /* ===== CALENDAR & REMINDERS: styled like the home screen (b20) ===== */
+    #cal-overlay, #cal-picker, #cal-sheet, #cal-toast {
+      --h-page:#f1f1f1; --h-card:#ffffff; --h-ink:#1b1b1b; --h-sub:#5d5d5d; --h-btn:#2b2b2b; --h-btn-ink:#ffffff; --h-btn2:#e9e9e9; --h-line:#8c8c8c; --h-shadow:#0d0d0d; --h-field:#f6f6f6; --h-dot:#cbd5e1; }
+    :root[data-theme="dark"] #cal-overlay, :root[data-theme="dark"] #cal-picker, :root[data-theme="dark"] #cal-sheet, :root[data-theme="dark"] #cal-toast {
+      --h-page:#121212; --h-card:#1e1e1e; --h-ink:#f1f1f1; --h-sub:#ababab; --h-btn:#e7e7e7; --h-btn-ink:#111111; --h-btn2:#2d2d2d; --h-line:#666666; --h-shadow:#000000; --h-field:#161616; --h-dot:#262626; }
+    :root[data-skin="elegant"] #cal-overlay, :root[data-skin="elegant"] #cal-picker, :root[data-skin="elegant"] #cal-sheet, :root[data-skin="elegant"] #cal-toast {
+      --h-page:var(--e-bg); --h-card:var(--e-paper); --h-ink:var(--e-ink); --h-sub:var(--e-mut); --h-btn:var(--e-btn); --h-btn-ink:var(--e-btn-ink); --h-btn2:var(--e-paper); --h-line:var(--e-hair); --h-shadow:transparent; --h-field:var(--e-paper2); --h-dot:transparent; }
+    #cal-overlay { background-color:var(--h-page); background-image:radial-gradient(var(--h-dot) 1.2px, transparent 1.2px); background-size:20px 20px; }
+    #cal-overlay .cal-card { background:var(--h-page); color:var(--h-ink); }
+    @media (min-width:660px) { #cal-overlay .cal-card { border-left:2px solid var(--h-line); border-right:2px solid var(--h-line); box-shadow:6px 0 0 var(--h-shadow); } }
+    #cal-overlay .cal-head { background:var(--h-card); border-bottom:2px solid var(--h-line); padding:12px; }
+    #cal-overlay .cal-head h2 { font-size:19px; font-weight:800; letter-spacing:-.02em; color:var(--h-ink); }
+    #cal-overlay .cal-x, #cal-overlay .cal-head select { background:var(--h-btn2); color:var(--h-ink); border:2px solid var(--h-line); box-shadow:2px 2px 0 var(--h-shadow); }
+    #cal-overlay .cal-x { border-radius:999px; font-weight:800; }
+    #cal-overlay .cal-head select { border-radius:12px; }
+    #cal-overlay #cal-tabs { gap:8px; padding:10px 12px; background:var(--h-card); border-bottom:2px solid var(--h-line); }
+    #cal-overlay #cal-tabs button { --tc:#ffc900; padding:10px 2px; border:2px solid var(--h-line); border-radius:12px; background:var(--h-btn2); color:var(--h-sub); box-shadow:2px 2px 0 var(--h-shadow); font-weight:800; }
+    #cal-overlay #cal-tabs button[data-t="sessions"] { --tc:#ff90e8; }
+    #cal-overlay #cal-tabs button[data-t="month"]    { --tc:#65b361; }
+    #cal-overlay #cal-tabs button[data-t="term"]     { --tc:#90a8ed; }
+    #cal-overlay #cal-tabs button[data-t="alerts"]   { --tc:#ffc900; }
+    #cal-overlay #cal-tabs button.on { background:var(--tc); color:#1a1a1a; border-color:var(--h-line); }
+    #cal-overlay #cal-tabs button:active, #cal-overlay .cal-x:active, #cal-overlay .cf-btn:active, #cal-overlay .cal-seg button:active, #cal-overlay .cal-big:active, #cal-overlay .cal-allow:active, #cal-overlay .cm-head button:active, #cal-overlay .cf-cnt button:active { transform:translate(2px,2px); box-shadow:1px 1px 0 var(--h-shadow); }
+    #cal-overlay #cal-body { background:transparent; }
+    #cal-overlay .cal-box { background:var(--h-card); border:2px solid var(--h-line); border-radius:14px; box-shadow:3px 3px 0 var(--h-shadow); }
+    #cal-overlay .cal-box.warn { border-color:var(--warning); }
+    #cal-overlay .cal-box.cal-today { border-color:var(--primary); }
+    #cal-overlay .cb-t, #cal-overlay .ct-h { color:var(--h-ink); letter-spacing:-.01em; }
+    #cal-overlay .cb-t small, #cal-overlay .cf-row small, #cal-overlay .ct-line small, #cal-overlay .cal-foot, #cal-overlay .ct-none { color:var(--h-sub); }
+    #cal-overlay .cf-btn, #cal-overlay .cal-seg button, #cal-overlay .cm-head button, #cal-overlay .cf-cnt button, #cal-overlay .cal-link { background:var(--h-btn2); color:var(--h-ink); border:2px solid var(--h-line); box-shadow:2px 2px 0 var(--h-shadow); }
+    #cal-overlay .cal-link { border-style:dashed; box-shadow:none; }
+    #cal-overlay .cal-seg button.on { background:var(--h-btn); color:var(--h-btn-ink); border-color:var(--h-line); }
+    #cal-overlay .cal-big { background:var(--h-btn); color:var(--h-btn-ink); border:2px solid var(--h-line); box-shadow:3px 3px 0 var(--h-shadow); }
+    #cal-overlay .cf-time, #cal-overlay .cc-add input[type=text] { background:var(--h-field); color:var(--h-ink); border:2px solid var(--h-line); border-radius:12px; }
+    #cal-overlay .ch-row { border-top-color:var(--h-line); }
+    #cal-overlay .cs-row { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+    #cal-overlay .cs-row .cs-line { flex:1; min-width:0; }
+    #cal-overlay .cal-allow { flex:none; padding:7px 14px; font-size:13px; font-weight:800; font-family:inherit; cursor:pointer; background:var(--h-btn); color:var(--h-btn-ink); border:2px solid var(--h-line); border-radius:999px; box-shadow:2px 2px 0 var(--h-shadow); }
+    #cal-picker-card, #cal-sheet-card { background:var(--h-card); color:var(--h-ink); border:2px solid var(--h-line); border-radius:20px; box-shadow:5px 5px 0 var(--h-shadow); }
+    #cal-picker-card .cp-head button, #cal-picker-card .cp-foot button, #cal-sheet-card .cs-btn { background:var(--h-btn2); color:var(--h-ink); border:2px solid var(--h-line); box-shadow:2px 2px 0 var(--h-shadow); }
+    #cal-picker-card .cp-d { background:var(--h-btn2); color:var(--h-ink); }
+    #cal-picker-card .cp-d.on { background:var(--h-btn); color:var(--h-btn-ink); }
+    #cal-picker-card .cp-title, #cal-sheet-card .cs-sub { color:var(--h-sub); }
+    #cal-toast { background:var(--h-btn); color:var(--h-btn-ink); border:2px solid var(--h-line); box-shadow:3px 3px 0 var(--h-shadow); }
+    :root[data-skin="elegant"] #cal-overlay :is(.cal-box, #cal-tabs button, .cf-btn, .cal-seg button, .cal-big, .cal-allow, .cal-x, .cm-head button, .cf-cnt button, .cal-head select) { border-width:1px; }
+    :root[data-skin="elegant"] #cal-overlay .cal-head h2 { font-family:var(--e-serif); font-weight:600; }
+    :root[data-skin="elegant"] #cal-overlay #cal-tabs button.on { background:var(--e-btn); color:var(--e-btn-ink); }
+    :root[data-skin="elegant"] #cal-overlay .cal-card, :root[data-skin="elegant"] #cal-overlay .cal-box { box-shadow:var(--e-sh-s); }
+
+    /* ===== home screen: Open / New / Calendar / Reminders as a 2x2 block ===== */
+    #start-overlay .start-actions { grid-template-columns:1fr 1fr; gap:12px; }
+    #start-overlay .start-actions .big-btn { display:flex; align-items:center; justify-content:center; text-align:center; min-height:52px; padding:10px 8px; line-height:1.2; }
+    @media (max-width:400px) { #start-overlay .start-actions { gap:10px; } #start-overlay .start-actions .big-btn { font-size:13px; gap:6px; } }
+    #start-overlay #start-cal-btn .ic { color:var(--hs-plus); width:16px; height:16px; stroke-width:2.4; }
+    #start-overlay #start-rem-btn .ic { color:#d97706; width:16px; height:16px; stroke-width:2.4; }
+    :root[data-theme="dark"] #start-overlay #start-rem-btn .ic { color:#fbbf24; }
+    :root[data-skin="elegant"] #start-overlay #start-rem-btn .ic { color:var(--e-gold); }
   </style>
 </head>
 <body data-nb="attendance">
@@ -2045,13 +2221,15 @@
     <div class="start-actions">
       <button class="big-btn" id="start-open-btn" data-ico="folder-open">📂 Open Excel file</button>
       <button class="big-btn secondary" id="start-new-btn" data-ico="plus">➕ New class</button>
+      <button class="big-btn secondary" id="start-cal-btn" data-ico="calendar">📅 Calendar</button>
+      <button class="big-btn secondary" id="start-rem-btn" data-ico="bell">🔔 Reminders</button>
     </div>
     <div id="lib-box" style="display:none;"></div>
     <footer class="hs-foot">
       <div class="start-error" id="start-error"></div>
       <p id="start-help">Either pick your Excel grade sheet (<span class="m">Reach</span>, <span class="m">Race</span>, <span class="m">Run</span>, or <span class="m">Start</span> — the file name tells the app which one it is), or create your own from scratch using <b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> New class</b>.</p>
       <div class="start-note" id="start-note"></div>
-      <div class="hs-stamp" id="hs-stamp"><span id="hs-build">App build: 2026-10-26 b18</span><span class="sep"></span><span class="hs-native" id="hs-native"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" x2="2" y1="12" y2="12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><line x1="6" x2="6.01" y1="16" y2="16"/><line x1="10" x2="10.01" y1="16" y2="16"/></svg> <span id="hs-native-txt">native file access: ON</span></span></div>
+      <div class="hs-stamp" id="hs-stamp"><span id="hs-build">App build: 2026-10-28 b19</span><span class="sep"></span><span class="hs-native" id="hs-native"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" x2="2" y1="12" y2="12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><line x1="6" x2="6.01" y1="16" y2="16"/><line x1="10" x2="10.01" y1="16" y2="16"/></svg> <span id="hs-native-txt">native file access: ON</span></span></div>
     </footer>
     <input type="file" id="start-file-input" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" style="display:none;">
   </div>
@@ -2063,6 +2241,8 @@
 <div id="newclass-overlay">
   <div class="nc-card" role="dialog" aria-modal="true" aria-labelledby="nc-title">
     <h2 id="nc-title">New class</h2>
+    <label for="nc-dept">DEPARTMENT</label>
+    <select id="nc-dept"><option value="ya">Young Adults</option><option value="ad">Adults</option><option value="ch">Children</option></select>
     <label for="nc-level">LEVEL (goes into the file name)</label>
     <select id="nc-level"></select>
     <label for="nc-gender">CLASS (goes into the file name)</label>
@@ -2114,6 +2294,10 @@
         <div class="set-row">
           <div class="set-txt"><b>Dark mode</b><span>Easier on the eyes in low light</span></div>
           <button id="theme-switch" class="set-switch" type="button" role="switch" aria-checked="false" aria-label="Dark mode"><i></i></button>
+        </div>
+        <div class="set-row" id="motion-row" style="margin-top:10px">
+          <div class="set-txt"><b>Motion effects</b><span>Background shapes drift when you tilt the device. Turn off to save battery.</span></div>
+          <button id="motion-switch" class="set-switch" type="button" role="switch" aria-checked="true" aria-label="Motion effects"><i></i></button>
         </div>
         <p class="set-h">Theme</p>
         <div class="set-themes">
@@ -2198,6 +2382,14 @@
 </ul>
 </div>
 
+<h3>Term calendar &amp; reminders</h3>
+<ul>
+  <li><b>Open it</b> with the 📅 button on the home screen or on the top bar of a class. Pick the first day of the term in the <b>Term</b> tab; the app lays out sessions 1 to 20 for the <b>Odd</b> (Sun &amp; Tue), <b>Even</b> (Sat &amp; Wed) and <b>Mon</b> (Mon &amp; Thu) groups. Each class belongs to the group written in its file name.</li>
+  <li><b>Holidays and changes:</b> add holidays in the Term tab, or tap any date in <b>Sessions</b> to move it, or to skip a cancelled day. Later sessions shift automatically.</li>
+  <li><b>Alerts:</b> every class rings before it starts (you choose how many minutes) using the class name and the time in its file name, plus the midpoint, one week before the end and the last session of the term. You can also add your own reminders.</li>
+  <li><b>Late students:</b> tap <b>L</b> on the Attendance keypad. The minutes are worked out from the class time and the clock, and you can always change them by hand. They are kept in the hidden <b>_AppMarks</b> tab; the Attendance cell still shows a plain L.</li>
+</ul>
+
 <h3>A good habit</h3>
 <p>Keep a copy of the original blank grade sheet. If a file is ever damaged by accident, you can start again from the copy.</p>
 
@@ -2211,6 +2403,8 @@
   <button id="file-save-btn" class="primary" style="display:none;" data-ico="save">💾 Save to Excel</button>
   <button id="file-share-btn" data-ico="share">☁️ Share</button>
   <button id="file-folder-btn" style="display:none;" data-ico="folder">📁 Folder</button>
+  <button id="file-cal-btn" title="Calendar" aria-label="Calendar" data-ico="calendar" data-ico-only="1">📅</button>
+  <button id="file-rem-btn" title="Reminders" aria-label="Reminders" data-ico="bell" data-ico-only="1">🔔</button>
   <button id="file-switch-btn" title="Home screen" aria-label="Home screen" data-ico="home" data-ico-only="1">🏠</button>
   <button id="file-settings-btn" title="Settings" aria-label="Settings" data-ico="gear" data-ico-only="1">⚙️</button>
 </div>
@@ -2299,6 +2493,27 @@
     </div>
   </div>
 </div>
+
+<!-- Term calendar, reminders -->
+<div id="cal-overlay">
+  <div class="cal-card" role="dialog" aria-modal="true" aria-label="Term calendar">
+    <div class="cal-head">
+      <button id="cal-close" class="cal-x" type="button" aria-label="Close">✕</button>
+      <h2>Calendar</h2>
+      <select id="cal-term" aria-label="Term"></select>
+    </div>
+    <div id="cal-tabs" role="tablist">
+      <button type="button" data-t="sessions" class="on" role="tab">Sessions</button>
+      <button type="button" data-t="month" role="tab">Month</button>
+      <button type="button" data-t="term" role="tab">Term</button>
+      <button type="button" data-t="alerts" role="tab">Alerts</button>
+    </div>
+    <div id="cal-body"></div>
+  </div>
+</div>
+<div id="cal-picker"><div id="cal-picker-card"></div></div>
+<div id="cal-sheet"><div id="cal-sheet-card"></div></div>
+<div id="cal-toast" role="alert"></div>
 
 <script>
 /*!
@@ -2707,7 +2922,7 @@ const Offline = (function () {
         const name = getVal(sheet, i, nameColIdx + 1);
         if (name && name !== '') {
           const map = {};
-          sessionCols.forEach(sc => { map[sc.num] = { status: getVal(sheet, i, sc.colIdx + 1) }; });
+          sessionCols.forEach(sc => { const nt = getNote(sheet, i, sc.colIdx + 1); map[sc.num] = { status: getVal(sheet, i, sc.colIdx + 1), late: (nt.late === undefined ? undefined : nt.late), arr: nt.arr || '' }; });
           students.push({ row: i, name: name, allSessions: map });
         }
       }
@@ -2771,6 +2986,10 @@ const Offline = (function () {
       headers.forEach((h, idx) => { if (String(h).trim() === String(data.sessionNum)) colIdx = idx; });
       if (colIdx === -1) { colIdx = maxColOf(sheet); setVal(sheet, 1, colIdx + 1, data.sessionNum); }
       setVal(sheet, data.row, colIdx + 1, data.status !== undefined ? data.status : '');
+      // minutes late (and the arrival time) live in the hidden _AppMarks sheet, next to the keypad choices; the cell itself stays a plain 'L'
+      const lateNum = Math.max(0, Math.round(Number(data.late) || 0));
+      if (data.status === 'L' && (lateNum > 0 || data.arr)) { const nt = { late: lateNum }; if (data.arr) nt.arr = String(data.arr); setNote(sheet, data.row, colIdx + 1, nt); }
+      else setNote(sheet, data.row, colIdx + 1, {});
       changed();
       return { success: true };
     },
@@ -3194,6 +3413,7 @@ const Offline = (function () {
   return {
     canAutoSave: S.canAutoSave,
     pickFile, openFromFileObject, openHandle, getLastHandleName, pickHandleOnly, libLoad, libSave,
+    calLoad: function () { return idbGet('calendar'); }, calSave: function (v) { return idbSet('calendar', v); },
     saveNow, status,
     prepareShareFile, getReadyShareFile,
     onOpened: f => { onOpened = f; },
@@ -3548,7 +3768,20 @@ const Offline = (function () {
     function uid() { return Math.random().toString(36).slice(2, 9); }
     function esc(t) { return String(t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
     function curTerm() { const d = LIB.data; return d.terms.find(function (t) { return t.id === d.current; }) || d.terms[0]; }
-    function libPersist() { Offline.libSave(LIB.data); }
+    function libPersist() { Offline.libSave(LIB.data); try { if (window.UGCal) UGCal.libChanged(); } catch (e) {} }
+    // read-only door for the calendar: terms > sections > files, the active term, and which term a file belongs to
+    window.UG_LIBAPI = {
+      terms: function () { return LIB.data ? LIB.data.terms : []; },
+      currentId: function () { try { return LIB.data ? curTerm().id : ''; } catch (e) { return ''; } },
+      setCurrent: function (id) { if (LIB.data && LIB.data.terms.some(function (t) { return t.id === id; })) { LIB.data.current = id; libPersist(); libRender(); } },
+      find: function (fileName) {
+        if (!LIB.data) return null;
+        for (let a = 0; a < LIB.data.terms.length; a++) { const t = LIB.data.terms[a];
+          for (let b = 0; b < t.sections.length; b++) { const sec = t.sections[b];
+            for (let c = 0; c < sec.files.length; c++) { const f = sec.files[c]; if (f.handle && f.handle.name === fileName) return { term: t, sec: sec, file: f }; } } }
+        return null;
+      }
+    };
     function findSec(t, id) { return t.sections.find(function (x) { return x.id === id; }); }
     // Each section gets its own colour (different from the blue of the Open button); files inherit it
     const SEC_COLORS = ['#0d9488', '#7c3aed', '#ea580c', '#16a34a', '#db2777', '#475569', '#0891b2', '#b45309'];
@@ -3969,9 +4202,16 @@ const Offline = (function () {
       return zip.generateAsync({ type: 'blob', compression: 'DEFLATE', mimeType: NC_XLSX_MIME });
     }
 
+    // Levels per department. Young Adults = the 13 levels below. Adults and Children get their own level lists later (add them here: { id, label, token, tpl }).
+    const NC_DEPT_LEVELS = { ad: [], ch: [] };
+    function ncFillLevels() {
+      const d = $('nc-dept').value, list = d === 'ya' ? NC_LEVELS : (NC_DEPT_LEVELS[d] || []);
+      $('nc-level').innerHTML = list.length ? list.map(function (l) { return '<option value="' + l.id + '">' + esc(l.label) + '</option>'; }).join('') : '<option value="" disabled selected>Levels will be added soon</option>';
+      $('nc-error').textContent = '';
+    }
     function ncOpenDialog() {
       showError('');
-      $('nc-level').innerHTML = NC_LEVELS.map(function (l) { return '<option value="' + l.id + '">' + esc(l.label) + '</option>'; }).join('');
+      $('nc-dept').value = 'ya'; ncFillLevels();
       $('nc-error').textContent = '';
       $('nc-names').value = '';
       ncUpdateCount();
@@ -3992,6 +4232,7 @@ const Offline = (function () {
       const err = $('nc-error'); err.textContent = '';
       const names = ncParseNames();
       if (names.length > NC_MAX) { err.textContent = 'The grade sheet holds ' + NC_MAX + ' students, but you typed ' + names.length + '.'; return; }
+      if (!$('nc-level').value) { err.textContent = 'The levels for this department will be added soon. Choose Young Adults to create a class now.'; return; }
       const lv = ncLevel($('nc-level').value);
       const rows = names.length ? names : ['Student 1'];          // no names typed: one student row so the app still has something to show
       const btn = $('nc-create'), label = btn.textContent;
@@ -4032,6 +4273,7 @@ const Offline = (function () {
     $('start-new-btn').addEventListener('click', ncOpenDialog);
     $('nc-cancel').addEventListener('click', ncClose);
     $('nc-create').addEventListener('click', ncCreate);
+    $('nc-dept').addEventListener('change', ncFillLevels);
     $('nc-names').addEventListener('input', ncUpdateCount);
 
     if (Offline.canAutoSave) {
@@ -4459,7 +4701,7 @@ const Offline = (function () {
     SHOW_LS_SUBTABS = Object.assign({}, v.showLsSubtabs);
     keypadProfiles = v.keypadProfiles;
     window.__variantLabel = v.label;
-    document.title = 'Ultimate Grader ' + v.label + ' V1.11';
+    document.title = 'Ultimate Grader ' + v.label + ' V1.16';
     document.documentElement.style.setProperty('--reading-cols', v.reading.cols.length);
 
     currentDictNo = 1; currentQuizNo = 1; currentQuizGroup = 0;
@@ -4550,6 +4792,46 @@ const Offline = (function () {
   let isAbsentModal = false;
   let currentModalMarks = {};
   let currentAttendanceStatus = '';
+  // ---------- late minutes (Attendance keypad): worked out from the class start time, always editable by hand ----------
+  let currentLateMin = null, currentLateArr = '';
+  function lateRefresh() { renderAttendanceKeypadForm(); }
+  function lateAdd(n) { currentLateMin = Math.max(0, (currentLateMin || 0) + n); currentLateArr = ''; lateRefresh(); }
+  function lateArrChanged(v) {
+    currentLateArr = v || '';
+    const m = window.UGCal ? UGCal.lateFrom(UGCal.classStart(), currentLateArr) : null;
+    if (m !== null) currentLateMin = m;
+    lateRefresh();
+  }
+  function lateUseNow() {
+    if (!window.UGCal) return;
+    const now = UGCal.nowHHMM(), m = UGCal.lateFrom(UGCal.classStart(), now);
+    currentLateArr = now;
+    if (m !== null) currentLateMin = m;
+    lateRefresh();
+  }
+  function lateType() {
+    NumPad.open({
+      title: 'Minutes late', subtitle: 'Type the number of minutes', max: 240,
+      value: currentLateMin === null ? '' : currentLateMin, nextName: null, enterLabel: 'Done ↵',
+      onCommit: function (v) { currentLateMin = (v === '' ? null : Math.round(v)); currentLateArr = ''; lateRefresh(); }
+    });
+  }
+  function lateBoxHtml() {
+    const start = window.UGCal ? UGCal.classStart() : '';
+    let src;
+    if (!start) src = 'No class time found in the file name, so type the minutes.';
+    else if (currentLateArr) src = 'Calculated: arrived ' + currentLateArr + ' − class start ' + start;
+    else if (currentLateMin !== null) src = 'Set by hand. Class starts at ' + start + '.';
+    else src = 'Class starts at ' + start + '. Enter the arrival time or the minutes.';
+    let html = '<div class="late-box"><div class="late-title">⏱️ How late?<span class="late-src">' + src + '</span></div>';
+    if (start) html += '<div class="late-row">Arrived at <input type="time" value="' + currentLateArr + '" onchange="lateArrChanged(this.value)"><button type="button" onclick="lateUseNow()">Now</button></div>';
+    html += '<div class="late-step"><button type="button" onclick="lateAdd(-5)">−5</button><button type="button" onclick="lateAdd(-1)">−1</button>' +
+            '<button type="button" class="late-val" onclick="lateType()">' + (currentLateMin === null ? '— min' : currentLateMin + ' min') + '</button>' +
+            '<button type="button" onclick="lateAdd(1)">+1</button><button type="button" onclick="lateAdd(5)">+5</button></div>' +
+            '<div class="late-hint">Tap the big number to type it. Changing it by hand always wins.</div></div>';
+    return html;
+  }
+
 
   // (Tabs, sub-tabs and keypads are set up in applyVariant() when a file is opened)
 
@@ -4813,7 +5095,9 @@ const Offline = (function () {
       const doneList = appState.doneSessions || [];
       const isDone = doneList.indexOf(appState.activeSession) !== -1;
       const lastDone = doneList.length ? Math.max.apply(null, doneList) : null;
+      const dateLine = window.UGCal ? UGCal.sessionLine(appState.activeSession) : '';
       container.innerHTML = `
+        ${dateLine ? '<div class="att-dateline">' + dateLine + '</div>' : ''}
         <div class="session-done-bar">
           <button class="session-done-btn ${isDone ? 'done' : ''}" onclick="toggleSessionDone()">${isDone ? '✅ Session ' + appState.activeSession + ' finished (tap to undo)' : '☐ Mark session ' + appState.activeSession + ' as finished'}</button>
           <span class="session-done-note">${lastDone !== null ? 'Last finished session: ' + lastDone : 'No session marked as finished yet'}</span>
@@ -4960,7 +5244,7 @@ const Offline = (function () {
           <div class="student-row-att">
             <div class="row-number">${index + 1}</div>
             <div class="student-name">${student.name}</div>
-            <div class="${actClass}" onclick="openKeypad(${index}, ${activeS})">${actDisplay}</div>
+            <div class="${actClass}${(actStat === 'L' && sessObj.late > 0) ? ' has-late' : ''}" onclick="openKeypad(${index}, ${activeS})">${actDisplay}${(actStat === 'L' && sessObj.late > 0) ? '<b class="late-corner">' + sessObj.late + '′</b>' : ''}</div>
           </div>
         `;
       } else if (currentMode === 'reading') {
@@ -5111,17 +5395,21 @@ const Offline = (function () {
       appState.sessionList.forEach(sNum => {
         let activeClass = (sNum === appState.activeSession) ? 'current-sess-th' : '';
         let isDone = doneList.indexOf(sNum) !== -1;
-        html += `<th class="${activeClass} ${isDone ? 'done-sess-th' : ''}" onclick="selectSessionFromMaster(${sNum})">${labelPrefix}${sNum} ${isDone ? '✔' : '🔍'}</th>`;
+        html += `<th class="${activeClass} ${isDone ? 'done-sess-th' : ''}" onclick="selectSessionFromMaster(${sNum})">${labelPrefix}${sNum} ${isDone ? '✔' : '🔍'}${(window.UGCal && UGCal.sessionShort(sNum)) ? '<br><small>' + UGCal.sessionShort(sNum) + '</small>' : ''}</th>`;
       });
+      html += `<th class="late-tot-th" title="Total minutes late">⏱️ min</th>`;
       html += `</tr></thead><tbody>`;
       
       appState.students.forEach((student, index) => {
+        let lateTotal = 0;
         html += `<tr><td class="sticky-col-1">${index + 1}</td><td class="sticky-col-2">${student.name}</td>`;
         appState.sessionList.forEach(sNum => {
           let sessObj = student.allSessions[sNum] || { status: "" };
           let val = sessObj.status === 'A' ? 'A' : (sessObj.status === 'L' ? 'L' : '');
-          html += `<td><div class="master-cell" onclick="openKeypad(${index}, ${sNum})">${val}</div></td>`;
+          if (sessObj.status === 'L' && sessObj.late > 0) lateTotal += sessObj.late;
+          html += `<td><div class="master-cell" onclick="openKeypad(${index}, ${sNum})">${val}${(sessObj.status === 'L' && sessObj.late > 0) ? '<sup class="late-sup">' + sessObj.late + '</sup>' : ''}</div></td>`;
         });
+        html += `<td class="late-tot">${lateTotal || ''}</td>`;
         html += `</tr>`;
       });
     } else if (currentMode === 'reading') {
@@ -5362,7 +5650,7 @@ const Offline = (function () {
       shown.classList.toggle('np-over', !!flash);
       if (flash) setTimeout(() => shown.classList.remove('np-over'), 350);
       $('np-max').textContent = 'max ' + cfg.max;
-      $('np-enter').innerHTML = cfg.nextName ? 'Enter ↵ <small>next: ' + cfg.nextName.replace(/</g, '&lt;') + '</small>' : 'Enter ↵ <small>last student</small>';
+      $('np-enter').innerHTML = cfg.enterLabel ? cfg.enterLabel : (cfg.nextName ? 'Enter ↵ <small>next: ' + cfg.nextName.replace(/</g, '&lt;') + '</small>' : 'Enter ↵ <small>last student</small>');
     }
     function open(c) {
       cfg = c;
@@ -5499,6 +5787,8 @@ const Offline = (function () {
       secondaryBtn.innerText = "Mark Present";
       let sessObj = (student.allSessions && student.allSessions[sessionNum]) ? student.allSessions[sessionNum] : { status: "" };
       currentAttendanceStatus = sessObj.status || "";
+      currentLateMin = (sessObj.status === 'L' && sessObj.late !== undefined && sessObj.late !== null) ? sessObj.late : null;
+      currentLateArr = (sessObj.status === 'L' && sessObj.arr) ? sessObj.arr : '';
       
       renderAttendanceKeypadForm();
       document.getElementById('keypad-modal').style.display = 'flex';
@@ -5916,6 +6206,7 @@ const Offline = (function () {
       html += `<div class="att-key-btn ${st.cls} ${isSelected}" onclick="selectAttendanceStatus('${st.code}')">${st.label}</div>`;
     });
     html += `</div>`;
+    if (currentAttendanceStatus === 'L') html += lateBoxHtml();
     
     document.getElementById('modal-body-content').innerHTML = html;
   }
@@ -5925,7 +6216,12 @@ const Offline = (function () {
       currentAttendanceStatus = "";
     } else {
       currentAttendanceStatus = code;
+      if (code === 'L') {                                   // Late: work out the minutes from the class time and the clock right now
+        const a = window.UGCal ? UGCal.autoLate(activeModalSession) : null;
+        if (a) { currentLateMin = a.min; currentLateArr = a.arr; } else { currentLateMin = null; currentLateArr = ''; }
+      }
     }
+    if (currentAttendanceStatus !== 'L') { currentLateMin = null; currentLateArr = ''; }
     renderAttendanceKeypadForm();
   }
   
@@ -5992,6 +6288,10 @@ const Offline = (function () {
       if (!student.allSessions[activeModalSession]) student.allSessions[activeModalSession] = {};
       const prevStatus = student.allSessions[activeModalSession].status || '';
       student.allSessions[activeModalSession].status = statusToSave;
+      const lateToSave = (statusToSave === 'L' && currentLateMin !== null) ? currentLateMin : null;
+      const arrToSave = (statusToSave === 'L' && currentLateArr) ? currentLateArr : '';
+      student.allSessions[activeModalSession].late = (lateToSave === null ? undefined : lateToSave);
+      student.allSessions[activeModalSession].arr = arrToSave;
       const attSess = activeModalSession;
       
       // Marking any attendance means this session has started -> colour its header (never un-colours)
@@ -6010,7 +6310,9 @@ const Offline = (function () {
         .updateAttendanceStatus({
           row: student.row,
           status: statusToSave,
-          sessionNum: attSess
+          sessionNum: attSess,
+          late: lateToSave,
+          arr: arrToSave
         });
       
       if (colourNow) {
@@ -6195,6 +6497,8 @@ const Offline = (function () {
       share: '<circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="6" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="m8.1 10.9 7.8-3.8M8.1 13.1l7.8 3.8"/>',
       chart: '<rect x="3.5" y="12" width="4.5" height="8" rx="1"/><rect x="9.75" y="8" width="4.5" height="12" rx="1"/><rect x="16" y="4" width="4.5" height="16" rx="1"/>',
       bolt: '<path d="M13 3 5 13.5h6L10 21l8-10.5h-6z"/>',
+      calendar: '<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+      bell: '<path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15z"/><path d="M10 21h4"/>',
       save: '<path d="M5 4h11l3 3v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z"/><path d="M8 4v5h7V4"/><path d="M8 20v-6h8v6"/>',
       folder: '<path d="M4 7a2 2 0 0 1 2-2h4l2 2.5h6a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/>',
       'folder-open': '<path d="M3.5 18.5v-11a2 2 0 0 1 2-2h4l2 2.5h5a2 2 0 0 1 2 2V10"/><path d="M3.5 18.5 6 11.5h15.5l-2.5 7z"/>',
@@ -6274,6 +6578,824 @@ const Offline = (function () {
   }
 </script>
 <script>
+// ============================================================================
+//  TERM CALENDAR, REMINDERS
+//  Sessions per term for the Odd / Even / Mon groups, class-start and term reminders, and the lateness helpers used by Attendance.
+//  Dates are stored as Gregorian ISO text and only shown in Shamsi or Gregorian.
+// ============================================================================
+(function () {
+  /* ---------- date maths (Gregorian ISO strings are the storage format; Jalali is only for showing / picking) ---------- */
+  function div(a, b) { return ~~(a / b); }
+  function mod(a, b) { return a - ~~(a / b) * b; }
+  var BRK = [-61, 9, 38, 199, 426, 686, 756, 818, 1111, 1181, 1210, 1635, 2060, 2097, 2192, 2262, 2324, 2394, 2456, 3178];
+  function jalCal(jy) {
+    var bl = BRK.length, gy = jy + 621, leapJ = -14, jp = BRK[0], jm, jump = 0, leap, leapG, march, n, i;
+    for (i = 1; i < bl; i++) { jm = BRK[i]; jump = jm - jp; if (jy < jm) break; leapJ += div(jump, 33) * 8 + div(mod(jump, 33), 4); jp = jm; }
+    n = jy - jp;
+    leapJ += div(n, 33) * 8 + div(mod(n, 33) + 3, 4);
+    if (mod(jump, 33) === 4 && jump - n === 4) leapJ += 1;
+    leapG = div(gy, 4) - div((div(gy, 100) + 1) * 3, 4) - 150;
+    march = 20 + leapJ - leapG;
+    if (jump - n < 6) n = n - jump + div(jump + 4, 33) * 33;
+    leap = mod(mod(n + 1, 33) - 1, 4);
+    if (leap === -1) leap = 4;
+    return { leap: leap, gy: gy, march: march };
+  }
+  function g2d(gy, gm, gd) {
+    var d = div((gy + div(gm - 8, 6) + 100100) * 1461, 4) + div(153 * mod(gm + 9, 12) + 2, 5) + gd - 34840408;
+    return d - div(div(gy + 100100 + div(gm - 8, 6), 100) * 3, 4) + 752;
+  }
+  function d2g(jdn) {
+    var j = 4 * jdn + 139361631;
+    j = j + div(div(4 * jdn + 183187720, 146097) * 3, 4) * 4 - 3908;
+    var i = div(mod(j, 1461), 4) * 5 + 308;
+    var gd = div(mod(i, 153), 5) + 1, gm = mod(div(i, 153), 12) + 1, gy = div(j, 1461) - 100100 + div(8 - gm, 6);
+    return { gy: gy, gm: gm, gd: gd };
+  }
+  function j2d(jy, jm, jd) { var r = jalCal(jy); return g2d(r.gy, 3, r.march) + (jm - 1) * 31 - div(jm, 7) * (jm - 7) + jd - 1; }
+  function d2j(jdn) {
+    var gy = d2g(jdn).gy, jy = gy - 621, r = jalCal(jy), jdn1f = g2d(gy, 3, r.march), jd, jm, k = jdn - jdn1f;
+    if (k >= 0) {
+      if (k <= 185) { return { jy: jy, jm: 1 + div(k, 31), jd: mod(k, 31) + 1 }; }
+      k -= 186;
+    } else { jy -= 1; k += 179; if (r.leap === 1) k += 1; }
+    jm = 7 + div(k, 30); jd = mod(k, 30) + 1;
+    return { jy: jy, jm: jm, jd: jd };
+  }
+
+  var DN = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  var GMN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  var JMN = ['Farvardin', 'Ordibehesht', 'Khordad', 'Tir', 'Mordad', 'Shahrivar', 'Mehr', 'Aban', 'Azar', 'Dey', 'Bahman', 'Esfand'];
+  function pad(n) { n = String(n); return n.length < 2 ? '0' + n : n; }
+  function isoParse(s) { var p = String(s).split('-'); return { y: +p[0], m: +p[1], d: +p[2] }; }
+  function isoMake(y, m, d) { return y + '-' + pad(m) + '-' + pad(d); }
+  function isoUTC(s) { var o = isoParse(s); return Date.UTC(o.y, o.m - 1, o.d); }
+  function addDays(s, n) { var t = new Date(isoUTC(s) + n * 864e5); return isoMake(t.getUTCFullYear(), t.getUTCMonth() + 1, t.getUTCDate()); }
+  function diffDays(a, b) { return Math.round((isoUTC(b) - isoUTC(a)) / 864e5); }
+  function dow(s) { return new Date(isoUTC(s)).getUTCDay(); }                 // 0 = Sunday
+  function wk(s) { return (dow(s) + 1) % 7; }                                   // 0 = Saturday (the week starts on Saturday)
+  function todayISO() { var d = new Date(); return isoMake(d.getFullYear(), d.getMonth() + 1, d.getDate()); }
+  function toParts(iso, sys) { var o = isoParse(iso); if (sys === 'jalali') { var j = d2j(g2d(o.y, o.m, o.d)); return { y: j.jy, m: j.jm, d: j.jd }; } return o; }
+  function fromParts(y, m, d, sys) { if (sys === 'jalali') { var g = d2g(j2d(y, m, d)); return isoMake(g.gy, g.gm, g.gd); } return isoMake(y, m, d); }
+  function monthLen(y, m, sys) {
+    if (sys === 'jalali') return m <= 6 ? 31 : (m <= 11 ? 30 : (jalCal(y).leap === 0 ? 30 : 29));
+    return new Date(Date.UTC(y, m, 0)).getUTCDate();
+  }
+  function monthName(m, sys) { return (sys === 'jalali' ? JMN : GMN)[m - 1]; }
+  function fmt(iso, sys, how) {                       // how: 'dm' (6 Aban) | 'long' (Tue 6 Aban 1405)
+    if (!iso) return '';
+    var p = toParts(iso, sys), base = p.d + ' ' + monthName(p.m, sys);
+    if (how === 'dm') return base;
+    return DN[dow(iso)] + ' ' + base + ' ' + p.y;
+  }
+
+  /* ---------- class groups and generated sessions ---------- */
+  /* ---------- class groups and generated sessions ---------- */
+  var GROUPS = {
+    odd:  { label: 'Odd days',  short: 'Odd',  days: [0, 2], dn: 'Sun & Tue', color: '#0d9488' },
+    even: { label: 'Even days', short: 'Even', days: [6, 3], dn: 'Sat & Wed', color: '#7c3aed' },
+    mon:  { label: 'Mon & Thu', short: 'Mon',  days: [1, 4], dn: 'Mon & Thu', color: '#ea580c' }
+  };
+  var GKEYS = ['odd', 'even', 'mon'];
+
+  // Automatically matches the calendar color to whatever color you gave that section in your Library
+  function groupColor(termId, g) {
+    var t = termList().filter(function (x) { return x.id === termId; })[0];
+    if (t && t.sections) {
+      for (var i = 0; i < t.sections.length; i++) {
+        var sec = t.sections[i];
+        if (sec.color) {
+          var sn = String(sec.name || '').toLowerCase();
+          if ((g === 'odd' && /odd/.test(sn)) || (g === 'even' && /even/.test(sn)) || (g === 'mon' && /mon/.test(sn))) {
+            return sec.color;
+          }
+          var hasG = (sec.files || []).some(function (f) {
+            var nm = f.handle && f.handle.name;
+            return nm && parseClass(nm, sec.name).group === g;
+          });
+          if (hasG) return sec.color;
+        }
+      }
+    }
+    return GROUPS[g] ? GROUPS[g].color : '#2563eb';
+  }
+
+  // Returns only groups that actually have classes in your library
+  function activeGroups(termId) {
+    var cls = classesOf(termId);
+    return GKEYS.filter(function (g) {
+      return cls.some(function (c) { return c.group === g; });
+    });
+  }
+
+  // Helper to read override and make-up details
+  function getOv(t, g, k) {
+    if (!t || !t.over || !t.over[g]) return null;
+    var x = t.over[g][k];
+    if (!x) return null;
+    return typeof x === 'object' ? x : { d: x };
+  }
+
+  function sessionDates(term, g) {
+    var out = [];
+    if (!term || !term.start) return out;
+    var n = term.count || 20, skip = {};
+    (term.hol || []).forEach(function (h) { if (h.g === 'all' || h.g === g) skip[h.d] = 1; });
+    var d = term.start, guard = 0, days = GROUPS[g].days;
+    while (out.length < n && guard++ < 900) { if (days.indexOf(dow(d)) > -1 && !skip[d]) out.push(d); d = addDays(d, 1); }
+    var ov = (term.over && term.over[g]) || {};
+    Object.keys(ov).forEach(function (k) {
+      var entry = ov[k];
+      var dateStr = (typeof entry === 'object' && entry && entry.d) ? entry.d : entry;
+      if (out[k - 1] !== undefined && dateStr) out[k - 1] = dateStr;
+    });
+    return out;
+  }
+  function parseClass(fileName, secName) {            // everything the app knows about a class comes from its name
+    var nm = String(fileName || '').replace(/\.xlsx$/i, '');
+    var tm = /(?:^|[_\s])(\d{1,2})[-:.](\d{2})(?=[_\s]|$)/.exec(nm);
+    var time = tm ? pad(tm[1]) + ':' + tm[2] : '';
+    var g = '';
+    nm.split(/[_\s]+/).forEach(function (t) {
+      t = t.toLowerCase();
+      if (!g) { if (/^odd(days?)?$/.test(t)) g = 'odd'; else if (/^even(days?)?$/.test(t)) g = 'even'; else if (/^mon(days?)?$/.test(t)) g = 'mon'; }
+    });
+    if (!g && secName) { var s = String(secName).toLowerCase(); if (/odd/.test(s)) g = 'odd'; else if (/even/.test(s)) g = 'even'; else if (/mon/.test(s)) g = 'mon'; }
+    return { name: nm, time: time, group: g };
+  }
+  function minutesOf(hhmm) { var m = /^(\d{1,2}):(\d{2})$/.exec(String(hhmm || '')); return m ? (+m[1]) * 60 + (+m[2]) : null; }
+  function lateFrom(startHHMM, arriveHHMM) {          // minutes between the start of the class and the arrival (never negative)
+    var a = minutesOf(startHHMM), b = minutesOf(arriveHHMM);
+    return (a === null || b === null) ? null : Math.max(0, b - a);
+  }
+  function hash31(str) { var h = 7; for (var i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) % 2147483000; return h + 100; }
+
+  /* ---------- saved data ---------- */
+  var CAL = { v: 1, sys: 'jalali', notif: { on: true, lead: 5, mid: true, week: true, end: true, morning: '08:00' }, terms: {}, custom: {} };
+  var ui = { tab: 'sessions', term: null, mY: 0, mM: 0, sel: '', showAll: false, ready: false };
+  var LIBAPI = window.UG_LIBAPI || { terms: function () { return []; }, currentId: function () { return ''; }, setCurrent: function () {}, find: function () { return null; } };
+  function el(id) { return document.getElementById(id); }
+  function esc(t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function uid() { return Math.random().toString(36).slice(2, 9); }
+  function pretty(name) { return String(name).replace(/_/g, ' ').replace(/\s+/g, ' ').trim(); }
+
+  function termList() { var t = LIBAPI.terms(); return t && t.length ? t : [{ id: 'default', name: 'My term', sections: [] }]; }
+  function curTermId() { if (ui.term && termList().some(function (t) { return t.id === ui.term; })) return ui.term; var c = LIBAPI.currentId(); return c || termList()[0].id; }
+  function termName(id) { var t = termList().filter(function (x) { return x.id === id; })[0]; return t ? t.name : ''; }
+  function getT(id) { return CAL.terms[id] || null; }
+  function ensureT(id) {
+    if (!CAL.terms[id]) CAL.terms[id] = { start: '', end: '', count: 20, hol: [], over: { odd: {}, even: {}, mon: {} }, custom: [] };
+    var t = CAL.terms[id]; t.hol = t.hol || []; t.over = t.over || {}; GKEYS.forEach(function (g) { t.over[g] = t.over[g] || {}; }); t.custom = t.custom || [];
+    return t;
+  }
+  function classesOf(termId) {
+    var out = [], t = termList().filter(function (x) { return x.id === termId; })[0];
+    if (!t) return out;
+    (t.sections || []).forEach(function (sec) {
+      (sec.files || []).forEach(function (f) {
+        var nm = f.handle && f.handle.name; if (!nm) return;
+        var c = parseClass(nm, sec.name); c.sec = sec.name; out.push(c);
+      });
+    });
+    return out;
+  }
+  var saveTimer = null;
+  function save() {
+    try { Offline.calSave(CAL); } catch (e) {}
+    clearTimeout(saveTimer); saveTimer = setTimeout(function () { Notif.resync(); }, 700);
+  }
+
+  /* ---------- reminders: what should ring, and when ---------- */
+  function atTime(iso, hhmm) { var o = isoParse(iso), m = minutesOf(hhmm) || 0; return new Date(o.y, o.m - 1, o.d, Math.floor(m / 60), m % 60).getTime(); }
+  function lastDateOf(termId) {
+    var t = getT(termId); if (!t || !t.start) return '';
+    if (t.end) return t.end;
+    var cls = classesOf(termId), last = '';
+    GKEYS.forEach(function (g) { if (!cls.some(function (c) { return c.group === g; })) return; var ds = sessionDates(t, g); if (ds.length && ds[ds.length - 1] > last) last = ds[ds.length - 1]; });
+    return last;
+  }
+  function buildPlan() {
+    var out = [], now = Date.now(), N = CAL.notif;
+    if (!N.on) return out;
+    termList().forEach(function (lt) {
+      var t = getT(lt.id); if (!t) return;
+      var cls = classesOf(lt.id), cnt = t.count || 20;
+      if (t.start) {
+        GKEYS.forEach(function (g) {
+          var gc = cls.filter(function (c) { return c.group === g; });
+          if (!gc.length) return;
+          var ds = sessionDates(t, g);
+          ds.forEach(function (d, i) {
+            var ov = getOv(t, g, i + 1);
+            var isMu = !!(ov && ov.makeup);
+            var timeToUse = (ov && ov.t) ? ov.t : null;
+            gc.forEach(function (c) {
+              var targetTime = timeToUse || c.time;
+              if (!targetTime || N.lead < 0) return;
+              var at = atTime(d, targetTime) - N.lead * 60000;
+              if (at > now) out.push({
+                key: 'c|' + lt.id + '|' + g + '|' + (i + 1) + '|' + c.name + (isMu ? '|mu' : ''),
+                at: at,
+                title: pretty(c.name) + (isMu ? ' Make-up Class' : '') + (N.lead ? ' starts in ' + N.lead + ' min' : ' starts now'),
+                body: 'Session ' + (i + 1) + (isMu ? ' (Make-up)' : ' of ' + cnt) + ' · ' + targetTime + ' · ' + GROUPS[g].label
+              });
+            });
+          });
+          var mid = Math.ceil(cnt / 2);
+          if (N.mid && ds[mid - 1]) { var at1 = atTime(ds[mid - 1], N.morning); if (at1 > now) out.push({ key: 'm|' + lt.id + '|' + g, at: at1, title: 'Midpoint of the term', body: GROUPS[g].label + ': session ' + mid + ' of ' + cnt + ' is today.' }); }
+          if (N.end && ds[cnt - 1]) { var at2 = atTime(ds[cnt - 1], N.morning); if (at2 > now) out.push({ key: 'e|' + lt.id + '|' + g, at: at2, title: 'Last session of the term', body: GROUPS[g].label + ': session ' + cnt + ' of ' + cnt + ' is today.' }); }
+        });
+        var last = lastDateOf(lt.id);
+        if (N.week && last) { var wd = addDays(last, -7), at3 = atTime(wd, N.morning); if (at3 > now) out.push({ key: 'w|' + lt.id, at: at3, title: 'One week left in the term', body: pretty(lt.name) + ' ends on ' + fmt(last, CAL.sys, 'long') + '.' }); }
+      }
+      (t.custom || []).forEach(function (r) { var at4 = atTime(r.d, r.t || N.morning); if (at4 > now) out.push({ key: 'x|' + r.id, at: at4, title: r.text || 'Reminder', body: pretty(lt.name) }); });
+    });
+    out.sort(function (a, b) { return a.at - b.at; });
+    out.forEach(function (p) { p.id = hash31(p.key); });
+    return out;
+  }
+
+  /* ---------- delivering the reminders ---------- */
+  var Notif = (function () {
+    var plan = [], fired = {}, timer = null;
+    try { fired = JSON.parse(localStorage.getItem('ug_cal_fired') || '{}') || {}; } catch (e) {}
+    function plugin() {
+      try {
+        var C = window.Capacitor; if (!window.UG_NATIVE || !C) return null;
+        if (typeof C.isPluginAvailable === 'function' && !C.isPluginAvailable('LocalNotifications')) return null;
+        return (C.Plugins && C.Plugins.LocalNotifications) || (C.registerPlugin ? C.registerPlugin('LocalNotifications') : null);
+      } catch (e) { return null; }
+    }
+    function isNative() { return !!plugin(); }
+    function browserPerm() { return ('Notification' in window) ? Notification.permission : 'unsupported'; }
+    async function status() {
+      var lp = plugin();
+      if (lp) {
+        try { var p = await lp.checkPermissions(); var s = { mode: 'native', perm: p.display }; try { var ex = await lp.checkExactNotificationSetting(); s.exact = ex && ex.exact_alarm; } catch (e) {} return s; }
+        catch (e) { return { mode: 'native', perm: 'error' }; }
+      }
+      return { mode: window.UG_NATIVE ? 'missing' : 'browser', perm: browserPerm() };
+    }
+    async function ask() {
+      var lp = plugin();
+      if (lp) { try { var r = await lp.requestPermissions(); return r.display; } catch (e) { return 'error'; } }
+      if ('Notification' in window) { try { return await Notification.requestPermission(); } catch (e) { return 'denied'; } }
+      return 'unsupported';
+    }
+    async function exactSettings() { var lp = plugin(); if (lp) { try { await lp.changeExactNotificationSetting(); } catch (e) {} } }
+    async function nativeSync() {
+      var lp = plugin(); if (!lp) return;
+      try {
+        var p = await lp.checkPermissions(); if (p.display !== 'granted') return;
+        try { await lp.createChannel({ id: 'ug-class', name: 'Class reminders', description: 'Class start times and term milestones', importance: 5, visibility: 1, vibration: true }); } catch (e) {}
+        var pend = await lp.getPending();
+        if (pend && pend.notifications && pend.notifications.length) await lp.cancel({ notifications: pend.notifications.map(function (n) { return { id: n.id }; }) });
+        var list = plan.slice(0, 450).map(function (x) { return { id: x.id, title: x.title, body: x.body, channelId: 'ug-class', schedule: { at: new Date(x.at), allowWhileIdle: true }, extra: { ug: 1 } }; });
+        for (var i = 0; i < list.length; i += 80) await lp.schedule({ notifications: list.slice(i, i + 80) });
+      } catch (e) { /* never break the app because of a reminder */ }
+    }
+    function resync() {
+      plan = buildPlan();
+      if (isNative()) nativeSync();
+      renderUpcoming();
+    }
+    function toast(title, body) {
+      var t = el('cal-toast'); if (!t) return;
+      t.innerHTML = '<b>' + esc(title) + '</b><span>' + esc(body || '') + '</span>'; t.style.display = 'block';
+      clearTimeout(toast._t); toast._t = setTimeout(function () { t.style.display = 'none'; }, 60000);
+      try { if (navigator.vibrate) navigator.vibrate([200, 100, 200]); } catch (e) {}
+    }
+    async function system(title, body) {
+      try {
+        if (!('Notification' in window) || Notification.permission !== 'granted') return;
+        var reg = navigator.serviceWorker && navigator.serviceWorker.getRegistration ? await navigator.serviceWorker.getRegistration() : null;
+        if (reg && reg.showNotification) reg.showNotification(title, { body: body, tag: 'ug-' + title }); else new Notification(title, { body: body });
+      } catch (e) {}
+    }
+    function fire(p) { toast(p.title, p.body); system(p.title, p.body); }
+    function tick() {
+      if (isNative() || !CAL.notif.on) return;               // the Android app rings by itself, even when closed
+      var now = Date.now(), changed = false;
+      plan.forEach(function (p) { if (p.at <= now && now - p.at < 6 * 60000 && !fired[p.key]) { fired[p.key] = now; changed = true; fire(p); } });
+      if (changed) { Object.keys(fired).forEach(function (k) { if (now - fired[k] > 3 * 864e5) delete fired[k]; }); try { localStorage.setItem('ug_cal_fired', JSON.stringify(fired)); } catch (e) {} }
+    }
+    function start() { clearInterval(timer); timer = setInterval(tick, 15000); document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') { tick(); } }); resync(); }
+    function upcoming() { return plan.slice(0, 6); }
+    return { start: start, resync: resync, status: status, ask: ask, exactSettings: exactSettings, upcoming: upcoming, isNative: isNative, toast: toast };
+  })();
+
+  /* ---------- date picker (works in Shamsi and Gregorian) ---------- */
+  var PK = { cb: null, y: 0, m: 0, sel: '', title: '' };
+  function pickDate(title, current, cb) {
+    var base = current || todayISO(), p = toParts(base, CAL.sys);
+    PK.cb = cb; PK.y = p.y; PK.m = p.m; PK.sel = current || ''; PK.title = title || 'Choose a date';
+    renderPicker(); el('cal-picker').style.display = 'flex';
+  }
+  function renderPicker() {
+    var sys = CAL.sys, len = monthLen(PK.y, PK.m, sys), first = fromParts(PK.y, PK.m, 1, sys), lead = wk(first), today = todayISO();
+    var h = '<div class="cp-head"><button type="button" data-pk="py" aria-label="Previous year">«</button><button type="button" data-pk="pm" aria-label="Previous month">‹</button><b>' + monthName(PK.m, sys) + ' ' + PK.y + '</b><button type="button" data-pk="nm" aria-label="Next month">›</button><button type="button" data-pk="ny" aria-label="Next year">»</button></div>';
+    h += '<div class="cp-title">' + esc(PK.title) + '</div><div class="cp-grid">';
+    ['Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'].forEach(function (n) { h += '<i class="cp-dn">' + n + '</i>'; });
+    for (var i = 0; i < lead; i++) h += '<i></i>';
+    for (var d = 1; d <= len; d++) {
+      var iso = fromParts(PK.y, PK.m, d, sys);
+      h += '<button type="button" class="cp-d' + (iso === PK.sel ? ' on' : '') + (iso === today ? ' today' : '') + '" data-pk="d" data-d="' + iso + '">' + d + '</button>';
+    }
+    h += '</div><div class="cp-foot"><button type="button" data-pk="cancel">Cancel</button><button type="button" data-pk="today">Today</button></div>';
+    el('cal-picker-card').innerHTML = h;
+  }
+  function pkMove(dm) { var m = PK.m + dm, y = PK.y; while (m < 1) { m += 12; y--; } while (m > 12) { m -= 12; y++; } PK.m = m; PK.y = y; renderPicker(); }
+  function pkDone(iso) { var cb = PK.cb; PK.cb = null; el('cal-picker').style.display = 'none'; if (cb && iso) cb(iso); }
+
+  /* ---------- action sheet ---------- */
+  function openSheet(title, sub, buttons) {
+    var h = '<div class="cs-title">' + esc(title) + '</div>' + (sub ? '<div class="cs-sub">' + sub + '</div>' : '');
+    buttons.forEach(function (b, i) { h += '<button type="button" class="cs-btn' + (b.danger ? ' danger' : '') + '" data-sheet="' + i + '">' + esc(b.label) + '</button>'; });
+    h += '<button type="button" class="cs-btn cancel" data-sheet="x">Cancel</button>';
+    el('cal-sheet-card').innerHTML = h; el('cal-sheet').style.display = 'flex'; el('cal-sheet')._b = buttons;
+  }
+  // Interactive Time Picker Sheet for Make-up classes
+  function openTimeSheet(title, subtitle, defaultTime, onSave) {
+    var defT = defaultTime || '16:00';
+    var h = '<div class="cs-title">' + esc(title) + '</div>' +
+            '<div class="cs-sub">' + esc(subtitle) + '</div>' +
+            '<div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin:14px 0 10px;">' +
+              '<span style="font-weight:800; font-size:15px;">Class starts at:</span>' +
+              '<input type="time" id="cal-time-input" class="cf-time" value="' + esc(defT) + '" style="font-size:16px; padding:8px 12px; font-weight:800;">' +
+            '</div>' +
+            '<div class="cal-seg" style="margin-bottom:14px;">' +
+              '<button type="button" data-qtime="' + esc(defT) + '">Normal (' + esc(defT) + ')</button>' +
+              '<button type="button" data-qtime="10:00">10:00</button>' +
+              '<button type="button" data-qtime="14:00">14:00</button>' +
+              '<button type="button" data-qtime="16:00">16:00</button>' +
+              '<button type="button" data-qtime="18:00">18:00</button>' +
+            '</div>' +
+            '<button type="button" class="cal-big" id="cal-time-save">✓ Set Make-up Class</button>' +
+            '<button type="button" class="cs-btn cancel" data-sheet="x" style="margin-top:8px;">Cancel</button>';
+    el('cal-sheet-card').innerHTML = h;
+    el('cal-sheet').style.display = 'flex';
+    el('cal-sheet')._b = null;
+    
+    Array.prototype.forEach.call(el('cal-sheet-card').querySelectorAll('[data-qtime]'), function (btn) {
+      btn.addEventListener('click', function () {
+        var inp = el('cal-time-input');
+        if (inp) inp.value = btn.getAttribute('data-qtime');
+      });
+    });
+    
+    var saveBtn = el('cal-time-save');
+    if (saveBtn) {
+      saveBtn.addEventListener('click', function () {
+        var inp = el('cal-time-input');
+        var val = (inp && inp.value) ? inp.value : defT;
+        closeSheet();
+        if (onSave) onSave(val);
+      });
+    }
+  }
+
+  // Two-step make-up setup: Date picker -> Time picker -> Save & Calendar update
+  function scheduleMakeupFlow(termId, g, k) {
+    var t = ensureT(termId);
+    var cls = classesOf(termId).filter(function (c) { return c.group === g; });
+    var defaultTime = (cls.length && cls[0].time) ? cls[0].time : '16:00';
+    var existingOv = getOv(t, g, k);
+    if (existingOv && existingOv.t) defaultTime = existingOv.t;
+    var currentD = (existingOv && existingOv.d) ? existingOv.d : (sessionDates(t, g)[k - 1] || todayISO());
+
+    pickDate('Choose Make-up Date for Session ' + k + ' (' + GROUPS[g].short + ')', currentD, function (newDate) {
+      if (!newDate) return;
+      openTimeSheet('Make-up Class Time', 'Session ' + k + ' (' + GROUPS[g].label + ') on ' + fmt(newDate, CAL.sys, 'long'), defaultTime, function (chosenTime) {
+        t.over[g][k] = { d: newDate, t: chosenTime, makeup: true };
+        save();
+        render();
+      });
+    });
+  }
+  function closeSheet() { el('cal-sheet').style.display = 'none'; }
+
+  /* ---------- the calendar screen ---------- */
+  function activeGroups(termId) {
+    var cls = classesOf(termId);
+    return GKEYS.filter(function (g) {
+      return cls.some(function (c) { return c.group === g; });
+    });
+  }
+  function groupsShown(termId) {
+    var cls = classesOf(termId), have = GKEYS.filter(function (g) { return cls.some(function (c) { return c.group === g; }); });
+    return (ui.showAll || !have.length) ? GKEYS.slice() : have;
+  }
+  function classChips(termId, g) {
+    var cls = classesOf(termId).filter(function (c) { return c.group === g; });
+    return cls.map(function (c) { return (c.time ? c.time + ' ' : '') + pretty(c.name); });
+  }
+  function todayCard(termId) {
+    var t = getT(termId), today = todayISO(), cls = classesOf(termId), active = activeGroups(termId), h = '';
+    var lines = [];
+    if (t && t.start) active.forEach(function (g) {
+      var ds = sessionDates(t, g), i = ds.indexOf(today);
+      if (i > -1) {
+        var gc = cls.filter(function (c) { return c.group === g; });
+        if (gc.length) {
+          var ov = getOv(t, g, i + 1);
+          var isMu = !!(ov && ov.makeup);
+          var timeStr = (ov && ov.t) ? ov.t : '';
+          lines.push('<div class="ct-line"><span class="ct-dot" style="background:' + groupColor(termId, g) + '"></span><b>Session ' + (i + 1) + (isMu ? ' (Make-up Class ★)' : '') + '</b> · ' + GROUPS[g].label + '<br><small>' + gc.map(function (c) { return esc((timeStr ? timeStr + ' · ' : (c.time ? c.time + ' · ' : '')) + pretty(c.name)); }).join('<br>') + '</small></div>');
+        }
+      }
+    });
+    h += '<div class="cal-box cal-today"><div class="ct-h">Today · ' + fmt(today, CAL.sys, 'long') + '</div>';
+    if (!t || !t.start) h += '<div class="ct-none">Set the start date of this term (Term tab) to see your sessions.</div>';
+    else if (lines.length) h += lines.join('');
+    else {
+      var nxt = '', ng = '', ni = 0;
+      active.forEach(function (g) { var ds = sessionDates(t, g); for (var i = 0; i < ds.length; i++) if (ds[i] > today) { if (!nxt || ds[i] < nxt) { nxt = ds[i]; ng = g; ni = i + 1; } break; } });
+      h += '<div class="ct-none">No classes today.' + (nxt ? ' Next: <b>' + fmt(nxt, CAL.sys, 'long') + '</b> · ' + GROUPS[ng].label + ' · session ' + ni + '.' : '') + '</div>';
+    }
+    return h + '</div>';
+  }
+  function viewSessions(termId) {
+    var t = getT(termId), h = todayCard(termId);
+    var shown = groupsShown(termId), cls = classesOf(termId);
+    if (!t || !t.start) return h + '<button class="cal-big" data-act="go-term">Set up this term</button>';
+    
+    // Check for sessions overflowing past the fixed term end
+    var cnt = t.count || 20, today = todayISO(), mid = Math.ceil(cnt / 2), end = t.end || '';
+    var data = {}; shown.forEach(function (g) { data[g] = sessionDates(t, g); });
+    var overflow = [];
+    if (end) {
+      shown.forEach(function (g) {
+        var ds = data[g];
+        for (var idx = 0; idx < ds.length; idx++) {
+          if (ds[idx] > end) {
+            var ov = getOv(t, g, idx + 1);
+            if (!ov || !ov.makeup || ov.d > end) {
+              overflow.push({ g: g, k: idx + 1, d: ds[idx] });
+            }
+          }
+        }
+      });
+    }
+    if (overflow.length) {
+      h += '<div class="cal-box warn"><div class="cb-t">⚠️ Make-up Classes Needed <small>(sessions past term end: ' + fmt(end, CAL.sys, 'dm') + ')</small></div>';
+      overflow.forEach(function (it) {
+        h += '<div class="ch-row"><span><b>' + GROUPS[it.g].label + ' · Session ' + it.k + '</b><br><small>Lands on ' + fmt(it.d, CAL.sys, 'long') + '</small></span>' +
+             '<button class="cf-btn" data-act="cell-mu" data-g="' + it.g + '" data-k="' + it.k + '">⭐ Schedule Make-up</button></div>';
+      });
+      h += '</div>';
+    }
+
+    h += '<div class="cal-key">';
+    shown.forEach(function (g) {
+      var n = cls.filter(function (c) { return c.group === g; }).length;
+      h += '<span class="ck" style="--gc:' + groupColor(termId, g) + '"><i></i>' + GROUPS[g].label + ' <small>' + GROUPS[g].dn + ' · ' + (n ? n + (n === 1 ? ' class' : ' classes') : 'no class') + '</small></span>';
+    });
+    h += '</div>';
+    
+    h += '<div class="cal-grid" style="grid-template-columns:30px repeat(' + shown.length + ',1fr)"><i class="cg-n"></i>';
+    shown.forEach(function (g) { h += '<b class="cg-h" style="background:' + groupColor(termId, g) + '">' + GROUPS[g].short + '</b>'; });
+    for (var k = 1; k <= cnt; k++) {
+      h += '<i class="cg-n' + (k === mid ? ' mark' : '') + (k === cnt ? ' mark' : '') + '">' + k + '</i>';
+      shown.forEach(function (g) {
+        var d = data[g][k - 1];
+        if (!d) { h += '<span class="cg-c empty">—</span>'; return; }
+        var ov = getOv(t, g, k);
+        var man = !!ov;
+        var isMu = !!(ov && ov.makeup);
+        var isOut = (end && d > end);
+        h += '<button type="button" class="cg-c' + (d < today ? ' past' : '') + (d === today ? ' today' : '') + (isMu ? ' makeup' : (man ? ' moved' : '')) + (isOut ? ' out' : '') + (k === mid || k === cnt ? ' mark' : '') + '" data-act="cell" data-g="' + g + '" data-k="' + k + '"><em>' + DN[dow(d)] + (isMu && ov.t ? ' ' + ov.t : '') + '</em><span>' + fmt(d, CAL.sys, 'dm') + '</span></button>';
+      });
+    }
+    h += '</div><div class="cal-foot">✎ moved · ★ make-up · ring = today · faded = past' + (end ? ' · red = after term end' : '') + '. Tap any date to move or schedule a make-up.</div>';
+    h += '<button class="cal-link" data-act="toggle-all">' + (ui.showAll ? 'Show only groups with classes' : 'Show all three groups') + '</button>';
+    return h;
+  }
+  function viewMonth(termId) {
+    var t = getT(termId), sys = CAL.sys, today = todayISO();
+    if (!ui.mY) { var p = toParts(today, sys); ui.mY = p.y; ui.mM = p.m; }
+    var map = {}, cls = classesOf(termId), active = activeGroups(termId);
+    if (t && t.start) {
+      active.forEach(function (g) {
+        sessionDates(t, g).forEach(function (d, i) {
+          var ov = getOv(t, g, i + 1);
+          (map[d] = map[d] || []).push({
+            g: g,
+            k: i + 1,
+            makeup: !!(ov && ov.makeup),
+            time: (ov && ov.t) || ''
+          });
+        });
+      });
+    }
+    var hol = {}; if (t) (t.hol || []).forEach(function (x) { if (x.g === 'all') hol[x.d] = 1; });
+    var len = monthLen(ui.mY, ui.mM, sys), first = fromParts(ui.mY, ui.mM, 1, sys), lead = wk(first);
+    var h = '<div class="cm-head"><button data-act="mprev" aria-label="Previous month">‹</button><b>' + monthName(ui.mM, sys) + ' ' + ui.mY + '</b><button data-act="mnext" aria-label="Next month">›</button><button class="cm-today" data-act="mtoday">Today</button></div>';
+    h += '<div class="cm-grid">';
+    ['Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'].forEach(function (n) { h += '<i class="cm-dn">' + n + '</i>'; });
+    for (var i = 0; i < lead; i++) h += '<i></i>';
+    for (var d = 1; d <= len; d++) {
+      var iso = fromParts(ui.mY, ui.mM, d, sys), items = map[iso] || [];
+      h += '<button type="button" class="cm-d' + (iso === today ? ' today' : '') + (iso === ui.sel ? ' sel' : '') + (hol[iso] ? ' hol' : '') + '" data-act="day" data-d="' + iso + '"><span>' + d + '</span>';
+      items.forEach(function (it) {
+        h += '<u style="background:' + groupColor(termId, it.g) + '"' + (it.makeup ? ' class="makeup" title="Make-up Class"' : '') + '>' + it.k + (it.makeup ? '★' : '') + '</u>';
+      });
+      h += '</button>';
+    }
+    h += '</div><div class="cal-key">';
+    var legendGroups = active.length ? active : GKEYS;
+    legendGroups.forEach(function (g) { h += '<span class="ck" style="--gc:' + groupColor(termId, g) + '"><i></i>' + GROUPS[g].label + '</span>'; });
+    h += '</div>';
+    if (ui.sel) {
+      var its = map[ui.sel] || [];
+      h += '<div class="cal-box"><div class="ct-h">' + fmt(ui.sel, sys, 'long') + '</div>';
+      if (!its.length) h += '<div class="ct-none">No classes this day.</div>';
+      its.forEach(function (it) {
+        var gc = cls.filter(function (c) { return c.group === it.g; });
+        var ov = getOv(t, it.g, it.k);
+        var isMu = !!(ov && ov.makeup);
+        var timeStr = (ov && ov.t) ? ov.t : (gc.length && gc[0].time ? gc[0].time : '');
+        h += '<div class="ct-line"><span class="ct-dot" style="background:' + groupColor(termId, it.g) + '"></span><b>Session ' + it.k + (isMu ? ' (Make-up Class ★)' : '') + '</b> · ' + GROUPS[it.g].label + (gc.length ? '<br><small>' + gc.map(function (c) { return esc((timeStr ? timeStr + ' · ' : (c.time ? c.time + ' · ' : '')) + pretty(c.name)); }).join('<br>') + '</small>' : '') + '</div>';
+      });
+      var isHol = t && (t.hol || []).some(function (x) { return x.d === ui.sel && x.g === 'all'; });
+      h += '<button class="cal-link" data-act="' + (isHol ? 'unhol' : 'hol') + '" data-d="' + ui.sel + '">' + (isHol ? 'Remove this holiday' : '🚫 Mark as a holiday (no classes, later sessions shift)') + '</button></div>';
+    }
+    return h;
+  }
+  // Returns HTML list of scheduled make-up classes
+  function makeupList(termId, t) {
+    var out = [];
+    if (t && t.over) {
+      GKEYS.forEach(function (g) {
+        var ovs = t.over[g] || {};
+        Object.keys(ovs).forEach(function (k) {
+          var ov = getOv(t, g, k);
+          if (ov && ov.makeup) out.push({ g: g, k: +k, d: ov.d, t: ov.t });
+        });
+      });
+    }
+    if (!out.length) return '<div class="ct-none">No make-up classes scheduled yet.</div>';
+    out.sort(function (a, b) { return a.d < b.d ? -1 : 1; });
+    var h = '';
+    out.forEach(function (m) {
+      h += '<div class="ch-row"><span><span class="ct-dot" style="background:' + groupColor(termId, m.g) + '"></span><b>' + GROUPS[m.g].label + ' · Session ' + m.k + ' (Make-up)</b><br><small>' + fmt(m.d, CAL.sys, 'long') + ' at ' + esc(m.t || 'default time') + '</small></span>' +
+           '<div style="display:flex; gap:6px;"><button class="lib-mini" data-act="cell-mu" data-g="' + m.g + '" data-k="' + m.k + '" title="Edit make-up">✎</button>' +
+           '<button class="lib-mini" data-act="del-mu" data-g="' + m.g + '" data-k="' + m.k + '" title="Cancel make-up">✕</button></div></div>';
+    });
+    return h;
+  }
+  function holList(t) {
+    if (!t || !t.hol || !t.hol.length) return '<div class="ct-none">No holidays yet.</div>';
+    var list = t.hol.slice().sort(function (a, b) { return a.d < b.d ? -1 : 1; }), h = '';
+    list.forEach(function (x) { h += '<div class="ch-row"><span>' + fmt(x.d, CAL.sys, 'long') + ' <small>' + (x.g === 'all' ? 'all groups' : GROUPS[x.g].label + ' only') + '</small></span><button class="lib-mini" data-act="unhol" data-d="' + x.d + '" data-g="' + x.g + '" aria-label="Remove">✕</button></div>'; });
+    return h;
+  }
+  function viewTerm(termId) {
+    var t = getT(termId) || {}, cls = classesOf(termId), h = '';
+    h += '<div class="cal-box"><div class="cb-t">Dates of this term</div>' +
+      '<div class="cf-row"><span>First day of the term</span><button class="cf-btn" data-act="set-start">' + (t.start ? fmt(t.start, CAL.sys, 'long') : 'Choose…') + '</button></div>' +
+      '<div class="cf-row"><span>Last day of the term <small>(fixed end)</small></span><button class="cf-btn" data-act="set-end">' + (t.end ? fmt(t.end, CAL.sys, 'long') : 'Choose…') + '</button></div>' +
+      '<div class="cf-row"><span>Sessions in the term</span><span class="cf-cnt"><button data-act="cnt" data-n="-1">−</button><b>' + (t.count || 20) + '</b><button data-act="cnt" data-n="1">+</button></span></div>' +
+      '<p class="cal-foot">Odd = Sun &amp; Tue, Even = Sat &amp; Wed, Mon = Mon &amp; Thu. If holidays push sessions past the fixed end, schedule make-up classes below.</p></div>';
+    
+    if (t.start) {
+      h += '<div class="cal-box"><div class="cb-t">Where each group ends</div>';
+      var shownGroups = activeGroups(termId).length ? activeGroups(termId) : GKEYS;
+      shownGroups.forEach(function (g) {
+        var ds = sessionDates(t, g), n = cls.filter(function (c) { return c.group === g; }).length;
+        h += '<div class="ct-line"><span class="ct-dot" style="background:' + groupColor(termId, g) + '"></span><b>' + GROUPS[g].label + '</b> <small>' + (n ? n + ' class' + (n > 1 ? 'es' : '') : 'no class') + '</small><br>' + (ds.length ? fmt(ds[0], CAL.sys, 'dm') + ' → ' + fmt(ds[ds.length - 1], CAL.sys, 'long') : '—') + '</div>';
+      });
+      h += '</div>';
+    }
+    
+    h += '<div class="cal-box"><div class="cb-t">Holidays <small>(no classes on these days)</small></div>' + holList(t) + '<button class="cal-link" data-act="add-hol">＋ Add a holiday</button></div>';
+    h += '<div class="cal-box"><div class="cb-t">Make-up classes (جبرانی) <small>(scheduled for holidays or cancelled days)</small></div>' + makeupList(termId, t) + '<button class="cal-link" data-act="add-makeup">＋ Schedule a make-up class</button></div>';
+    h += '<div class="cal-box"><div class="cb-t">Dates shown as</div><div class="cal-seg"><button data-act="sys" data-v="jalali" class="' + (CAL.sys === 'jalali' ? 'on' : '') + '">Shamsi (1405)</button><button data-act="sys" data-v="greg" class="' + (CAL.sys === 'greg' ? 'on' : '') + '">Gregorian (2026)</button></div></div>';
+    
+    var other = cls.filter(function (c) { return !c.group; });
+    if (other.length) h += '<div class="cal-box warn"><div class="cb-t">Classes without a day in their name</div><small>' + other.map(function (c) { return esc(pretty(c.name)); }).join('<br>') + '</small><p class="cal-foot">Put Odd, Even or Mon in the file name (or section name) so the calendar recognizes their meeting days.</p></div>';
+    return h;
+  }
+  function sw(id, on, title, sub) { return '<div class="set-row cal-sw"><div class="set-txt"><b>' + title + '</b><span>' + sub + '</span></div><button class="set-switch" type="button" role="switch" aria-checked="' + (on ? 'true' : 'false') + '" data-act="' + id + '"><i></i></button></div>'; }
+  var alertStatus = null;
+  function viewAlerts(termId) {
+    var N = CAL.notif, t = ensureT(termId), h = '';
+    h += '<div id="cal-status" class="cal-box">' + statusHtml() + '</div>';
+    h += sw('n-on', N.on, 'Reminders', 'Class start times and term milestones');
+    h += '<div class="cal-box"><div class="cb-t">Class reminder</div><div class="cal-seg">';
+    [0, 5, 10, 15, 30].forEach(function (m) { h += '<button data-act="lead" data-v="' + m + '" class="' + (N.lead === m ? 'on' : '') + '">' + (m ? m + ' min before' : 'At start') + '</button>'; });
+    h += '</div><p class="cal-foot">Each class rings with its own name, e.g. “Run 2 Boys Odd 17-30 Fall 1405 starts in ' + (N.lead || 0) + ' min”. The start time is read from the file name.</p></div>';
+    h += '<div class="cb-t" style="margin:14px 2px 8px">Term milestones</div>';
+    h += sw('n-mid', N.mid, 'Midpoint of the term', 'On the day of session ' + Math.ceil((t.count || 20) / 2));
+    h += sw('n-week', N.week, 'One week before the end', 'A week before the last day of the term');
+    h += sw('n-end', N.end, 'Last session of the term', 'On the day of session ' + (t.count || 20));
+    h += '<div class="cf-row cal-box" style="margin-top:10px"><span>Milestones ring at</span><input type="time" class="cf-time" id="cal-morning" value="' + esc(N.morning) + '"></div>';
+    h += '<div class="cal-box"><div class="cb-t">My own reminders <small>(this term)</small></div>';
+    if (!t.custom.length) h += '<div class="ct-none">None yet. Example: “Send the final grades”.</div>';
+    t.custom.slice().sort(function (a, b) { return (a.d + (a.t || '')) < (b.d + (b.t || '')) ? -1 : 1; }).forEach(function (r) { h += '<div class="ch-row"><span><b>' + esc(r.text) + '</b><br><small>' + fmt(r.d, CAL.sys, 'long') + ' · ' + esc(r.t || N.morning) + '</small></span><button class="lib-mini" data-act="del-custom" data-id="' + r.id + '" aria-label="Remove">✕</button></div>'; });
+    h += '<div class="cc-add"><input type="text" id="cc-text" placeholder="What should I remind you?" maxlength="80"><div class="cc-r"><button class="cf-btn" id="cc-date" data-act="cc-date">' + (ui.ccDate ? fmt(ui.ccDate, CAL.sys, 'dm') : 'Date…') + '</button><input type="time" class="cf-time" id="cc-time" value="' + esc(N.morning) + '"><button class="cal-big sm" data-act="add-custom">Add</button></div></div></div>';
+    h += '<div class="cal-box"><div class="cb-t">Coming up</div><div id="cal-upcoming"></div></div>';
+    return h;
+  }
+  function statusHtml() {
+    var s = alertStatus;
+    if (!s) return '<div class="cs-line">Checking…</div>';
+    var ok = s.perm === 'granted';
+    var allow = (!ok && s.mode !== 'missing' && s.perm !== 'unsupported') ? '<button type="button" class="cal-allow" data-act="perm">Allow</button>' : '';
+    if (s.mode === 'native') return '<div class="cs-row"><div class="cs-line ' + (ok ? 'ok' : 'bad') + '">' + (ok ? '✓ Reminders ring even when the app is closed.' : '⚠ Notifications are not allowed yet.') + '</div>' + allow + '</div>' + (ok && s.exact === 'prompt' ? '<div class="cs-line bad" style="margin-top:8px">⚠ For on-the-minute alerts, allow exact alarms: <button class="cf-btn" data-act="exact">Open setting</button></div>' : '');
+    if (s.mode === 'missing') return '<div class="cs-line bad">⚠ This Android build does not have the reminder plug-in yet, so reminders only appear while the app is open. See the update steps I sent with this version.</div>';
+    return '<div class="cs-row"><div class="cs-line ' + (ok ? 'ok' : '') + '">' + (ok ? '✓ Allowed.' : 'Browser mode.') + ' Reminders appear only while the app is open. For alerts with the app closed, use the Android app.</div>' + allow + '</div>';
+  }
+  function renderUpcoming() {
+    var box = el('cal-upcoming'); if (!box) return;
+    var up = Notif.upcoming();
+    box.innerHTML = up.length ? up.map(function (p) { var d = new Date(p.at), iso = isoMake(d.getFullYear(), d.getMonth() + 1, d.getDate()); return '<div class="ch-row"><span><b>' + esc(p.title) + '</b><br><small>' + fmt(iso, CAL.sys, 'dm') + ' · ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ' · ' + esc(p.body) + '</small></span></div>'; }).join('') : '<div class="ct-none">Nothing scheduled. Set the term dates and make sure your classes have a day and time in their names.</div>';
+  }
+
+  function render() {
+    var id = curTermId(), body = el('cal-body');
+    var sel = el('cal-term'); sel.innerHTML = termList().map(function (t) { return '<option value="' + t.id + '"' + (t.id === id ? ' selected' : '') + '>' + esc(t.name) + '</option>'; }).join('');
+    Array.prototype.forEach.call(document.querySelectorAll('#cal-tabs button'), function (b) { var on = b.getAttribute('data-t') === ui.tab; b.classList.toggle('on', on); b.setAttribute('aria-selected', on ? 'true' : 'false'); });
+    var st = body.scrollTop;
+    body.innerHTML = ui.tab === 'sessions' ? viewSessions(id) : ui.tab === 'month' ? viewMonth(id) : ui.tab === 'term' ? viewTerm(id) : viewAlerts(id);
+    body.scrollTop = st;
+    if (ui.tab === 'alerts') { renderUpcoming(); Notif.status().then(function (s) { alertStatus = s; var b = el('cal-status'); if (b) b.innerHTML = statusHtml(); }); }
+  }
+  function openCal(tab) {
+    ui.tab = tab || 'sessions'; ui.sel = ''; ui.mY = 0;
+    var c = LIBAPI.currentId(); if (c) ui.term = c;
+    render(); el('cal-overlay').style.display = 'flex';
+  }
+  function closeCal() { el('cal-overlay').style.display = 'none'; closeSheet(); el('cal-picker').style.display = 'none'; }
+  function isOpen() { return el('cal-overlay').style.display === 'flex'; }
+  function handleBack() {
+    if (el('cal-picker').style.display === 'flex') { pkDone(null); return true; }
+    if (el('cal-sheet').style.display === 'flex') { closeSheet(); return true; }
+    if (isOpen()) { closeCal(); return true; }
+    return false;
+  }
+
+  /* ---------- taps ---------- */
+  function onBody(ev) {
+    var b = ev.target.closest('[data-act]'); if (!b) return;
+    var a = b.getAttribute('data-act'), id = curTermId(), N = CAL.notif;
+    if (a === 'cell') {
+      var g = b.getAttribute('data-g'), k = +b.getAttribute('data-k'), t = ensureT(id), d = sessionDates(t, g)[k - 1];
+      var ov = getOv(t, g, k), isMu = !!(ov && ov.makeup), man = !!ov;
+      var btns = [];
+      if (isMu) {
+        btns.push({
+          label: '✎ Change make-up date & time (' + fmt(d, CAL.sys, 'dm') + ' at ' + (ov.t || 'default time') + ')…',
+          run: function () { scheduleMakeupFlow(id, g, k); }
+        });
+        btns.push({
+          label: '✕ Cancel make-up class (revert to normal schedule)',
+          danger: true,
+          run: function () { delete t.over[g][k]; save(); render(); }
+        });
+      } else {
+        btns.push({
+          label: '⭐ Schedule as Make-up Class (choose date & time)…',
+          run: function () { scheduleMakeupFlow(id, g, k); }
+        });
+        btns.push({
+          label: 'Move this session to another date…',
+          run: function () { pickDate('Move session ' + k + ' (' + GROUPS[g].short + ') to…', d, function (nd) { ensureT(id).over[g][k] = nd; save(); render(); }); }
+        });
+        if (man) {
+          btns.push({
+            label: 'Undo my manual move',
+            run: function () { delete t.over[g][k]; save(); render(); }
+          });
+        }
+      }
+      btns.push({
+        label: 'Class cancelled that day: skip it, later sessions shift',
+        run: function () { t.hol.push({ d: d, g: g }); save(); render(); }
+      });
+      btns.push({
+        label: 'Holiday for every group: skip it, later sessions shift',
+        run: function () { t.hol.push({ d: d, g: 'all' }); save(); render(); }
+      });
+      var gc = classChips(id, g);
+      var subTitle = esc(fmt(d, CAL.sys, 'long')) + (isMu ? ' · <b>Make-up Class at ' + esc(ov.t || 'class time') + '</b>' : '') + (gc.length ? '<br>' + gc.map(esc).join('<br>') : '');
+      openSheet(GROUPS[g].label + ' · session ' + k + (isMu ? ' (Make-up ★)' : ''), subTitle, btns);
+    } else if (a === 'cell-mu') {
+      scheduleMakeupFlow(id, b.getAttribute('data-g'), +b.getAttribute('data-k'));
+    } else if (a === 'del-mu') {
+      var t6 = ensureT(id);
+      if (t6.over && t6.over[b.getAttribute('data-g')]) delete t6.over[b.getAttribute('data-g')][+b.getAttribute('data-k')];
+      save(); render();
+    } else if (a === 'add-makeup') {
+      var t7 = ensureT(id), actG = activeGroups(id);
+      var chosenG = actG.length === 1 ? actG[0] : (actG[0] || 'odd');
+      var suggestK = t7.count || 20;
+      scheduleMakeupFlow(id, chosenG, suggestK);
+    } else if (a === 'toggle-all') { ui.showAll = !ui.showAll; render(); }
+    else if (a === 'go-term') { ui.tab = 'term'; render(); }
+    else if (a === 'mprev') { var m = ui.mM - 1, y = ui.mY; if (m < 1) { m = 12; y--; } ui.mM = m; ui.mY = y; render(); }
+    else if (a === 'mnext') { var m2 = ui.mM + 1, y2 = ui.mY; if (m2 > 12) { m2 = 1; y2++; } ui.mM = m2; ui.mY = y2; render(); }
+    else if (a === 'mtoday') { ui.mY = 0; ui.sel = todayISO(); render(); }
+    else if (a === 'day') { ui.sel = (ui.sel === b.getAttribute('data-d')) ? '' : b.getAttribute('data-d'); render(); }
+    else if (a === 'hol') { ensureT(id).hol.push({ d: b.getAttribute('data-d'), g: 'all' }); save(); render(); }
+    else if (a === 'unhol') { var t2 = ensureT(id), dd = b.getAttribute('data-d'), gg = b.getAttribute('data-g') || 'all'; t2.hol = t2.hol.filter(function (x) { return !(x.d === dd && x.g === gg); }); save(); render(); }
+    else if (a === 'add-hol') pickDate('Holiday date', '', function (nd) { var t3 = ensureT(id); if (!t3.hol.some(function (x) { return x.d === nd && x.g === 'all'; })) t3.hol.push({ d: nd, g: 'all' }); save(); render(); });
+    else if (a === 'set-start') pickDate('First day of the term', getT(id) && getT(id).start, function (nd) { ensureT(id).start = nd; save(); render(); });
+    else if (a === 'set-end') pickDate('Last day of the term', getT(id) && getT(id).end, function (nd) { ensureT(id).end = nd; save(); render(); });
+    else if (a === 'cnt') { var t4 = ensureT(id); t4.count = Math.max(1, Math.min(40, (t4.count || 20) + (+b.getAttribute('data-n')))); save(); render(); }
+    else if (a === 'sys') { CAL.sys = b.getAttribute('data-v'); ui.mY = 0; save(); render(); }
+    else if (a === 'n-on') { N.on = !N.on; save(); if (N.on) Notif.ask().then(function () { render(); }); render(); }
+    else if (a === 'n-mid') { N.mid = !N.mid; save(); render(); }
+    else if (a === 'n-week') { N.week = !N.week; save(); render(); }
+    else if (a === 'n-end') { N.end = !N.end; save(); render(); }
+    else if (a === 'lead') { N.lead = +b.getAttribute('data-v'); save(); render(); }
+    else if (a === 'cc-date') pickDate('Reminder date', ui.ccDate || '', function (nd) { ui.ccDate = nd; var x = el('cc-date'); if (x) x.textContent = fmt(nd, CAL.sys, 'dm'); });
+    else if (a === 'add-custom') {
+      var txt = (el('cc-text').value || '').trim();
+      if (!txt) { el('cc-text').focus(); return; }
+      if (!ui.ccDate) { pickDate('Reminder date', '', function (nd) { ui.ccDate = nd; render(); }); return; }
+      ensureT(id).custom.push({ id: uid(), d: ui.ccDate, t: el('cc-time').value || N.morning, text: txt }); ui.ccDate = ''; save(); render();
+    }
+    else if (a === 'del-custom') { var t5 = ensureT(id); t5.custom = t5.custom.filter(function (r) { return r.id !== b.getAttribute('data-id'); }); save(); render(); }
+    else if (a === 'perm') Notif.ask().then(function () { Notif.resync(); render(); });
+    else if (a === 'exact') Notif.exactSettings();
+  }
+
+  function wire() {
+    el('cal-close').addEventListener('click', closeCal);
+    el('cal-overlay').addEventListener('click', function (e) { if (e.target === el('cal-overlay')) closeCal(); });
+    el('cal-tabs').addEventListener('click', function (e) { var b = e.target.closest('button[data-t]'); if (!b) return; ui.tab = b.getAttribute('data-t'); render(); });
+    el('cal-body').addEventListener('click', onBody);
+    el('cal-body').addEventListener('change', function (e) { if (e.target.id === 'cal-morning') { CAL.notif.morning = e.target.value || '08:00'; save(); } });
+    el('cal-term').addEventListener('change', function (e) { ui.term = e.target.value; LIBAPI.setCurrent(ui.term); ui.mY = 0; ui.sel = ''; render(); });
+    el('cal-picker').addEventListener('click', function (e) {
+      if (e.target === el('cal-picker')) return pkDone(null);
+      var b = e.target.closest('[data-pk]'); if (!b) return; var k = b.getAttribute('data-pk');
+      if (k === 'd') pkDone(b.getAttribute('data-d')); else if (k === 'cancel') pkDone(null); else if (k === 'today') pkDone(todayISO());
+      else if (k === 'pm') pkMove(-1); else if (k === 'nm') pkMove(1); else if (k === 'py') { PK.y--; renderPicker(); } else if (k === 'ny') { PK.y++; renderPicker(); }
+    });
+    el('cal-sheet').addEventListener('click', function (e) {
+      if (e.target === el('cal-sheet')) return closeSheet();
+      var b = e.target.closest('[data-sheet]'); if (!b) return; var k = b.getAttribute('data-sheet'), list = el('cal-sheet')._b || [];
+      closeSheet(); if (k !== 'x' && list[+k]) list[+k].run();
+    });
+    el('cal-toast').addEventListener('click', function () { el('cal-toast').style.display = 'none'; });
+    ['start-cal-btn', 'file-cal-btn'].forEach(function (id) { var b = el(id); if (b) b.addEventListener('click', function () { openCal('sessions'); }); });
+    ['start-rem-btn', 'file-rem-btn'].forEach(function (id) { var b = el(id); if (b) b.addEventListener('click', function () { openCal('alerts'); }); });
+  }
+
+  /* ---------- hooks used by the Attendance tab ---------- */
+  function openInfo() {
+    var fn = ''; try { fn = Offline.status().fileName; } catch (e) {}
+    if (!fn) return null;
+    var hit = LIBAPI.find(fn), c = parseClass(fn, hit && hit.sec && hit.sec.name), tid = hit ? hit.term.id : LIBAPI.currentId();
+    return { c: c, termId: tid, term: getT(tid) };
+  }
+  function sessionDateFor(n) {
+    var i = openInfo(); if (!i || !i.c.group || !i.term || !i.term.start) return '';
+    return sessionDates(i.term, i.c.group)[n - 1] || '';
+  }
+  function sessionTimeFor(n) {
+    var i = openInfo(); if (!i || !i.c.group || !i.term) return '';
+    var ov = getOv(i.term, i.c.group, n);
+    return (ov && ov.t) ? ov.t : (i.c.time || '');
+  }
+
+  function sessionLine(n) {
+    var i = openInfo(); if (!i) return '';
+    var d = sessionDateFor(n), parts = [];
+    if (d) parts.push(fmt(d, CAL.sys, 'long'));
+    var st = sessionTimeFor(n);
+    var ov = getOv(i.term, i.c.group, n);
+    var isMu = !!(ov && ov.makeup);
+    if (st) parts.push('class at ' + st);
+    if (!parts.length) return '';
+    var tag = d === todayISO() ? '<span class="att-today">TODAY</span>' : '';
+    return '📅 Session ' + n + (isMu ? ' (Make-up)' : '') + ' · ' + parts.join(' · ') + tag;
+  }
+
+  function autoLate(n) {
+    var i = openInfo(); if (!i) return null;
+    var d = sessionDateFor(n), now = new Date(), nowM = now.getHours() * 60 + now.getMinutes(), startM = minutesOf(sessionTimeFor(n));
+    if (d) { if (d !== todayISO()) return null; } else if (startM === null || nowM < startM - 30 || nowM > startM + 240) return null;
+    return { min: Math.max(0, nowM - startM), arr: pad(now.getHours()) + ':' + pad(now.getMinutes()) };
+  }
+  function classStart() { var i = openInfo(); return i && i.c.time ? i.c.time : ''; }
+
+  window.UGCal = { open: openCal, sessionShort: function (n) { var d = sessionDateFor(n); return d ? fmt(d, CAL.sys, 'dm') : ''; }, handleBack: handleBack, sessionLine: sessionLine, sessionDate: sessionDateFor, autoLate: autoLate, classStart: classStart, lateFrom: lateFrom, nowHHMM: function () { var d = new Date(); return pad(d.getHours()) + ':' + pad(d.getMinutes()); }, libChanged: function () { if (ui.ready) { clearTimeout(saveTimer); saveTimer = setTimeout(function () { Notif.resync(); }, 700); } } };
+
+  function init() {
+    wire();
+    Promise.resolve(Offline.calLoad ? Offline.calLoad() : null).then(function (d) {
+      if (d && d.v) { CAL.sys = d.sys || CAL.sys; CAL.notif = Object.assign(CAL.notif, d.notif || {}); CAL.terms = d.terms || {}; }
+      ui.ready = true;
+      setTimeout(function () { Notif.start(); }, 1500);       // the library finishes loading a moment after start-up
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+
+})();
+</script>
+<script>
   // ============================================================================
   //  BACK GESTURE GUARD
   //  Swiping back (or the Back button) no longer closes the app by accident:
@@ -6303,6 +7425,7 @@ const Offline = (function () {
 
     window.addEventListener('popstate', function () {
       if (!armed) return;
+      if (window.UGCal && UGCal.handleBack()) { pushGuard(); return; }
       if (typeof isAboutOpen === 'function' && isAboutOpen()) { closeAbout(); pushGuard(); return; }
       if (typeof NumPad !== 'undefined' && NumPad.isOpen()) { NumPad.close(); pushGuard(); return; }
       const modal = document.getElementById('keypad-modal');
@@ -6333,11 +7456,16 @@ window.UG_TEMPLATES = {
   // Appearance settings: light / dark mode and the colour theme ("skin"). Both are remembered on this device.
   (function () {
     var root = document.documentElement, sw = document.getElementById('theme-switch'), cards = document.querySelectorAll('.set-theme[data-skin]');
+    var ms = document.getElementById('motion-switch');
+    function motion() { try { return localStorage.getItem('ug_motion') !== 'off'; } catch (e) { return true; } }
+    function applyMotion() { if (window.HS_PAR_motion) window.HS_PAR_motion.apply(); }
+    if (ms) ms.addEventListener('click', function () { try { localStorage.setItem('ug_motion', motion() ? 'off' : 'on'); } catch (e) {} paint(); applyMotion(); });
     function mode() { return root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light'; }
     function skin() { return root.getAttribute('data-skin') === 'elegant' ? 'elegant' : 'classic'; }
     function paint() {
       var dark = mode() === 'dark', k = skin();
       if (sw) sw.setAttribute('aria-checked', dark ? 'true' : 'false');
+      if (ms) ms.setAttribute('aria-checked', motion() ? 'true' : 'false');
       Array.prototype.forEach.call(cards, function (b) { var on = b.getAttribute('data-skin') === k; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); });
       var m = document.querySelector('meta[name="theme-color"]');
       if (m) m.setAttribute('content', k === 'elegant' ? (dark ? '#14120f' : '#f4f1ea') : (dark ? '#0f1623' : '#2563eb'));
@@ -6350,7 +7478,7 @@ window.UG_TEMPLATES = {
     Array.prototype.forEach.call(cards, function (b) {
       b.addEventListener('click', function () {
         var n = b.getAttribute('data-skin'); root.setAttribute('data-skin', n); try { localStorage.setItem('ug_skin', n); } catch (e) {}
-        paint();
+        paint(); applyMotion();
       });
     });
     paint();
@@ -6438,7 +7566,7 @@ window.UG_TEMPLATES = {
       var bp = (-cx * cfg.amp * cfg.bg).toFixed(2) + 'px ' + (-cy * cfg.amp * cfg.bg).toFixed(2) + 'px'; ov.style.backgroundPosition = bp; document.body.style.backgroundPosition = bp;
       if (Math.abs(tx - cx) > .002 || Math.abs(ty - cy) > .002) raf = requestAnimationFrame(frame);
     }
-    function kick() { if (!raf && !reduce) raf = requestAnimationFrame(frame); }
+    function kick() { if (!raf && !reduce && listening) raf = requestAnimationFrame(frame); }
     function clamp(v) { return v > 1 ? 1 : v < -1 ? -1 : v; }
     function onTilt(e) {
       if (e.gamma == null || e.beta == null || !visible()) return;
@@ -6450,9 +7578,24 @@ window.UG_TEMPLATES = {
       if (a === 90) { x = b; y = -g; } else if (a === 270) { x = -b; y = g; } else if (a === 180) { x = -g; y = -b; } else { x = g; y = b; }
       tx = clamp(x / cfg.range); ty = clamp(y / cfg.range); kick();
     }
-    window.addEventListener('deviceorientation', onTilt, true);
+    // Motion effects: on in Classic (unless switched off in Settings > Appearance); never used in Elegant. When off, the sensor listener is removed completely.
+    function motionOn() { if (document.documentElement.getAttribute('data-skin') === 'elegant') return false; try { return localStorage.getItem('ug_motion') !== 'off'; } catch (e) { return true; } }
+    var listening = false;
+    function applyMotion() {
+      var on = motionOn();
+      if (on && !listening) { window.addEventListener('deviceorientation', onTilt, true); listening = true; }
+      if (!on) {
+        if (listening) { window.removeEventListener('deviceorientation', onTilt, true); listening = false; }
+        gyro = false; bg = null; bb = null; tx = 0; ty = 0; cx = 0; cy = 0;
+        if (raf) { cancelAnimationFrame(raf); raf = 0; }
+        for (var i = 0; i < nodes.length; i++) nodes[i].style.transform = 'rotate(' + nodes[i]._r + 'deg)';
+        ov.style.backgroundPosition = ''; document.body.style.backgroundPosition = '';
+      }
+    }
+    window.HS_PAR_motion = { on: motionOn, apply: applyMotion };
+    applyMotion();
     document.addEventListener('pointermove', function (e) {          // mouse and stylus hover fallback (not finger drags)
-      if (gyro || e.pointerType === 'touch' || !visible()) return;
+      if (gyro || !listening || e.pointerType === 'touch' || !visible()) return;
       tx = clamp((e.clientX / window.innerWidth) * 2 - 1); ty = clamp((e.clientY / window.innerHeight) * 2 - 1); kick();
     }, { passive: true });
     document.addEventListener('pointerleave', function () { if (!gyro) { tx = 0; ty = 0; kick(); } });
@@ -6729,8 +7872,8 @@ window.UG_TEMPLATES = {
       'STUDENT REPORT': 'گزارش عملکرد دانش‌آموز', 'CLASS OVERVIEW': 'گزارش عملکرد کلاس', 'class activity score': 'نمره فعالیت کلاسی',
       'STRENGTHS AND WEAK SPOTS': 'نقاط قوت و ضعف', 'STRONGEST AREA': 'قوی‌ترین مهارت', 'NEEDS ATTENTION': 'نیازمند توجه', 'NEED ATTENTION': 'نیازمند توجه',
       'No area is below 70': 'هیچ مهارتی زیر ۷۰ نیست', 'Steady across the board': 'عملکرد یکنواخت و پایدار', 'TREND': 'روند', 'weight': 'وزن', 'Class average': 'میانگین کلاس',
-      'SHOWN SEPARATELY  ·  NOT PART OF THE CLASS ACTIVITY SCORE': 'جداگانه  ·  بدون تأثیر در نمره فعالیت کلاسی',
-      'SHOWN SEPARATELY  ·  NOT IN THE ACTIVITY SCORE': 'جداگانه  ·  بدون تأثیر در نمره فعالیت',
+      'NOT PART OF THE CLASS ACTIVITY SCORE': 'بدون تأثیر در نمره فعالیت کلاسی',
+      'NOT IN THE ACTIVITY SCORE': 'بدون تأثیر در نمره فعالیت',
       'Performance of the whole class  ·  scores out of 100': 'عملکرد کل کلاس  ·  نمره‌ها از ۱۰۰',
       'STUDENTS': 'تعداد دانش‌آموزان', 'ACTIVITY AVERAGE': 'میانگین فعالیت کلاسی', 'AREAS SCORED': 'مهارت‌های نمره‌دار',
       'CLASS AVERAGE BY AREA': 'میانگین کلاس در هر مهارت', 'TOP OF THE CLASS': 'نفرات برتر کلاس', 'ALL STUDENTS': 'همه دانش‌آموزان', 'STUDENT': 'دانش‌آموز', 'SCORE': 'نمره',
@@ -6918,7 +8061,7 @@ window.UG_TEMPLATES = {
       };
       sorted.forEach(drawArea);
       if (ex.length) {
-        tx(c, T, tr(T, 'SHOWN SEPARATELY  ·  NOT PART OF THE CLASS ACTIVITY SCORE'), M + 4, y + 18, { size: 17, ls: 3, color: T.mut, max: IW - 8, min: 12 });
+        tx(c, T, tr(T, 'NOT PART OF THE CLASS ACTIVITY SCORE'), M + 4, y + 18, { size: 17, ls: 3, color: T.mut, max: IW - 8, min: 12 });
         y += 46; ex.forEach(drawArea);
       }
       y = foot(c, T, W, y);
@@ -6958,7 +8101,7 @@ window.UG_TEMPLATES = {
       D.scored.forEach(function (a, i) { areaRow(a, y + 84 + i * 54); });
       if (rowsB.length) {
         var by = y + 84 + D.scored.length * 54;
-        tx(c, T, tr(T, 'SHOWN SEPARATELY  ·  NOT IN THE ACTIVITY SCORE'), M + P + 2, by + 22, { size: 15, ls: 3, color: T.mut });
+        tx(c, T, tr(T, 'NOT IN THE ACTIVITY SCORE'), M + P + 2, by + 22, { size: 15, ls: 3, color: T.mut });
         rowsB.forEach(function (a, i) { areaRow(a, by + 40 + i * 54); });
       }
       y += h + G;
@@ -7155,7 +8298,7 @@ window.UG_TEMPLATES = {
       if (ar.length > 1) { ins = 'Strongest area: <b>' + esc(best.label) + '</b> (' + R(vals[best.key]) + '). '; if (vals[worst.key] < 70) ins += 'Needs attention: <b>' + esc(worst.label) + '</b> (' + R(vals[worst.key]) + ', class average ' + R(D.classAvg[worst.key]) + ').'; else ins += 'No area is below 70.'; }
       if (ins) h += '<div class="ov-card"><p class="ov-h">In short</p><div class="ov-insight">' + ins + '</div></div>';
       sorted.forEach(function (a) { h += areaCard(a, s, D); });
-      if (ex.length) { h += '<p class="ov-sep">Shown separately · not part of the class activity score</p>'; ex.forEach(function (a) { h += areaCard(a, s, D); }); }
+      if (ex.length) { h += '<p class="ov-sep">not part of the class activity score</p>'; ex.forEach(function (a) { h += areaCard(a, s, D); }); }
       return h;
     }
     function render() {
