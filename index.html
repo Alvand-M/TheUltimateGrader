@@ -107,7 +107,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <link rel="icon" href="icon-256.png">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>Ultimate Grader V1.16</title>
+  <title>Ultimate Grader V1.21</title>
   <style>
     :root {
       --bg: #f0f2f5;
@@ -1244,7 +1244,7 @@
     [data-ico] { display: inline-flex; align-items: center; justify-content: center; gap: .5em; }
     [data-ico] .ic { width: 1.25em; height: 1.25em; flex: none; }
     [data-ico] .tx { display: block; line-height: 1.2; }
-    #file-switch-btn, #file-settings-btn, #file-cal-btn, #file-rem-btn { padding-left: 11px; padding-right: 11px; }
+    #file-switch-btn, #file-settings-btn, #file-cal-btn, #file-rem-btn, #file-notes-btn { padding-left: 11px; padding-right: 11px; }
     #start-overlay .big-btn[data-ico] { display: flex; width: 100%; }
 
     /* ---- text centred by cap height / x-height: identical on every phone and tablet (needs a current Android WebView) ---- */
@@ -1621,7 +1621,7 @@
     #ov-container .ov-hd { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:6px; }
     #ov-container .ov-hd h3 { margin:0; font-size:22px; flex:1; min-width:0; }
     #ov-container .ov-big { font-size:34px; font-weight:900; line-height:1; }
-    #ov-container .ov-radar { display:block; width:100%; max-width:420px; margin:0 auto; }
+    #ov-container .ov-radar { display:block; width:100%; max-width:420px; margin:0 auto; overflow:visible; }
     #ov-container .ov-radar text { font-family:inherit; font-size:12px; font-weight:800; fill:var(--ov-ink); }
     #ov-container .ov-leg { display:flex; gap:14px; justify-content:center; font-size:12px; font-weight:700; color:var(--ov-mut); margin-top:4px; flex-wrap:wrap; }
     #ov-container .ov-leg i { display:inline-block; width:14px; height:10px; border:2px solid var(--nb-line); margin-right:5px; vertical-align:-1px; }
@@ -2052,14 +2052,14 @@
     .cal-grid { display: grid; gap: 5px; align-items: stretch; }
     .cg-h { text-align: center; color: #fff; border-radius: 9px; padding: 7px 2px; font-size: 14px; }
     .cg-n { display: flex; align-items: center; justify-content: center; font-style: normal; font-weight: 800; font-size: 13px; color: var(--secondary); }
-    .cg-n.mark { color: var(--primary); }
     .cg-c { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; padding: 6px 2px; border: 2px solid var(--border); border-radius: 9px; background: var(--card-bg); color: var(--text); font-family: inherit; cursor: pointer; position: relative; line-height: 1.15; }
     .cg-c em { font-style: normal; font-size: 10.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--secondary); }
     .cg-c span { font-size: 13.5px; font-weight: 800; }
     .cg-c.empty { color: var(--secondary); cursor: default; }
     .cg-c.past { opacity: .5; }
     .cg-c.today { outline: 3px solid var(--primary); outline-offset: 1px; opacity: 1; }
-    .cg-c.mark { border-color: var(--primary); }
+    .cg-c.last { border: 2px dashed var(--warning); background: color-mix(in srgb, var(--warning) 14%, var(--card-bg)); }
+    .cg-n.last { color: var(--warning); }
     .cg-c.moved::after { content: '✎'; position: absolute; top: 1px; right: 4px; font-size: 10px; color: var(--warning); }
     .cg-c.out { border-color: var(--danger); }
     .cal-foot { font-size: 12.5px; line-height: 1.45; color: var(--secondary); margin: 8px 2px 0; }
@@ -2220,6 +2220,138 @@
     @keyframes ugSplLift { to { opacity:0; transform:scale(1.12); } }
     @keyframes ugSplOut { to { opacity:0; visibility:hidden; } }
     @media (prefers-reduced-motion: reduce) { #ug-splash { animation-duration:.3s; animation-delay:.9s; } #ug-splash .sp-ico, #ug-splash .sp-glow, #ug-splash .sp-title { animation:none; opacity:1; } #ug-splash .sp-glow { display:none; } }
+
+    /* ===== NOTES (b25): same look as the Calendar & Reminders screens, in Classic, Elegant, light and dark ===== */
+    #notes-overlay {
+      --h-page:#f1f1f1; --h-card:#ffffff; --h-ink:#1b1b1b; --h-sub:#5d5d5d; --h-btn:#2b2b2b; --h-btn-ink:#ffffff; --h-btn2:#e9e9e9; --h-line:#8c8c8c; --h-shadow:#0d0d0d; --h-field:#f6f6f6; --h-dot:#cbd5e1; }
+    :root[data-theme="dark"] #notes-overlay {
+      --h-page:#121212; --h-card:#1e1e1e; --h-ink:#f1f1f1; --h-sub:#ababab; --h-btn:#e7e7e7; --h-btn-ink:#111111; --h-btn2:#2d2d2d; --h-line:#666666; --h-shadow:#000000; --h-field:#161616; --h-dot:#262626; }
+    :root[data-skin="elegant"] #notes-overlay {
+      --h-page:var(--e-bg); --h-card:var(--e-paper); --h-ink:var(--e-ink); --h-sub:var(--e-mut); --h-btn:var(--e-btn); --h-btn-ink:var(--e-btn-ink); --h-btn2:var(--e-paper); --h-line:var(--e-hair); --h-shadow:transparent; --h-field:var(--e-paper2); --h-dot:transparent; }
+    #notes-overlay { position:fixed; inset:0; z-index:10055; display:none; justify-content:center; background-color:var(--h-page); background-image:radial-gradient(var(--h-dot) 1.2px, transparent 1.2px); background-size:20px 20px; }
+    #notes-overlay .nt-card { background:var(--h-page); color:var(--h-ink); width:100%; max-width:640px; height:100%; display:flex; flex-direction:column; overflow:hidden; }
+    @media (min-width:660px) { #notes-overlay .nt-card { border-left:2px solid var(--h-line); border-right:2px solid var(--h-line); box-shadow:6px 0 0 var(--h-shadow); } }
+    #notes-overlay .nt-head { display:flex; align-items:center; gap:10px; padding:12px; background:var(--h-card); border-bottom:2px solid var(--h-line); padding-top:max(12px, env(safe-area-inset-top)); }
+    #notes-overlay .nt-ttl { flex:1; min-width:0; }
+    #notes-overlay .nt-ttl h2 { margin:0; font-size:19px; font-weight:800; letter-spacing:-.02em; color:var(--h-ink); }
+    #notes-overlay .nt-ttl small { display:block; margin-top:1px; font-size:12.5px; font-weight:600; color:var(--h-sub); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    #notes-overlay .nt-x { flex:none; width:38px; height:38px; padding:0; display:inline-flex; align-items:center; justify-content:center; border-radius:999px; border:2px solid var(--h-line); background:var(--h-btn2); color:var(--h-ink); font-size:18px; font-weight:800; font-family:inherit; box-shadow:2px 2px 0 var(--h-shadow); cursor:pointer; }
+    #notes-overlay .nt-x.danger { color:var(--danger, #dc2626); }
+    #notes-overlay .nt-x:active { transform:translate(2px,2px); box-shadow:1px 1px 0 var(--h-shadow); }
+    #notes-overlay .nt-ic { width:18px; height:18px; flex:none; }
+    #notes-overlay #nt-term { flex:0 1 46%; min-width:0; padding:8px; font-size:14px; font-weight:700; border:2px solid var(--h-line); border-radius:12px; background:var(--h-btn2); color:var(--h-ink); box-shadow:2px 2px 0 var(--h-shadow); font-family:inherit; }
+    #notes-overlay #nt-body { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:12px 12px max(40px, env(safe-area-inset-bottom)); }
+    #notes-overlay .nt-search, #notes-overlay .nt-in, #notes-overlay .nt-ta, #notes-overlay .nt-lab select { width:100%; box-sizing:border-box; padding:11px 12px; font-size:16px; font-family:inherit; color:var(--h-ink); background:var(--h-field); border:2px solid var(--h-line); border-radius:12px; }
+    #notes-overlay .nt-search { margin-bottom:12px; }
+    #notes-overlay .nt-in { margin-bottom:10px; font-weight:700; }
+    #notes-overlay .nt-ta { min-height:150px; resize:none; line-height:1.55; margin-bottom:12px; overflow:hidden; }
+    #notes-overlay .nt-sec { margin-bottom:22px; }
+    #notes-overlay .nt-sech { display:flex; align-items:center; justify-content:space-between; gap:10px; margin:2px 2px 4px; font-size:12px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:var(--h-sub); }
+    #notes-overlay .nt-sech small { font-size:12px; font-weight:700; letter-spacing:.02em; text-transform:none; }
+    #notes-overlay .nt-hint { margin:0 2px 10px; font-size:12.5px; line-height:1.45; color:var(--h-sub); }
+    #notes-overlay .nt-none { margin:2px 2px 12px; font-size:14px; line-height:1.5; color:var(--h-sub); }
+    #notes-overlay .nt-msg { margin-bottom:12px; padding:10px 12px; font-size:13.5px; font-weight:700; border:2px solid var(--h-line); border-radius:12px; background:var(--h-card); box-shadow:3px 3px 0 var(--h-shadow); }
+    #notes-overlay .nt-item { display:block; width:100%; text-align:start; font:inherit; color:var(--h-ink); background:var(--h-card); border:2px solid var(--h-line); border-inline-start:8px solid var(--nc, #ffc900); border-radius:14px; box-shadow:3px 3px 0 var(--h-shadow); padding:10px 12px; margin:0 0 10px; cursor:pointer; }
+    #notes-overlay .nt-item:active { transform:translate(2px,2px); box-shadow:1px 1px 0 var(--h-shadow); }
+    #notes-overlay .nt-ti { display:block; font-weight:800; font-size:15px; line-height:1.35; overflow-wrap:anywhere; }
+    #notes-overlay .nt-sn { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; margin-top:3px; font-size:13.5px; line-height:1.45; color:var(--h-sub); white-space:pre-wrap; overflow-wrap:anywhere; }
+    #notes-overlay .nt-chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+    #notes-overlay .nt-chip { display:inline-flex; align-items:center; gap:4px; padding:2px 9px; font-size:11.5px; font-weight:800; color:var(--h-sub); background:var(--h-field); border:1.5px solid var(--h-line); border-radius:999px; }
+    #notes-overlay .nt-chip .nt-ic { width:12px; height:12px; stroke-width:2.6; }
+    #notes-overlay .nt-chip.rem { background:#ffc900; color:#1a1a1a; }
+    #notes-overlay .nt-chip.rem.past { opacity:.55; }
+    #notes-overlay .nt-add { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:12px; margin:0 0 10px; font-size:15px; font-weight:800; font-family:inherit; cursor:pointer; background:var(--h-btn); color:var(--h-btn-ink); border:2px solid var(--h-line); border-radius:12px; box-shadow:3px 3px 0 var(--h-shadow); }
+    #notes-overlay .nt-add.alt { background:var(--h-btn2); color:var(--h-ink); }
+    #notes-overlay .nt-add.sm { padding:10px 8px; font-size:14px; margin:0; }
+    #notes-overlay .nt-add:disabled { opacity:.6; }
+    #notes-overlay .nt-add:active { transform:translate(2px,2px); box-shadow:1px 1px 0 var(--h-shadow); }
+    #notes-overlay .nt-btnrow { display:flex; gap:8px; margin-top:2px; }
+    #notes-overlay .nt-btnrow .nt-add { flex:1; }
+    #notes-overlay .nt-folder { margin:0 0 10px; background:var(--h-card); border:2px solid var(--h-line); border-inline-start:8px solid var(--nc, #90a8ed); border-radius:14px; box-shadow:3px 3px 0 var(--h-shadow); overflow:hidden; }
+    #notes-overlay .nt-fh { display:flex; align-items:center; gap:10px; width:100%; padding:12px; font:inherit; font-size:15px; text-align:start; color:var(--h-ink); background:none; border:0; cursor:pointer; }
+    #notes-overlay .nt-fh b { flex:1; min-width:0; font-weight:800; line-height:1.3; overflow-wrap:anywhere; }
+    #notes-overlay .nt-dot { flex:none; width:12px; height:12px; border-radius:50%; background:var(--nc, #90a8ed); border:1.5px solid var(--h-line); }
+    #notes-overlay .nt-count { flex:none; min-width:26px; padding:1px 8px; text-align:center; font-size:12.5px; font-weight:800; color:var(--h-btn-ink); background:var(--h-btn); border-radius:999px; }
+    #notes-overlay .nt-chev { transition:transform .15s; color:var(--h-sub); }
+    #notes-overlay .nt-folder.open .nt-chev { transform:rotate(180deg); }
+    #notes-overlay .nt-fb { padding:2px 10px 12px; border-top:2px solid var(--h-line); padding-top:12px; }
+    #notes-overlay .nt-fb .nt-item { box-shadow:2px 2px 0 var(--h-shadow); }
+    #notes-overlay .nt-stamp { margin:0 2px 10px; font-size:13px; font-weight:700; color:var(--h-sub); }
+    #notes-overlay .nt-lab { display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 0 10px; font-size:14px; font-weight:800; }
+    #notes-overlay .nt-lab select { width:auto; min-width:150px; padding:8px 10px; font-size:15px; font-weight:700; }
+    #notes-overlay .nt-box { padding:12px; background:var(--h-card); border:2px solid var(--h-line); border-radius:14px; box-shadow:3px 3px 0 var(--h-shadow); }
+    #notes-overlay .nt-boxh { display:flex; align-items:center; gap:14px; }
+    #notes-overlay .nt-bt { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+    #notes-overlay .nt-bt b { font-size:15px; }
+    #notes-overlay .nt-bt span { font-size:12.5px; font-weight:500; color:var(--h-sub); }
+    #notes-overlay .nt-remrow { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:12px; }
+    #notes-overlay .nt-remrow .cf-btn { display:inline-flex; align-items:center; gap:6px; flex:1; min-width:0; background:var(--h-btn2); color:var(--h-ink); border:2px solid var(--h-line); box-shadow:2px 2px 0 var(--h-shadow); }
+    #notes-overlay .nt-remrow .cf-time { background:var(--h-field); color:var(--h-ink); border:2px solid var(--h-line); border-radius:12px; }
+    #notes-overlay .nt-warn { margin-top:10px; font-size:12.5px; font-weight:700; color:var(--warning, #d97706); }
+    :root[data-skin="elegant"] #notes-overlay :is(.nt-item, .nt-folder, .nt-add, .nt-x, .nt-box, .nt-msg, #nt-term, .nt-search, .nt-in, .nt-ta, .nt-chip) { border-width:1px; }
+    :root[data-skin="elegant"] #notes-overlay .nt-item, :root[data-skin="elegant"] #notes-overlay .nt-folder { border-inline-start-width:5px; box-shadow:var(--e-sh-s); }
+    :root[data-skin="elegant"] #notes-overlay .nt-ttl h2 { font-family:var(--e-serif); font-weight:600; }
+    :root[data-skin="elegant"] #notes-overlay .nt-chip.rem { background:var(--e-gold); color:var(--e-btn-ink); }
+    :root[data-skin="elegant"] #notes-overlay :is(.nt-add, .nt-box, .nt-msg, .nt-x, #nt-term) { box-shadow:var(--e-sh-s); }
+
+    /* ---- the Notes buttons: home screen (full-width row under the 2x2 block) and the class top bar ---- */
+    #start-overlay #start-notes-btn .ic { color:#db2777; width:16px; height:16px; stroke-width:2.4; }
+    :root[data-theme="dark"] #start-overlay #start-notes-btn .ic { color:#f472b6; }
+    :root[data-skin="elegant"] #start-overlay #start-notes-btn .ic { color:var(--e-gold); }
+    #start-overlay #start-notes-btn[data-n]::after { content:attr(data-n); position:absolute; right:-6px; top:-9px; min-width:22px; padding:1px 7px; box-sizing:border-box; text-align:center; font-size:11.5px; font-weight:800; line-height:1.5; color:#0f172a; background:#fbbf24; border:1.5px solid var(--hs-bd); border-radius:999px; }
+    :root[data-skin="elegant"] #start-overlay #start-notes-btn[data-n]::after { color:var(--e-btn-ink); background:var(--e-gold); border:none; }
+    #file-notes-btn { position:relative; padding-left:11px; padding-right:11px; }
+    #file-notes-btn[data-n]::after { content:attr(data-n); position:absolute; top:-7px; right:-6px; min-width:18px; padding:0 5px; box-sizing:border-box; text-align:center; font-size:10.5px; font-weight:800; line-height:17px; color:#0f172a; background:#fbbf24; border:1.5px solid #0f172a; border-radius:9px; pointer-events:none; }
+    :root[data-skin="elegant"] #file-notes-btn[data-n]::after { color:var(--e-btn-ink); background:var(--e-gold); border:none; }
+
+    /* ---- home screen: the Settings button now lives inside the card, and the card is truly centred ---- */
+    #start-overlay .hs-top { display:none; }
+    #start-overlay .hs-head { position:relative; }
+    #start-overlay .hs-head .hs-title { padding-inline:30px; }
+    @media (max-width:400px) { #start-overlay .hs-head .hs-title { padding-inline:24px; } #start-overlay .hs-head h1 { font-size:21px; white-space:nowrap; } }
+    #start-overlay .hs-head #settings-open-btn { position:absolute; top:-10px; right:-12px; z-index:2; }
+
+    /* ===== b26: Notes editor (formatting bar, save / discard prompt) ===== */
+    #notes-overlay .nt-ed { min-height:200px; box-sizing:border-box; padding:11px 12px; margin-bottom:12px; font-size:16px; line-height:1.55; color:var(--h-ink); background:var(--h-field); border:2px solid var(--h-line); border-radius:12px; outline:none; overflow-wrap:anywhere; -webkit-user-select:text; user-select:text; }
+    #notes-overlay .nt-ed:focus { border-color:var(--h-ink); }
+    #notes-overlay .nt-ed:empty::before { content:attr(data-ph); color:var(--h-sub); pointer-events:none; }
+    #notes-overlay .nt-ed ul, #notes-overlay .nt-ed ol { margin:4px 0; padding-inline-start:26px; }
+    #notes-overlay .nt-ed mark { background:#ffe066; color:#1a1a1a; border-radius:3px; padding:0 1px; }
+    /* notes-bold-italic-fix */
+    :root[data-skin="classic"] #notes-overlay .nt-ed { font-family:"Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "UG Persian"; font-synthesis:weight style; }
+    :root[data-skin="classic"] #notes-overlay .nt-tools button i { font-synthesis:style; }
+    #notes-overlay .nt-tools { position:sticky; top:0; z-index:3; display:flex; gap:8px; margin:0 0 10px; padding:2px 0 8px; background:var(--h-page); }
+    #notes-overlay .nt-tools button { flex:1; max-width:60px; height:40px; padding:0; display:inline-flex; align-items:center; justify-content:center; font:inherit; font-size:17px; color:var(--h-ink); background:var(--h-btn2); border:2px solid var(--h-line); border-radius:10px; box-shadow:2px 2px 0 var(--h-shadow); cursor:pointer; }
+    #notes-overlay .nt-tools button.on { background:var(--h-btn); color:var(--h-btn-ink); }
+    #notes-overlay .nt-tools button:active { transform:translate(2px,2px); box-shadow:1px 1px 0 var(--h-shadow); }
+    #notes-overlay .nt-actions { position:sticky; bottom:0; z-index:3; margin-top:14px; padding:10px 0 2px; background:var(--h-page); }
+    #notes-overlay .nt-actions .nt-add { margin:0; }
+    #notes-overlay .nt-ask { position:absolute; inset:0; z-index:10; display:flex; align-items:center; justify-content:center; padding:20px; background:rgba(0,0,0,.45); }
+    #notes-overlay .nt-askc { width:100%; max-width:360px; padding:16px; background:var(--h-card); color:var(--h-ink); border:2px solid var(--h-line); border-radius:18px; box-shadow:5px 5px 0 var(--h-shadow); }
+    #notes-overlay .nt-askc b { display:block; font-size:17px; }
+    #notes-overlay .nt-askc p { margin:6px 0 14px; font-size:14px; color:var(--h-sub); }
+    #notes-overlay .nt-askc .nt-add { margin:0 0 10px; }
+    #notes-overlay .nt-askc .nt-add:last-child { margin-bottom:0; }
+    #notes-overlay .nt-add.danger { color:var(--danger, #dc2626); }
+    :root[data-skin="elegant"] #notes-overlay :is(.nt-ed, .nt-tools button, .nt-askc) { border-width:1px; }
+    :root[data-skin="elegant"] #notes-overlay :is(.nt-tools button, .nt-askc) { box-shadow:var(--e-sh-s); }
+    :root[data-skin="elegant"] #notes-overlay .nt-tools button.on { background:var(--e-btn); }
+
+    /* ===== b26: home screen, second row = Calendar / Reminders / Notes (three equal tiles under the two big buttons) ===== */
+    #start-overlay .start-actions { grid-template-columns:repeat(6, 1fr); }
+    #start-overlay .start-actions .big-btn { grid-column:span 3; }
+    #start-overlay .start-actions #start-cal-btn, #start-overlay .start-actions #start-rem-btn, #start-overlay .start-actions #start-notes-btn { grid-column:span 2; position:relative; padding:8px 4px; }
+    @media (max-width:480px) {
+      #start-overlay .start-actions #start-cal-btn, #start-overlay .start-actions #start-rem-btn, #start-overlay .start-actions #start-notes-btn { flex-direction:column; gap:3px; font-size:12.5px; }
+    }
+
+    /* ===== b26: narrow screens: the buttons always stay on screen; the file name and the saved message take the first line ===== */
+    @media (max-width:600px) {
+      body[data-nb] .file-bar { flex-wrap:wrap; justify-content:flex-end; row-gap:6px; }
+      body[data-nb] .file-bar .file-name { flex:1 1 52%; min-width:0; }
+      body[data-nb] .file-bar .file-state { flex:1 1 40%; min-width:0; text-align:end; }
+      body[data-nb] .file-bar button { flex:none; }
+    }
   </style>
 </head>
 <body data-nb="attendance">
@@ -2229,15 +2361,12 @@
 <!-- Start screen: choose the Excel file -->
 <div id="start-overlay">
   <div class="hs-free" id="hs-free" aria-hidden="true"></div>
-  <header class="hs-top">
-    <span class="hs-sp" aria-hidden="true"></span>
-    <button id="settings-open-btn" type="button" aria-label="Settings" title="Settings" data-ico="gear" data-ico-only="1">⚙️</button>
-  </header>
   <main class="hs-main">
   <div class="hs-cardwrap">
   <div class="hs-par" id="hs-par" aria-hidden="true"></div>
   <div class="start-card">
     <div class="hs-head">
+      <button id="settings-open-btn" type="button" aria-label="Settings" title="Settings" data-ico="gear" data-ico-only="1">⚙️</button>
       <div class="hs-title"><div class="hs-logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15.477 12.89 1.515 8.526a.5.5 0 0 1-.81.47l-3.58-2.687a1 1 0 0 0-1.197 0l-3.586 2.686a.5.5 0 0 1-.81-.469l1.514-8.526"/><circle cx="12" cy="8" r="6"/></svg></div><h1>Ultimate Grader</h1></div>
       <p class="hs-sub">Local Excel Sync • Offline Gradebook</p>
     </div>
@@ -2246,13 +2375,14 @@
       <button class="big-btn secondary" id="start-new-btn" data-ico="plus">➕ New class</button>
       <button class="big-btn secondary" id="start-cal-btn" data-ico="calendar">📅 Calendar</button>
       <button class="big-btn secondary" id="start-rem-btn" data-ico="bell">🔔 Reminders</button>
+      <button class="big-btn secondary" id="start-notes-btn" data-ico="notes">📝 Notes</button>
     </div>
     <div id="lib-box" style="display:none;"></div>
     <footer class="hs-foot">
       <div class="start-error" id="start-error"></div>
       <p id="start-help">Either pick your Excel grade sheet (<span class="m">Reach</span>, <span class="m">Race</span>, <span class="m">Run</span>, or <span class="m">Start</span> — the file name tells the app which one it is), or create your own from scratch using <b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> New class</b>.</p>
       <div class="start-note" id="start-note"></div>
-      <div class="hs-stamp" id="hs-stamp"><span id="hs-build">App build: 2026-10-28 b21</span><span class="sep"></span><span class="hs-native" id="hs-native"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" x2="2" y1="12" y2="12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><line x1="6" x2="6.01" y1="16" y2="16"/><line x1="10" x2="10.01" y1="16" y2="16"/></svg> <span id="hs-native-txt">native file access: ON</span></span></div>
+      <div class="hs-stamp" id="hs-stamp"><span id="hs-build">App build: 2026-10-31 b26</span><span class="sep"></span><span class="hs-native" id="hs-native"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" x2="2" y1="12" y2="12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><line x1="6" x2="6.01" y1="16" y2="16"/><line x1="10" x2="10.01" y1="16" y2="16"/></svg> <span id="hs-native-txt">native file access: ON</span></span></div>
     </footer>
     <input type="file" id="start-file-input" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" style="display:none;">
   </div>
@@ -2272,8 +2402,9 @@
     <select id="nc-gender"><option value="Boys">Boys</option><option value="Girls">Girls</option></select>
     <label for="nc-day">DAYS (goes into the file name)</label>
     <select id="nc-day"><option value="Odd">Odd days</option><option value="Even">Even days</option><option value="Mon">Mon (Mondays &amp; Thursdays)</option></select>
-    <label for="nc-time">TIME OF THE CLASS (goes into the file name)</label>
+    <label for="nc-time" id="nc-time-label">TIME OF THE CLASS (goes into the file name)</label>
     <input id="nc-time" type="text" placeholder="17:30" autocomplete="off">
+    <div id="nc-time2-wrap" style="display:none;"><label for="nc-time2">THURSDAY CLASS TIME (goes into the file name)</label><input id="nc-time2" type="text" placeholder="09:00" autocomplete="off"></div>
     <label for="nc-season">SEASON (goes into the file name)</label>
     <select id="nc-season"><option value="Spring">Spring</option><option value="Summer">Summer</option><option value="Fall">Fall</option><option value="Winter">Winter</option></select>
     <label for="nc-year">YEAR OF THE TERM (goes into the file name)</label>
@@ -2392,7 +2523,7 @@
   <li><b>The file name.</b> It must keep the level in it (Reach, Race, Start, Run 1&amp;2, Run 3&amp;4), because that is how the app knows which level to load.</li>
   <li><b>The names of the five working tabs:</b> HomeWork, Attendance, Reading, Listening&amp;Speaking and Writing.</li>
   <li><b>The layout of those tabs:</b> the header row (row 1), the student names column, and the order and position of the columns. Do not insert, delete, move or rename columns.</li>
-  <li><b>The hidden tab called _AppMarks.</b> The app creates it to remember keypad choices. Leave it alone.</li>
+  <li><b>The hidden tabs called _AppMarks and _AppNotes.</b> The app creates them to remember keypad choices and your class notes. Leave them alone (you may unhide _AppNotes to read your notes in Excel, but edit them inside the app).</li>
 </ul>
 </div>
 
@@ -2413,6 +2544,15 @@
   <li><b>Late students:</b> tap <b>L</b> on the Attendance keypad. The minutes are worked out from the class time and the clock, and you can always change them by hand. They are kept in the hidden <b>_AppMarks</b> tab; the Attendance cell still shows a plain L.</li>
 </ul>
 
+<h3>Notes</h3>
+<ul>
+  <li><b>Two kinds of notes.</b> <b>General notes</b> are about the term or things you need to do, and stay on this device only. <b>Class notes</b> belong to one class and are saved <b>inside its Excel file</b>, so you see them on any device that opens the file.</li>
+  <li><b>On the home screen</b> tap <b>Notes</b> to see everything: your general notes, then one folder per class in your library with its notes inside. Tap a note to read or edit it. If no class is in the library, no class notes are shown.</li>
+  <li><b>Inside a class</b> tap the <b>Notes</b> button on the top bar (next to Home and Settings) to see, add, edit and delete only that class's notes. Each class note is stamped with the date and, when today is a class day in your calendar, the session. You can change the session by hand.</li>
+  <li><b>Reminders:</b> switch on <b>Reminder</b> inside any note and pick a date and time. It rings like your other reminders and appears under <b>Calendar › Alerts › Coming up</b>.</li>
+  <li>Tap <b>Save &amp; close</b> to keep a note. If you leave with unsaved changes the app asks whether to save or discard them. The bar above the writing area gives bold, italic, highlight, bullet and numbered lists. If you changed a class's notes on another device, tap <b>Read class notes</b> on the home Notes screen to bring them in.</li>
+</ul>
+
 <h3>A good habit</h3>
 <p>Keep a copy of the original blank grade sheet. If a file is ever damaged by accident, you can start again from the copy.</p>
 
@@ -2428,6 +2568,7 @@
   <button id="file-folder-btn" style="display:none;" data-ico="folder">📁 Folder</button>
   <button id="file-cal-btn" title="Calendar" aria-label="Calendar" data-ico="calendar" data-ico-only="1">📅</button>
   <button id="file-rem-btn" title="Reminders" aria-label="Reminders" data-ico="bell" data-ico-only="1">🔔</button>
+  <button id="file-notes-btn" title="Notes" aria-label="Notes" data-ico="notes" data-ico-only="1">📝</button>
   <button id="file-switch-btn" title="Home screen" aria-label="Home screen" data-ico="home" data-ico-only="1">🏠</button>
   <button id="file-settings-btn" title="Settings" aria-label="Settings" data-ico="gear" data-ico-only="1">⚙️</button>
 </div>
@@ -2538,6 +2679,14 @@
 <div id="cal-sheet"><div id="cal-sheet-card"></div></div>
 <div id="cal-toast" role="alert"></div>
 
+<!-- Notes: general notes (this device) and class notes (inside the class's Excel file) -->
+<div id="notes-overlay">
+  <div class="nt-card" role="dialog" aria-modal="true" aria-label="Notes">
+    <div class="nt-head" id="nt-head"></div>
+    <div id="nt-body"></div>
+  </div>
+</div>
+
 <script>
 /*!
 
@@ -2562,6 +2711,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 const Offline = (function () {
   const NS_MAIN = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
   const MARKS_SHEET = '_AppMarks';          // hidden sheet that stores keypad selections
+  const NOTES_SHEET = '_AppNotes';          // hidden sheet that stores this class's notes
   const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 
   const S = {
@@ -2570,7 +2720,7 @@ const Offline = (function () {
     sst: [], sheetInfo: {}, sheets: {},
     stylesDoc: null, stylesTouched: false, xfCache: {},
     rev: 0, shareFile: null, shareRev: -1, shareTimer: null,
-    marks: new Map(), dirty: false, saving: false, saveTimer: null, lastError: '',
+    marks: new Map(), notes: [], dirty: false, saving: false, saveTimer: null, lastError: '',
     canAutoSave: typeof window.showOpenFilePicker === 'function'
   };
 
@@ -2607,7 +2757,7 @@ const Offline = (function () {
     const wbFile = zip.file('xl/workbook.xml');
     if (!wbFile) throw new Error('This does not look like an Excel (.xlsx) file.');
 
-    S.zip = zip; S.fileName = fileName; S.sheets = {}; S.sheetInfo = {}; S.marks = new Map(); S.dirty = false; S.lastError = '';
+    S.zip = zip; S.fileName = fileName; S.sheets = {}; S.sheetInfo = {}; S.marks = new Map(); S.notes = []; S.dirty = false; S.lastError = '';
     S.stylesDoc = null; S.stylesTouched = false; S.xfCache = {};
     S.rev = 0; S.shareFile = null; S.shareRev = -1;
     const stylesFile = zip.file('xl/styles.xml');
@@ -2632,11 +2782,13 @@ const Offline = (function () {
     }
 
     // parse the sheets the app uses + the hidden marks sheet
-    for (const name of ['HomeWork', 'Attendance', 'Reading', 'Listening&Speaking', 'Writing', 'Quizes', 'Quizzes', MARKS_SHEET]) {
+    for (const name of ['HomeWork', 'Attendance', 'Reading', 'Listening&Speaking', 'Writing', 'Quizes', 'Quizzes', MARKS_SHEET, NOTES_SHEET]) {
       if (S.sheetInfo[name]) await parseSheet(name);
     }
     readMarksSheet();
+    readNotesSheet();
     scheduleSharePrep();
+    try { if (window.UGNotes) window.UGNotes.fileLoaded(fileName, S.notes.map(n => Object.assign({}, n))); } catch (e) { /* notes never block opening a file */ }
   }
 
   async function parseSheet(name) {
@@ -2666,6 +2818,60 @@ const Offline = (function () {
       if (sName === '' || json === '') continue;
       try { S.marks.set(sName + '|' + row + '|' + col, JSON.parse(json)); } catch (e) { /* ignore bad row */ }
     }
+  }
+
+  // ---------- class notes (hidden _AppNotes tab) ----------
+  function noteFromRow(v) {
+    return { id: String(v[0] || ''), c: String(v[1] || ''), ct: String(v[2] || ''), s: Number(v[3]) || 0, t: String(v[4] || ''), x: String(v[5] || ''), rd: String(v[6] || ''), rt: String(v[7] || ''), u: Number(v[8]) || 0 };
+  }
+  function readNotesSheet() {
+    S.notes = [];
+    const sh = S.sheets[NOTES_SHEET];
+    if (!sh) return;
+    const maxR = maxRowOf(sh);
+    for (let r = 2; r <= maxR; r++) {
+      const id = getVal(sh, r, 1);
+      if (id === '' || id === null) continue;
+      S.notes.push(noteFromRow([id, getVal(sh, r, 2), getVal(sh, r, 3), getVal(sh, r, 4), getVal(sh, r, 5), getVal(sh, r, 6), getVal(sh, r, 7), getVal(sh, r, 8), getVal(sh, r, 9)]));
+    }
+  }
+  // Reads only the notes of another class file (for the home screen overview) without opening it as the working file
+  async function peekNotes(handle, allowPrompt) {
+    try {
+      let perm = await handle.queryPermission({ mode: 'read' });
+      if (perm !== 'granted' && allowPrompt) perm = await handle.requestPermission({ mode: 'read' });
+      if (perm !== 'granted') return null;
+      const file = await handle.getFile();
+      const zip = await JSZip.loadAsync(await file.arrayBuffer());
+      const wbF = zip.file('xl/workbook.xml'), rlF = zip.file('xl/_rels/workbook.xml.rels');
+      if (!wbF || !rlF) return null;
+      const wbDoc = parseXml(await wbF.async('string')), rlDoc = parseXml(await rlF.async('string'));
+      const rels = {};
+      for (const r of rlDoc.getElementsByTagName('Relationship')) rels[r.getAttribute('Id')] = r.getAttribute('Target');
+      let path = '';
+      for (const sh of wbDoc.getElementsByTagName('sheet')) {
+        if (sh.getAttribute('name') === NOTES_SHEET) { const t = rels[sh.getAttribute('r:id')] || ''; path = t.startsWith('/') ? t.slice(1) : 'xl/' + t; }
+      }
+      if (!path) return [];
+      const sf = zip.file(path); if (!sf) return [];
+      const sst = [];
+      const ssF = zip.file('xl/sharedStrings.xml');
+      if (ssF) { const d = parseXml(await ssF.async('string')); for (const si of d.getElementsByTagName('si')) sst.push(textOfSi(si)); }
+      const doc = parseXml(await sf.async('string'));
+      const out = [];
+      for (const row of doc.getElementsByTagName('row')) {
+        const rn = parseInt(row.getAttribute('r'), 10); if (!(rn >= 2)) continue;
+        const vals = [];
+        for (const c of kids(row, 'c')) {
+          const p = splitRef(c.getAttribute('r')), t = c.getAttribute('t'); let v = '';
+          if (t === 'inlineStr') { const is = kids(c, 'is')[0]; v = is ? textOfSi(is) : ''; }
+          else { const ve = kids(c, 'v')[0]; if (ve) { v = ve.textContent; if (t === 's') v = sst[parseInt(v, 10)] !== undefined ? sst[parseInt(v, 10)] : ''; } }
+          vals[p.c - 1] = v;
+        }
+        if (vals[0]) out.push(noteFromRow(vals));
+      }
+      return out;
+    } catch (e) { return null; }
   }
 
   // ---------- reading / writing cells ----------
@@ -3256,8 +3462,24 @@ const Offline = (function () {
     return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<worksheet xmlns="' + NS_MAIN + '"><sheetData>' + rows + '</sheetData></worksheet>';
   }
 
-  function ensureMarksSheetRegistered() {
-    if (S.sheetInfo[MARKS_SHEET]) return;
+  function buildNotesSheetXml() {
+    const clean = t => String(t == null ? '' : t).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF]/g, '');
+    const str = (ref, v) => { v = clean(v); return v === '' ? '' : '<c r="' + ref + '" t="inlineStr"><is><t xml:space="preserve">' + xmlEsc(v) + '</t></is></c>'; };
+    const num = (ref, v) => (v ? '<c r="' + ref + '"><v>' + Number(v) + '</v></c>' : '');
+    const head = ['ID', 'Date', 'Time', 'Session', 'Title', 'Note', 'Reminder date', 'Reminder time', 'Updated'];
+    let rows = '<row r="1">' + head.map((h, i) => str(String.fromCharCode(65 + i) + '1', h)).join('') + str('K1', 'Class notes (used by the app - edit them inside the app)') + '</row>';
+    S.notes.forEach((n, i) => {
+      const r = i + 2;
+      rows += '<row r="' + r + '">' + str('A' + r, n.id) + str('B' + r, n.c) + str('C' + r, n.ct) + num('D' + r, n.s) + str('E' + r, n.t) + str('F' + r, String(n.x || '').slice(0, 32000)) + str('G' + r, n.rd) + str('H' + r, n.rt) + num('I' + r, n.u) + '</row>';
+    });
+    const widths = [10, 12, 8, 9, 28, 70, 14, 12, 16];
+    const cols = '<cols>' + widths.map((w, i) => '<col min="' + (i + 1) + '" max="' + (i + 1) + '" width="' + w + '" customWidth="1"/>').join('') + '</cols>';
+    return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<worksheet xmlns="' + NS_MAIN + '">' + cols + '<sheetData>' + rows + '</sheetData></worksheet>';
+  }
+
+  function ensureMarksSheetRegistered() { ensureSheetRegistered(MARKS_SHEET); }
+  function ensureSheetRegistered(NAME) {
+    if (S.sheetInfo[NAME]) return;
     const path = findFreeSheetPath();
     const relsNs = S.relsDoc.documentElement.namespaceURI;
     // relationship id
@@ -3273,7 +3495,7 @@ const Offline = (function () {
     const sheetsEl = S.wbDoc.getElementsByTagName('sheets')[0];
     let maxId = 0; for (const s of sheetsEl.getElementsByTagName('sheet')) maxId = Math.max(maxId, parseInt(s.getAttribute('sheetId'), 10) || 0);
     const sEl = S.wbDoc.createElementNS(S.wbDoc.documentElement.namespaceURI, 'sheet');
-    sEl.setAttribute('name', MARKS_SHEET);
+    sEl.setAttribute('name', NAME);
     sEl.setAttribute('sheetId', String(maxId + 1));
     sEl.setAttribute('state', 'hidden');
     sEl.setAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'r:id', rid);
@@ -3283,21 +3505,31 @@ const Offline = (function () {
     ov.setAttribute('PartName', '/' + path);
     ov.setAttribute('ContentType', 'application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml');
     S.ctDoc.documentElement.appendChild(ov);
-    S.sheetInfo[MARKS_SHEET] = { path };
+    S.sheetInfo[NAME] = { path };
   }
 
   async function buildXlsxBlob() {
     // 1) the sheets the app edited
     for (const name in S.sheets) {
-      if (name === MARKS_SHEET) continue;
+      if (name === MARKS_SHEET || name === NOTES_SHEET) continue;
       const sh = S.sheets[name];
       if (sh.touched) S.zip.file(sh.path, serializeXml(sh.doc));
     }
     if (S.stylesTouched && S.stylesDoc) S.zip.file('xl/styles.xml', serializeXml(S.stylesDoc));
     // 2) hidden sheet with keypad selections
+    let extraSheets = false;
     if (S.marks.size > 0 || S.sheetInfo[MARKS_SHEET]) {
       ensureMarksSheetRegistered();
       S.zip.file(S.sheetInfo[MARKS_SHEET].path, buildMarksSheetXml());
+      extraSheets = true;
+    }
+    // 2b) hidden sheet with this class's notes
+    if (S.notes.length > 0 || S.sheetInfo[NOTES_SHEET]) {
+      ensureSheetRegistered(NOTES_SHEET);
+      S.zip.file(S.sheetInfo[NOTES_SHEET].path, buildNotesSheetXml());
+      extraSheets = true;
+    }
+    if (extraSheets) {
       S.zip.file('xl/_rels/workbook.xml.rels', serializeXml(S.relsDoc));
       S.zip.file('[Content_Types].xml', serializeXml(S.ctDoc));
     }
@@ -3437,6 +3669,9 @@ const Offline = (function () {
     canAutoSave: S.canAutoSave,
     pickFile, openFromFileObject, openHandle, getLastHandleName, pickHandleOnly, libLoad, libSave,
     calLoad: function () { return idbGet('calendar'); }, calSave: function (v) { return idbSet('calendar', v); },
+    kvGet: idbGet, kvSet: idbSet, peekNotes,
+    notesGet: function () { return S.notes.map(n => Object.assign({}, n)); },
+    notesSet: function (arr) { if (!S.zip) throw new Error('No class is open.'); S.notes = arr.map(n => Object.assign({}, n)); changed(); },
     saveNow, status,
     prepareShareFile, getReadyShareFile,
     onOpened: f => { onOpened = f; },
@@ -3797,6 +4032,15 @@ const Offline = (function () {
       terms: function () { return LIB.data ? LIB.data.terms : []; },
       currentId: function () { try { return LIB.data ? curTerm().id : ''; } catch (e) { return ''; } },
       setCurrent: function (id) { if (LIB.data && LIB.data.terms.some(function (t) { return t.id === id; })) { LIB.data.current = id; libPersist(); libRender(); } },
+      openFile: async function (fileName) {                       // used by Notes: make sure this class is the open one
+        const hit = window.UG_LIBAPI.find(fileName);
+        if (!hit) throw new Error('This class is not in your library any more.');
+        const st = Offline.status();
+        if (st.open && st.fileName === fileName) { overlay.style.display = 'none'; bar.style.display = 'flex'; return true; }
+        await libOpen(hit.sec, hit.file);
+        const s2 = Offline.status();
+        return !!(s2.open && s2.fileName === fileName);
+      },
       find: function (fileName) {
         if (!LIB.data) return null;
         for (let a = 0; a < LIB.data.terms.length; a++) { const t = LIB.data.terms[a];
@@ -4120,7 +4364,12 @@ const Offline = (function () {
     function ncClean(t) { return String(t || '').replace(/start|race|reach|run/gi, ' ').trim().replace(/[^\p{L}\p{N}]+/gu, '_').replace(/^_+|_+$/g, ''); }
 
     // time like “17:30” or “5:30 pm” -> “1730” / “530pm” (keeps the file name tidy; the app ignores it when it reads the level)
-    function ncTime(t) { return String(t || '').replace(/start|race|reach|run/gi, '').replace(/[:\s]+/g, '').replace(/[^\p{L}\p{N}-]+/gu, '-').replace(/^-+|-+$/g, ''); }
+    function ncTime(t) {
+      const s0 = String(t || '').replace(/start|race|reach|run/gi, '').trim(), hm = /^(\d{1,2})\s*[:.\-h]?\s*(\d{2})$/.exec(s0);
+      if (hm && +hm[1] < 24 && +hm[2] < 60) return ('0' + hm[1]).slice(-2) + '-' + hm[2];        // 17:30 / 1730 / 9.00 -> 17-30 / 09-00 (how the calendar reads it)
+      return ncTimeOld(t);
+    }
+    function ncTimeOld(t) { return String(t || '').replace(/start|race|reach|run/gi, '').replace(/[:\s]+/g, '').replace(/[^\p{L}\p{N}-]+/gu, '-').replace(/^-+|-+$/g, ''); }
 
     // The templates hold NC_MAX (30) student rows. Removes the unused ones at the bottom of a sheet, so the file has exactly as many
     // student rows as there are names (nothing is left behind, hidden or empty), and shortens everything that reached down to the old last row.
@@ -4232,9 +4481,15 @@ const Offline = (function () {
       $('nc-level').innerHTML = list.length ? list.map(function (l) { return '<option value="' + l.id + '">' + esc(l.label) + '</option>'; }).join('') : '<option value="" disabled selected>Levels will be added soon</option>';
       $('nc-error').textContent = '';
     }
+    function ncDayUi() {                              // Mon & Thu classes have two times (Monday first, then Thursday)
+      const mon = $('nc-day').value === 'Mon';
+      $('nc-time-label').textContent = mon ? 'MONDAY CLASS TIME (goes into the file name)' : 'TIME OF THE CLASS (goes into the file name)';
+      $('nc-time2-wrap').style.display = mon ? 'block' : 'none';
+      if (!mon) $('nc-time2').value = '';
+    }
     function ncOpenDialog() {
       showError('');
-      $('nc-dept').value = 'ya'; ncFillLevels();
+      $('nc-dept').value = 'ya'; ncFillLevels(); ncDayUi();
       $('nc-error').textContent = '';
       $('nc-names').value = '';
       ncUpdateCount();
@@ -4256,10 +4511,11 @@ const Offline = (function () {
       const names = ncParseNames();
       if (names.length > NC_MAX) { err.textContent = 'The grade sheet holds ' + NC_MAX + ' students, but you typed ' + names.length + '.'; return; }
       if (!$('nc-level').value) { err.textContent = 'The levels for this department will be added soon. Choose Young Adults to create a class now.'; return; }
+      if ($('nc-day').value === 'Mon' && $('nc-time2').value.trim() && !$('nc-time').value.trim()) { err.textContent = 'Type the Monday time first, then the Thursday time.'; return; }
       const lv = ncLevel($('nc-level').value);
       const rows = names.length ? names : ['Student 1'];          // no names typed: one student row so the app still has something to show
       const btn = $('nc-create'), label = btn.textContent;
-      const fileName = [lv.token, $('nc-gender').value, $('nc-day').value, ncTime($('nc-time').value), $('nc-season').value, ncClean($('nc-year').value)].filter(Boolean).join('_') + '.xlsx';
+      const fileName = [lv.token, $('nc-gender').value, $('nc-day').value, ncTime($('nc-time').value), ($('nc-day').value === 'Mon' ? ncTime($('nc-time2').value) : ''), $('nc-season').value, ncClean($('nc-year').value)].filter(Boolean).join('_') + '.xlsx';
       try {
         btn.disabled = true; btn.textContent = 'Building…';
         const blob = await buildClassWorkbook(lv.tpl, rows);
@@ -4297,6 +4553,7 @@ const Offline = (function () {
     $('nc-cancel').addEventListener('click', ncClose);
     $('nc-create').addEventListener('click', ncCreate);
     $('nc-dept').addEventListener('change', ncFillLevels);
+    $('nc-day').addEventListener('change', ncDayUi);
     $('nc-names').addEventListener('input', ncUpdateCount);
 
     if (Offline.canAutoSave) {
@@ -4724,7 +4981,7 @@ const Offline = (function () {
     SHOW_LS_SUBTABS = Object.assign({}, v.showLsSubtabs);
     keypadProfiles = v.keypadProfiles;
     window.__variantLabel = v.label;
-    document.title = 'Ultimate Grader ' + v.label + ' V1.16';
+    document.title = 'Ultimate Grader ' + v.label + ' V1.21';
     document.documentElement.style.setProperty('--reading-cols', v.reading.cols.length);
 
     currentDictNo = 1; currentQuizNo = 1; currentQuizGroup = 0;
@@ -6522,6 +6779,7 @@ const Offline = (function () {
       bolt: '<path d="M13 3 5 13.5h6L10 21l8-10.5h-6z"/>',
       calendar: '<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
       bell: '<path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15z"/><path d="M10 21h4"/>',
+      notes: '<path d="M5 4h14a1 1 0 0 1 1 1v10l-5 5H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/><path d="M15 20v-4a1 1 0 0 1 1-1h4"/><path d="M8 9h8M8 13h4"/>',
       save: '<path d="M5 4h11l3 3v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z"/><path d="M8 4v5h7V4"/><path d="M8 20v-6h8v6"/>',
       folder: '<path d="M4 7a2 2 0 0 1 2-2h4l2 2.5h6a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/>',
       'folder-open': '<path d="M3.5 18.5v-11a2 2 0 0 1 2-2h4l2 2.5h5a2 2 0 0 1 2 2V10"/><path d="M3.5 18.5 6 11.5h15.5l-2.5 7z"/>',
@@ -6736,15 +6994,21 @@ const Offline = (function () {
   }
   function parseClass(fileName, secName) {            // everything the app knows about a class comes from its name
     var nm = String(fileName || '').replace(/\.xlsx$/i, '');
-    var tm = /(?:^|[_\s])(\d{1,2})[-:.](\d{2})(?=[_\s]|$)/.exec(nm);
-    var time = tm ? pad(tm[1]) + ':' + tm[2] : '';
+    var times = [], reT = /(?:^|[_\s])(\d{1,2})[-:.](\d{2})(?=[_\s]|$)/g, tm;
+    while ((tm = reT.exec(nm)) && times.length < 2) times.push(pad(tm[1]) + ':' + tm[2]);         // Mon & Thu files: first = Monday, second = Thursday
+    var time = times[0] || '';
     var g = '';
     nm.split(/[_\s]+/).forEach(function (t) {
       t = t.toLowerCase();
       if (!g) { if (/^odd(days?)?$/.test(t)) g = 'odd'; else if (/^even(days?)?$/.test(t)) g = 'even'; else if (/^mon(days?)?$/.test(t)) g = 'mon'; }
     });
     if (!g && secName) { var s = String(secName).toLowerCase(); if (/odd/.test(s)) g = 'odd'; else if (/even/.test(s)) g = 'even'; else if (/mon/.test(s)) g = 'mon'; }
-    return { name: nm, time: time, group: g };
+    return { name: nm, time: time, time2: g === 'mon' ? (times[1] || '') : '', group: g };
+  }
+  function timeForDate(c, iso) {                      // Mon & Thu classes: Thursday sessions use the second time, everything else the first
+    if (!c) return '';
+    if (c.group === 'mon' && c.time2 && iso && dow(iso) === 4) return c.time2;
+    return c.time || '';
   }
   function minutesOf(hhmm) { var m = /^(\d{1,2}):(\d{2})$/.exec(String(hhmm || '')); return m ? (+m[1]) * 60 + (+m[2]) : null; }
   function lateFrom(startHHMM, arriveHHMM) {          // minutes between the start of the class and the arrival (never negative)
@@ -6800,6 +7064,7 @@ const Offline = (function () {
   function buildPlan() {
     var out = [], now = Date.now(), N = CAL.notif;
     if (!N.on) return out;
+    try { ((window.UGNotes && UGNotes.reminders && UGNotes.reminders()) || []).forEach(function (r) { if (r.at > now) out.push(r); }); } catch (e) { /* a note can never break the reminder list */ }
     termList().forEach(function (lt) {
       var t = getT(lt.id); if (!t) return;
       var cls = classesOf(lt.id), cnt = t.count || 20;
@@ -6813,7 +7078,7 @@ const Offline = (function () {
             var isMu = !!(ov && ov.makeup);
             var timeToUse = (ov && ov.t) ? ov.t : null;
             gc.forEach(function (c) {
-              var targetTime = timeToUse || c.time;
+              var targetTime = timeToUse || timeForDate(c, d);
               if (!targetTime || N.lead < 0) return;
               var at = atTime(d, targetTime) - N.lead * 60000;
               if (at > now) out.push({
@@ -6981,7 +7246,7 @@ const Offline = (function () {
   function scheduleMakeupFlow(termId, g, k) {
     var t = ensureT(termId);
     var cls = classesOf(termId).filter(function (c) { return c.group === g; });
-    var defaultTime = (cls.length && cls[0].time) ? cls[0].time : '16:00';
+    var defaultTime = (cls.length && timeForDate(cls[0], sessionDates(t, g)[k - 1])) || '16:00';
     var existingOv = getOv(t, g, k);
     if (existingOv && existingOv.t) defaultTime = existingOv.t;
     var currentD = (existingOv && existingOv.d) ? existingOv.d : (sessionDates(t, g)[k - 1] || todayISO());
@@ -7010,7 +7275,7 @@ const Offline = (function () {
   }
   function classChips(termId, g) {
     var cls = classesOf(termId).filter(function (c) { return c.group === g; });
-    return cls.map(function (c) { return (c.time ? c.time + ' ' : '') + pretty(c.name); });
+    return cls.map(function (c) { return (c.time ? c.time + (c.time2 ? ' / ' + c.time2 : '') + ' ' : '') + pretty(c.name); });
   }
   function todayCard(termId) {
     var t = getT(termId), today = todayISO(), cls = classesOf(termId), active = activeGroups(termId), h = '';
@@ -7023,7 +7288,7 @@ const Offline = (function () {
           var ov = getOv(t, g, i + 1);
           var isMu = !!(ov && ov.makeup);
           var timeStr = (ov && ov.t) ? ov.t : '';
-          lines.push('<div class="ct-line"><span class="ct-dot" style="background:' + groupColor(termId, g) + '"></span><b>Session ' + (i + 1) + (isMu ? ' (Make-up Class ★)' : '') + '</b> · ' + GROUPS[g].label + '<br><small>' + gc.map(function (c) { return esc((timeStr ? timeStr + ' · ' : (c.time ? c.time + ' · ' : '')) + pretty(c.name)); }).join('<br>') + '</small></div>');
+          lines.push('<div class="ct-line"><span class="ct-dot" style="background:' + groupColor(termId, g) + '"></span><b>Session ' + (i + 1) + (isMu ? ' (Make-up Class ★)' : '') + '</b> · ' + GROUPS[g].label + '<br><small>' + gc.map(function (c) { return esc((timeStr ? timeStr + ' · ' : (timeForDate(c, today) ? timeForDate(c, today) + ' · ' : '')) + pretty(c.name)); }).join('<br>') + '</small></div>');
         }
       }
     });
@@ -7078,7 +7343,7 @@ const Offline = (function () {
     h += '<div class="cal-grid" style="grid-template-columns:30px repeat(' + shown.length + ',1fr)"><i class="cg-n"></i>';
     shown.forEach(function (g) { h += '<b class="cg-h" style="background:' + groupColor(termId, g) + '">' + GROUPS[g].short + '</b>'; });
     for (var k = 1; k <= cnt; k++) {
-      h += '<i class="cg-n' + (k === mid ? ' mark' : '') + (k === cnt ? ' mark' : '') + '">' + k + '</i>';
+      h += '<i class="cg-n' + (k === cnt ? ' last' : '') + '">' + k + '</i>';
       shown.forEach(function (g) {
         var d = data[g][k - 1];
         if (!d) { h += '<span class="cg-c empty">—</span>'; return; }
@@ -7086,10 +7351,10 @@ const Offline = (function () {
         var man = !!ov;
         var isMu = !!(ov && ov.makeup);
         var isOut = (end && d > end);
-        h += '<button type="button" class="cg-c' + (d < today ? ' past' : '') + (d === today ? ' today' : '') + (isMu ? ' makeup' : (man ? ' moved' : '')) + (isOut ? ' out' : '') + (k === mid || k === cnt ? ' mark' : '') + '" data-act="cell" data-g="' + g + '" data-k="' + k + '"><em>' + DN[dow(d)] + (isMu && ov.t ? ' ' + ov.t : '') + '</em><span>' + fmt(d, CAL.sys, 'dm') + '</span></button>';
+        h += '<button type="button" class="cg-c' + (d < today ? ' past' : '') + (d === today ? ' today' : '') + (isMu ? ' makeup' : (man ? ' moved' : '')) + (isOut ? ' out' : '') + (k === cnt ? ' last' : '') + '" data-act="cell" data-g="' + g + '" data-k="' + k + '"><em>' + DN[dow(d)] + (isMu && ov.t ? ' ' + ov.t : '') + '</em><span>' + fmt(d, CAL.sys, 'dm') + '</span></button>';
       });
     }
-    h += '</div><div class="cal-foot">✎ moved · ★ make-up · ring = today · faded = past' + (end ? ' · red = after term end' : '') + '. Tap any date to move or schedule a make-up.</div>';
+    h += '</div><div class="cal-foot">✎ moved · ★ make-up · ring = today · gold dashed = last session · faded = past' + (end ? ' · red = after term end' : '') + '. Tap any date to move or schedule a make-up.</div>';
     h += '<button class="cal-link" data-act="toggle-all">' + (ui.showAll ? 'Show only groups with classes' : 'Show all three groups') + '</button>';
     return h;
   }
@@ -7136,8 +7401,8 @@ const Offline = (function () {
         var gc = cls.filter(function (c) { return c.group === it.g; });
         var ov = getOv(t, it.g, it.k);
         var isMu = !!(ov && ov.makeup);
-        var timeStr = (ov && ov.t) ? ov.t : (gc.length && gc[0].time ? gc[0].time : '');
-        h += '<div class="ct-line"><span class="ct-dot" style="background:' + groupColor(termId, it.g) + '"></span><b>Session ' + it.k + (isMu ? ' (Make-up Class ★)' : '') + '</b> · ' + GROUPS[it.g].label + (gc.length ? '<br><small>' + gc.map(function (c) { return esc((timeStr ? timeStr + ' · ' : (c.time ? c.time + ' · ' : '')) + pretty(c.name)); }).join('<br>') + '</small>' : '') + '</div>';
+        var ct = function (c) { return (ov && ov.t) ? ov.t : timeForDate(c, ui.sel); };
+        h += '<div class="ct-line"><span class="ct-dot" style="background:' + groupColor(termId, it.g) + '"></span><b>Session ' + it.k + (isMu ? ' (Make-up Class ★)' : '') + '</b> · ' + GROUPS[it.g].label + (gc.length ? '<br><small>' + gc.map(function (c) { return esc((ct(c) ? ct(c) + ' · ' : '') + pretty(c.name)); }).join('<br>') + '</small>' : '') + '</div>';
       });
       var isHol = t && (t.hol || []).some(function (x) { return x.d === ui.sel && x.g === 'all'; });
       h += '<button class="cal-link" data-act="' + (isHol ? 'unhol' : 'hol') + '" data-d="' + ui.sel + '">' + (isHol ? 'Remove this holiday' : '🚫 Mark as a holiday (no classes, later sessions shift)') + '</button></div>';
@@ -7191,7 +7456,7 @@ const Offline = (function () {
     }
     
     h += '<div class="cal-box"><div class="cb-t">Holidays <small>(no classes on these days)</small></div>' + holList(t) + '<button class="cal-link" data-act="add-hol">＋ Add a holiday</button></div>';
-    h += '<div class="cal-box"><div class="cb-t">Make-up classes (جبرانی) <small>(scheduled for holidays or cancelled days)</small></div>' + makeupList(termId, t) + '<button class="cal-link" data-act="add-makeup">＋ Schedule a make-up class</button></div>';
+    h += '<div class="cal-box"><div class="cb-t">Make-up classes<small>(scheduled for holidays or cancelled days)</small></div>' + makeupList(termId, t) + '<button class="cal-link" data-act="add-makeup">＋ Schedule a make-up class</button></div>';
     h += '<div class="cal-box"><div class="cb-t">Dates shown as</div><div class="cal-seg"><button data-act="sys" data-v="jalali" class="' + (CAL.sys === 'jalali' ? 'on' : '') + '">Shamsi (1405)</button><button data-act="sys" data-v="greg" class="' + (CAL.sys === 'greg' ? 'on' : '') + '">Gregorian (2026)</button></div></div>';
     
     var other = cls.filter(function (c) { return !c.group; });
@@ -7206,7 +7471,7 @@ const Offline = (function () {
     h += sw('n-on', N.on, 'Reminders', 'Class start times and term milestones');
     h += '<div class="cal-box"><div class="cb-t">Class reminder</div><div class="cal-seg">';
     [0, 5, 10, 15, 30].forEach(function (m) { h += '<button data-act="lead" data-v="' + m + '" class="' + (N.lead === m ? 'on' : '') + '">' + (m ? m + ' min before' : 'At start') + '</button>'; });
-    h += '</div><p class="cal-foot">Each class rings with its own name, e.g. “Run 2 Boys Odd 17-30 Fall 1405 starts in ' + (N.lead || 0) + ' min”. The start time is read from the file name.</p></div>';
+    h += '</div><p class="cal-foot">Each class rings with its own name, e.g. “Run 2 Boys Odd 17-30 Fall 1405 starts in ' + (N.lead || 0) + ' min”. The start time is read from the file name. A Mon &amp; Thu class holds two times, Monday first and Thursday second, e.g. “Mon_17-30_09-00”.</p></div>';
     h += '<div class="cb-t" style="margin:14px 2px 8px">Term milestones</div>';
     h += sw('n-mid', N.mid, 'Midpoint of the term', 'On the day of session ' + Math.ceil((t.count || 20) / 2));
     h += sw('n-week', N.week, 'One week before the end', 'A week before the last day of the term');
@@ -7380,7 +7645,7 @@ const Offline = (function () {
   function sessionTimeFor(n) {
     var i = openInfo(); if (!i || !i.c.group || !i.term) return '';
     var ov = getOv(i.term, i.c.group, n);
-    return (ov && ov.t) ? ov.t : (i.c.time || '');
+    return (ov && ov.t) ? ov.t : timeForDate(i.c, sessionDateFor(n));
   }
 
   function sessionLine(n) {
@@ -7402,9 +7667,14 @@ const Offline = (function () {
     if (d) { if (d !== todayISO()) return null; } else if (startM === null || nowM < startM - 30 || nowM > startM + 240) return null;
     return { min: Math.max(0, nowM - startM), arr: pad(now.getHours()) + ':' + pad(now.getMinutes()) };
   }
-  function classStart() { var i = openInfo(); return i && i.c.time ? i.c.time : ''; }
+  function classStart() { var i = openInfo(); return i ? timeForDate(i.c, todayISO()) : ''; }
 
-  window.UGCal = { open: openCal, sessionShort: function (n) { var d = sessionDateFor(n); return d ? fmt(d, CAL.sys, 'dm') : ''; }, handleBack: handleBack, sessionLine: sessionLine, sessionDate: sessionDateFor, autoLate: autoLate, classStart: classStart, lateFrom: lateFrom, nowHHMM: function () { var d = new Date(); return pad(d.getHours()) + ':' + pad(d.getMinutes()); }, libChanged: function () { if (ui.ready) { clearTimeout(saveTimer); saveTimer = setTimeout(function () { Notif.resync(); }, 700); } } };
+  function sessionOnDate(iso) {
+    var i = openInfo(); if (!i || !i.c.group || !i.term || !i.term.start) return 0;
+    var k = sessionDates(i.term, i.c.group).indexOf(iso); return k > -1 ? k + 1 : 0;
+  }
+  function sessionCountOpen() { var i = openInfo(); return (i && i.term && i.term.count) || 20; }
+  window.UGCal = { pickDate: pickDate, fmtDate: function (iso, how) { return fmt(iso, CAL.sys, how || 'long'); }, todayISO: todayISO, sessionOnDate: sessionOnDate, sessionCount: sessionCountOpen, remindersOn: function () { return !!CAL.notif.on; }, morning: function () { return CAL.notif.morning || '08:00'; }, resync: function () { if (ui.ready) { clearTimeout(saveTimer); saveTimer = setTimeout(function () { Notif.resync(); }, 400); } }, open: openCal, sessionShort: function (n) { var d = sessionDateFor(n); return d ? fmt(d, CAL.sys, 'dm') : ''; }, handleBack: handleBack, sessionLine: sessionLine, sessionDate: sessionDateFor, autoLate: autoLate, classStart: classStart, lateFrom: lateFrom, nowHHMM: function () { var d = new Date(); return pad(d.getHours()) + ':' + pad(d.getMinutes()); }, libChanged: function () { try { if (window.UGNotes) UGNotes.badges(); } catch (e) {} if (ui.ready) { clearTimeout(saveTimer); saveTimer = setTimeout(function () { Notif.resync(); }, 700); } } };
 
   function init() {
     wire();
@@ -7418,6 +7688,505 @@ const Offline = (function () {
 
 })();
 </script>
+<script>
+// ============================================================================
+//  NOTES (b25)
+//  General notes: kept on this device only.  Class notes: kept inside each class's Excel file (hidden tab _AppNotes),
+//  so they travel with the file to any device.  Note reminders join the normal reminder list (Calendar > Alerts).
+// ============================================================================
+(function () {
+  'use strict';
+  var NOTE_MAX = 30000;
+  function $(id) { return document.getElementById(id); }
+  function esc(t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function uid() { return 'n' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+  function pad(n) { n = String(n); return n.length < 2 ? '0' + n : n; }
+  function nowParts() { var d = new Date(); return { d: d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()), t: pad(d.getHours()) + ':' + pad(d.getMinutes()) }; }
+  function pretty(name) { return String(name || '').replace(/\.xlsx$/i, '').replace(/_/g, ' ').replace(/\s+/g, ' ').trim(); }
+  function cal() { return window.UGCal || {}; }
+  function fmtDate(iso, how) { try { return cal().fmtDate ? cal().fmtDate(iso, how) : iso; } catch (e) { return iso; } }
+
+  var RICH = '<!--rich-->';
+  function isRich(x) { return typeof x === 'string' && x.indexOf(RICH) === 0; }
+  // keeps only a tiny safe set of tags (bold, italic, underline, highlight, lists, line breaks)
+  function sanitize(html) {
+    var doc = new DOMParser().parseFromString('<body>' + html + '</body>', 'text/html');
+    function walk(node) {
+      var out = '';
+      Array.prototype.forEach.call(node.childNodes, function (ch) {
+        if (ch.nodeType === 3) { out += esc(ch.nodeValue); return; }
+        if (ch.nodeType !== 1) return;
+        var t = ch.tagName.toLowerCase(), inner = walk(ch);
+        if (t === 'b' || t === 'strong') out += '<b>' + inner + '</b>';
+        else if (t === 'i' || t === 'em') out += '<i>' + inner + '</i>';
+        else if (t === 'u') out += '<u>' + inner + '</u>';
+        else if (t === 'mark') out += '<mark>' + inner + '</mark>';
+        else if (t === 'span') {
+          var st = ch.getAttribute('style') || '';
+          if (/background(-color)?\s*:\s*(?!transparent|rgba\(0,\s*0,\s*0,\s*0\)|white|#fff)/i.test(st)) inner = '<mark>' + inner + '</mark>';
+          if (/font-weight\s*:\s*(bold|[6-9]00)/i.test(st)) inner = '<b>' + inner + '</b>';
+          if (/font-style\s*:\s*italic/i.test(st)) inner = '<i>' + inner + '</i>';
+          out += inner;
+        }
+        else if (t === 'ul' || t === 'ol') out += '<' + t + '>' + inner + '</' + t + '>';
+        else if (t === 'li') out += '<li>' + inner + '</li>';
+        else if (t === 'br') out += '<br>';
+        else if (t === 'div' || t === 'p') out += '<div>' + inner + '</div>';
+        else out += inner;
+      });
+      return out;
+    }
+    return walk(doc.body);
+  }
+  function toPlain(x) {
+    x = x || ''; if (!isRich(x)) return x;
+    var h = sanitize(x.slice(RICH.length)).replace(/<\/(div|li)>/gi, '\n').replace(/<br>/gi, '\n');
+    var d = new DOMParser().parseFromString('<body>' + h + '</body>', 'text/html');
+    return d.body.textContent.replace(/\n{3,}/g, '\n\n').trim();
+  }
+  function toEditorHtml(x) { x = x || ''; return isRich(x) ? sanitize(x.slice(RICH.length)) : esc(x).replace(/\n/g, '<br>'); }
+  function serializeEditor(el) { var html = sanitize(el.innerHTML); return toPlain(RICH + html).trim() === '' ? '' : RICH + html; }
+
+  var IC = {
+    bell: '<path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15z"/><path d="M10 21h4"/>',
+    trash: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/>',
+    plus: '<path d="M12 5v14M5 12h14"/>',
+    chev: '<path d="m6 9 6 6 6-6"/>',
+    back: '<path d="m15 5-7 7 7 7"/>',
+    refresh: '<path d="M20 11a8 8 0 0 0-14.5-4M4 5v3.5h3.5"/><path d="M4 13a8 8 0 0 0 14.5 4M20 19v-3.5h-3.5"/>',
+    open: '<path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"/>',
+    notes: '<path d="M5 4h14a1 1 0 0 1 1 1v10l-5 5H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/><path d="M15 20v-4a1 1 0 0 1 1-1h4"/><path d="M8 9h8M8 13h4"/>',
+    ul: '<path d="M9 6h11M9 12h11M9 18h11"/><path d="M4.5 6h.01M4.5 12h.01M4.5 18h.01"/>',
+    ol: '<path d="M10 6h10M10 12h10M10 18h10"/><path d="M4 5l1.5-1v4M4 17.5c0-1 2.5-1 2.5.3 0 1-2.5 1.8-2.5 2.7h2.7"/>',
+    mark: '<path d="m4 16 8-8 4 4-8 8H4z"/><path d="m13 7 2-2 4 4-2 2"/><path d="M12 21h8"/>'
+  };
+  function ico(k, cls) { return '<svg class="nt-ic' + (cls ? ' ' + cls : '') + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + IC[k] + '</svg>'; }
+
+  /* ---------- data ---------- */
+  var GEN = [], CACHE = {}, ready = false, readyP = null;
+  var ui = { open: false, mode: 'home', view: 'list', scope: 'general', q: '', term: '', folders: {}, reading: false, msg: '', ask: false, snap: '' };
+  var cur = null, saveT = null, msgT = null;
+
+  function persistGen() { if (!ready) return; try { Offline.kvSet('notes', { v: 1, general: GEN }); } catch (e) {} }
+  function persistCache() { if (!ready) return; try { Offline.kvSet('notesCache', { v: 1, files: CACHE }); } catch (e) {} }
+  function load() {
+    if (readyP) return readyP;
+    readyP = Promise.all([Offline.kvGet('notes'), Offline.kvGet('notesCache')]).then(function (r) {
+      if (r[0] && Array.isArray(r[0].general)) GEN = r[0].general;
+      if (r[1] && r[1].files) Object.keys(r[1].files).forEach(function (k) { if (!CACHE[k]) CACHE[k] = r[1].files[k]; });
+      ready = true; persistCache(); badges(); resyncSoon();
+    }).catch(function () { ready = true; });
+    return readyP;
+  }
+
+  function resyncSoon() { try { if (cal().resync) cal().resync(); } catch (e) {} }
+  function openFileName() { try { var s = Offline.status(); return s.open ? s.fileName : ''; } catch (e) { return ''; } }
+  function liveNotes() { try { return Offline.notesGet(); } catch (e) { return []; } }
+  function inLibrary(name) { try { return !!(window.UG_LIBAPI && UG_LIBAPI.find(name)); } catch (e) { return false; } }
+  function termsList() { try { return (window.UG_LIBAPI && UG_LIBAPI.terms()) || []; } catch (e) { return []; } }
+  function curTerm() {
+    var ts = termsList(); if (!ts.length) return null;
+    var id = ui.term; if (!id || !ts.some(function (t) { return t.id === id; })) { try { id = UG_LIBAPI.currentId(); } catch (e) { id = ''; } }
+    return ts.filter(function (t) { return t.id === id; })[0] || ts[0];
+  }
+  function classesFor(term) {
+    var out = [];
+    ((term && term.sections) || []).forEach(function (sec) { (sec.files || []).forEach(function (f) { var nm = f.handle && f.handle.name; if (nm) out.push({ name: nm, sec: sec, f: f, color: sec.color || '' }); }); });
+    return out;
+  }
+  function classColor(name) { try { var h = UG_LIBAPI.find(name); return (h && h.sec && h.sec.color) || '#90a8ed'; } catch (e) { return '#90a8ed'; } }
+  function notesOfClass(name) { if (name && name === openFileName()) return liveNotes(); var c = CACHE[name]; return c && c.notes ? c.notes : null; }
+
+  /* ---------- small helpers for showing a note ---------- */
+  function parts(n) {
+    var t = (n.t || '').trim(), x = toPlain(n.x);
+    if (t) return { title: t, snip: x.trim() };
+    var i = x.indexOf('\n'), first = (i < 0 ? x : x.slice(0, i)).trim();
+    if (!first) return { title: 'Untitled note', snip: '' };
+    return { title: first.length > 90 ? first.slice(0, 90) + '…' : first, snip: i < 0 ? '' : x.slice(i + 1).trim() };
+  }
+  function atMs(d, t) {
+    var p = String(d).split('-'), m = /^(\d{1,2}):(\d{2})$/.exec(t || ''), mins = m ? (+m[1]) * 60 + (+m[2]) : 8 * 60;
+    return new Date(+p[0], +p[1] - 1, +p[2], Math.floor(mins / 60), mins % 60).getTime();
+  }
+  function sorted(list) { return list.slice().sort(function (a, b) { return ((b.u || 0) - (a.u || 0)) || ((b.c + b.ct) > (a.c + a.ct) ? 1 : -1); }); }
+  function match(n) { if (!ui.q) return true; return ((n.t || '') + ' ' + toPlain(n.x)).toLowerCase().indexOf(ui.q.toLowerCase()) > -1; }
+
+  function itemHtml(n, color, file, scope) {
+    var p = parts(n), chips = '';
+    if (n.c) chips += '<span class="nt-chip">' + esc(fmtDate(n.c, 'dm')) + '</span>';
+    if (n.s) chips += '<span class="nt-chip">Session ' + esc(n.s) + '</span>';
+    if (n.rd) {
+      var past = atMs(n.rd, n.rt) < Date.now();
+      chips += '<span class="nt-chip rem' + (past ? ' past' : '') + '">' + ico('bell') + esc(fmtDate(n.rd, 'dm')) + ' · ' + esc(n.rt || '08:00') + '</span>';
+    }
+    return '<button type="button" class="nt-item" data-nt="open" data-id="' + esc(n.id) + '" data-file="' + esc(file || '') + '" data-scope="' + scope + '" style="--nc:' + color + '">' +
+      '<span class="nt-ti" dir="auto">' + esc(p.title) + '</span>' +
+      (p.snip ? '<span class="nt-sn" dir="auto">' + esc(p.snip) + '</span>' : '') +
+      (chips ? '<span class="nt-chips">' + chips + '</span>' : '') + '</button>';
+  }
+
+  /* ---------- badges on the two Notes buttons ---------- */
+  function badges() {
+    var a = $('start-notes-btn'), b = $('file-notes-btn');
+    var h = GEN.length, t = curTerm();
+    if (t) classesFor(t).forEach(function (c) { var l = notesOfClass(c.name); if (l) h += l.length; });
+    var f = openFileName() ? liveNotes().length : 0;
+    function put(el, n) { if (!el) return; if (n) el.setAttribute('data-n', n > 99 ? '99+' : String(n)); else el.removeAttribute('data-n'); }
+    put(a, h); put(b, f);
+  }
+
+  /* ---------- the screens ---------- */
+  function listHtml() {
+    if (ui.mode === 'class') return classList();
+    return homeList();
+  }
+  function classList() {
+    var name = openFileName();
+    if (!name) return '<div class="nt-none">Open a class to see its notes.</div>';
+    var list = sorted(liveNotes()), color = classColor(name), h = '';
+    h += '<button type="button" class="nt-add" data-nt="new-class" data-file="' + esc(name) + '">' + ico('plus') + 'New note</button>';
+    var shown = list.filter(match);
+    if (!list.length) h += '<div class="nt-none">No notes in this class yet. Each note is stamped with today’s date and session, and is saved inside this Excel file, so you see it on any device that opens the file.</div>';
+    else if (!shown.length) h += '<div class="nt-none">Nothing matches your search.</div>';
+    shown.forEach(function (n) { h += itemHtml(n, color, name, 'class'); });
+    return h;
+  }
+  function homeList() {
+    var h = '', gl = sorted(GEN).filter(match);
+    h += '<div class="nt-sec"><div class="nt-sech"><span>General notes</span><small>' + GEN.length + '</small></div>';
+    h += '<p class="nt-hint">About the term or anything you need to do. Kept on this device only, never in an Excel file.</p>';
+    gl.forEach(function (n) { h += itemHtml(n, '#ffc900', '', 'general'); });
+    if (GEN.length && !gl.length) h += '<div class="nt-none">Nothing matches your search.</div>';
+    h += '<button type="button" class="nt-add" data-nt="new-gen">' + ico('plus') + 'New note</button></div>';
+
+    var t = curTerm(), cls = t ? classesFor(t) : [];
+    if (cls.length) {
+      h += '<div class="nt-sec"><div class="nt-sech"><span>Class notes</span><small>' + esc(t.name || '') + '</small></div>';
+      h += '<p class="nt-hint">Saved inside each class’s Excel file. Tap a class to look through its notes.</p>';
+      var any = false;
+      cls.forEach(function (c) {
+        var list = notesOfClass(c.name), shown = list ? sorted(list).filter(match) : [];
+        if (ui.q && !shown.length) return;
+        any = true;
+        var color = c.color || '#90a8ed', open = !!ui.folders[c.name] || !!ui.q;
+        h += '<div class="nt-folder' + (open ? ' open' : '') + '" style="--nc:' + color + '">';
+        h += '<button type="button" class="nt-fh" data-nt="folder" data-file="' + esc(c.name) + '"><span class="nt-dot"></span><b dir="auto">' + esc(pretty(c.name)) + '</b><span class="nt-count">' + (list ? list.length : '–') + '</span>' + ico('chev', 'nt-chev') + '</button>';
+        if (open) {
+          h += '<div class="nt-fb">';
+          if (list === null) h += '<div class="nt-none">Not read yet. Tap “Read class notes” below, or open the class once.</div>';
+          else if (!list.length) h += '<div class="nt-none">No notes in this class yet.</div>';
+          else shown.forEach(function (n) { h += itemHtml(n, color, c.name, 'class'); });
+          h += '<div class="nt-btnrow"><button type="button" class="nt-add sm" data-nt="new-class" data-file="' + esc(c.name) + '">' + ico('plus') + 'New note</button><button type="button" class="nt-add sm alt" data-nt="open-class" data-file="' + esc(c.name) + '">' + ico('open') + 'Open class</button></div>';
+          h += '</div>';
+        }
+        h += '</div>';
+      });
+      if (!any && ui.q) h += '<div class="nt-none">Nothing matches your search.</div>';
+      h += '<button type="button" class="nt-add alt" data-nt="refresh"' + (ui.reading ? ' disabled' : '') + '>' + ico('refresh') + (ui.reading ? 'Reading…' : 'Read class notes') + '</button>';
+      h += '<p class="nt-hint">Class notes are read from the Excel files. If you edited notes on another device, tap “Read class notes” to bring them in.</p></div>';
+    }
+    return h;
+  }
+  function viewList() {
+    var showSearch = ui.mode === 'home' ? true : liveNotes().length >= 5;
+    return (ui.msg ? '<div class="nt-msg">' + esc(ui.msg) + '</div>' : '') +
+      (showSearch ? '<input id="nt-q" class="nt-search" type="search" placeholder="Search notes" autocomplete="off" value="' + esc(ui.q) + '">' : '') +
+      '<div id="nt-list">' + listHtml() + '</div>';
+  }
+  function viewEdit() {
+    var n = cur, isClass = ui.scope === 'class', h = '<div class="nt-edit">';
+    if (ui.msg) h += '<div class="nt-msg">' + esc(ui.msg) + '</div>';
+    h += '<div class="nt-stamp">' + esc(fmtDate(n.c, 'long')) + (n.ct ? ' · ' + esc(n.ct) : '') + '</div>';
+    if (isClass) {
+      var cnt = 20; try { cnt = cal().sessionCount ? cal().sessionCount() : 20; } catch (e) {}
+      cnt = Math.max(cnt, n.s || 0);
+      h += '<label class="nt-lab">Session<select id="nt-sess"><option value="0"' + (n.s ? '' : ' selected') + '>No session</option>';
+      for (var i = 1; i <= cnt; i++) h += '<option value="' + i + '"' + (n.s === i ? ' selected' : '') + '>Session ' + i + '</option>';
+      h += '</select></label>';
+    }
+    h += '<input id="nt-t" class="nt-in" type="text" dir="auto" maxlength="120" placeholder="Title (optional)" value="' + esc(n.t) + '">';
+    h += '<div class="nt-tools" id="nt-tools" role="toolbar" aria-label="Formatting">' +
+      '<button type="button" data-fmt="bold" aria-label="Bold"><b>B</b></button>' +
+      '<button type="button" data-fmt="italic" aria-label="Italic"><i>I</i></button>' +
+      '<button type="button" data-fmt="hilite" aria-label="Highlight">' + ico('mark') + '</button>' +
+      '<button type="button" data-fmt="ul" aria-label="Bullet list">' + ico('ul') + '</button>' +
+      '<button type="button" data-fmt="ol" aria-label="Numbered list">' + ico('ol') + '</button></div>';
+    h += '<div id="nt-x" class="nt-ed" contenteditable="true" dir="auto" data-ph="Write your note…" role="textbox" aria-multiline="true">' + toEditorHtml(n.x) + '</div>';
+    h += '<div class="nt-box"><div class="nt-boxh"><div class="nt-bt"><b>Reminder</b><span>' + (n.rd ? 'Shows in Calendar › Alerts › Coming up' : 'Get a notification for this note') + '</span></div>' +
+      '<button class="set-switch" type="button" role="switch" aria-checked="' + (n.rd ? 'true' : 'false') + '" data-nt="rem-toggle" aria-label="Reminder"><i></i></button></div>';
+    if (n.rd) {
+      h += '<div class="nt-remrow"><button type="button" class="cf-btn" data-nt="rem-date">' + ico('bell') + esc(fmtDate(n.rd, 'long')) + '</button><input type="time" id="nt-rt" class="cf-time" value="' + esc(n.rt || '08:00') + '"></div>';
+      var on = true; try { on = cal().remindersOn ? cal().remindersOn() : true; } catch (e) {}
+      if (!on) h += '<div class="nt-warn">Reminders are switched off. Turn them on in Calendar › Alerts.</div>';
+      else if (atMs(n.rd, n.rt) < Date.now()) h += '<div class="nt-warn">This time has already passed. Pick a new date to be reminded again.</div>';
+    }
+    h += '</div>';
+    h += '<div class="nt-actions"><button type="button" class="nt-add" data-nt="save">Save &amp; close</button></div></div>';
+    return h;
+  }
+
+  function render(keepScroll) {
+    var head = $('nt-head'), body = $('nt-body'); if (!head || !body) return;
+    var st = keepScroll ? body.scrollTop : 0, edit = ui.view === 'edit';
+    if (edit) {
+      var sub = ui.scope === 'class' ? '<small dir="auto">' + esc(pretty(openFileName())) + '</small>' : '<small>General · stays on this device</small>';
+      head.innerHTML = '<button class="nt-x" type="button" data-nt="back" aria-label="Back">' + ico('back') + '</button><div class="nt-ttl"><h2>' + (ui.scope === 'class' ? 'Class note' : 'General note') + '</h2>' + sub + '</div><button class="nt-x danger" type="button" data-nt="del" aria-label="Delete note">' + ico('trash') + '</button>';
+      body.innerHTML = viewEdit();
+    } else {
+      var ts = termsList(), sel = '';
+      if (ui.mode === 'home' && ts.length > 1) { var ct = curTerm(); sel = '<select id="nt-term" aria-label="Term">' + ts.map(function (t) { return '<option value="' + esc(t.id) + '"' + (ct && t.id === ct.id ? ' selected' : '') + '>' + esc(t.name) + '</option>'; }).join('') + '</select>'; }
+      head.innerHTML = '<button class="nt-x" type="button" data-nt="close" aria-label="Close">✕</button><div class="nt-ttl"><h2>Notes</h2>' + (ui.mode === 'class' ? '<small dir="auto">' + esc(pretty(openFileName())) + '</small>' : '') + '</div>' + sel;
+      body.innerHTML = viewList();
+    }
+    body.scrollTop = st;
+    if (edit) updateTools();
+  }
+  function autoGrow(ta) { ta.style.height = 'auto'; ta.style.height = Math.max(ta.scrollHeight + 4, 150) + 'px'; }
+  function say(msg) { ui.msg = msg; clearTimeout(msgT); msgT = setTimeout(function () { ui.msg = ''; if (ui.open && ui.view === 'list') render(true); }, 6000); }
+
+  /* ---------- saving ---------- */
+  function syncFields() {
+    if (!cur) return;
+    var t = $('nt-t'), x = $('nt-x'), s = $('nt-sess'), r = $('nt-rt');
+    if (t) cur.t = t.value;
+    if (x && x.getAttribute('contenteditable')) cur.x = serializeEditor(x);
+    if (s) cur.s = parseInt(s.value, 10) || 0;
+    if (r && r.value) cur.rt = r.value;
+  }
+  function commit() {
+    clearTimeout(saveT);
+    if (!cur) return;
+    syncFields();
+    var isClass = ui.scope === 'class', list = isClass ? liveNotes() : GEN, idx = -1;
+    for (var i = 0; i < list.length; i++) if (list[i].id === cur.id) { idx = i; break; }
+    if (idx === -1 && !(cur.t || '').trim() && !(cur.x || '').trim()) return;       // a new note nobody wrote in is not kept
+    var copy = Object.assign({}, cur); copy.u = Date.now();
+    if (idx === -1) list.unshift(copy); else list[idx] = copy;
+    if (isClass) {
+      var fn = openFileName();
+      try { Offline.notesSet(list); } catch (e) { say('Could not save the note: ' + (e && e.message || e)); return; }
+      if (fn) { CACHE[fn] = { at: Date.now(), notes: liveNotes() }; persistCache(); }
+    } else { GEN = list; persistGen(); }
+    badges(); resyncSoon();
+  }
+  function later() { clearTimeout(saveT); saveT = setTimeout(commit, 500); }
+
+  /* ---------- actions ---------- */
+  function newNote(scope) {
+    var p = nowParts(), n = { id: uid(), c: p.d, ct: p.t, s: 0, t: '', x: '', rd: '', rt: '', u: 0 };
+    if (scope === 'class') { try { n.s = cal().sessionOnDate ? cal().sessionOnDate(p.d) : 0; } catch (e) { n.s = 0; } }
+    ui.scope = scope; ui.view = 'edit'; cur = n; beginEdit(true);
+  }
+  function editById(id, scope) {
+    var list = scope === 'class' ? liveNotes() : GEN, f = null;
+    for (var i = 0; i < list.length; i++) if (list[i].id === id) f = list[i];
+    if (!f) return;
+    ui.scope = scope; ui.view = 'edit'; cur = Object.assign({}, f); beginEdit(false);
+  }
+  function snapOf(n) { return JSON.stringify([n.t, n.x, n.s, n.rd, n.rt]); }
+  function beginEdit(focus) {
+    ui.ask = false; ui.msg = ''; render(); syncFields(); ui.snap = snapOf(cur);
+    if (focus) { var t = $('nt-x'); if (t) { try { t.focus(); } catch (e) {} } }
+  }
+  function isDirty() { if (!cur) return false; syncFields(); return snapOf(cur) !== ui.snap; }
+  function showAsk() {
+    hideAsk(); ui.ask = true;
+    var d = document.createElement('div'); d.id = 'nt-ask'; d.className = 'nt-ask';
+    d.innerHTML = '<div class="nt-askc" role="alertdialog" aria-modal="true"><b>Save this note?</b><p>You have changes that are not saved yet.</p>' +
+      '<button type="button" class="nt-add" data-nt="ask-save">Save &amp; close</button>' +
+      '<button type="button" class="nt-add alt danger" data-nt="ask-discard">Discard changes</button>' +
+      '<button type="button" class="nt-add alt" data-nt="ask-keep">Keep editing</button></div>';
+    $('notes-overlay').appendChild(d);
+  }
+  function hideAsk() { ui.ask = false; var d = $('nt-ask'); if (d) d.remove(); }
+  function requestLeave() {
+    if (!cur) { ui.view = 'list'; render(); return; }
+    if (isDirty()) { showAsk(); return; }
+    cur = null; ui.view = 'list'; render();
+  }
+  function discardAndClose() { hideAsk(); cur = null; ui.view = 'list'; ui.msg = ''; render(true); }
+  function saveAndClose() {
+    if (!cur) return; syncFields();
+    if (!(cur.t || '').trim() && !(cur.x || '').trim()) { hideAsk(); ui.msg = 'Write a title or some text first, or tap the back arrow to discard.'; render(true); return; }
+    if ((cur.x || '').length > NOTE_MAX) { hideAsk(); ui.msg = 'This note is too long to save. Please shorten it.'; render(true); return; }
+    commit(); hideAsk(); cur = null; ui.view = 'list'; ui.msg = ''; render(true);
+  }
+  function fmt(cmd) {
+    var ed = $('nt-x'); if (!ed) return;
+    if (document.activeElement !== ed) ed.focus();
+    try {
+      document.execCommand('styleWithCSS', false, true);
+      if (cmd === 'bold') document.execCommand('bold');
+      else if (cmd === 'italic') document.execCommand('italic');
+      else if (cmd === 'ul') document.execCommand('insertUnorderedList');
+      else if (cmd === 'ol') document.execCommand('insertOrderedList');
+      else if (cmd === 'hilite') {
+        document.execCommand('hiliteColor', false, isHilite() ? 'transparent' : '#ffe066');
+      }
+    } catch (e) {}
+    updateTools();
+  }
+  function isHilite() {                                   // is the cursor / selection inside highlighted text?
+    var ed = $('nt-x'), sel = window.getSelection(); if (!ed || !sel || !sel.anchorNode) return false;
+    var n = sel.anchorNode.nodeType === 1 ? sel.anchorNode : sel.anchorNode.parentNode;
+    while (n && n !== ed) {
+      if (n.tagName === 'MARK') return true;
+      if (n.style && n.style.backgroundColor && !/transparent|rgba\(0,\s*0,\s*0,\s*0\)/i.test(n.style.backgroundColor)) return true;
+      n = n.parentNode;
+    }
+    return false;
+  }
+  function updateTools() {
+    var bar = $('nt-tools'), ed = $('nt-x'); if (!bar || !ed) return;
+    var sel = window.getSelection(), inside = sel && sel.anchorNode && ed.contains(sel.anchorNode);
+    var st = { bold: 'bold', italic: 'italic', ul: 'insertUnorderedList', ol: 'insertOrderedList' };
+    Array.prototype.forEach.call(bar.querySelectorAll('button'), function (b) {
+      var k = b.getAttribute('data-fmt'), on = false;
+      if (inside) { try { if (st[k]) on = document.queryCommandState(st[k]); else if (k === 'hilite') on = isHilite(); } catch (e) {} }
+      b.classList.toggle('on', !!on);
+    });
+  }
+  var leaveEdit = requestLeave;
+  function deleteCur() {
+    if (!cur) return;
+    var isClass = ui.scope === 'class', list = isClass ? liveNotes() : GEN, id = cur.id;
+    if (!list.some(function (n) { return n.id === id; })) { hideAsk(); cur = null; ui.view = 'list'; render(); return; }       // never saved: nothing to delete
+    if (!confirm('Delete this note?')) return;
+    list = list.filter(function (n) { return n.id !== id; });
+    if (isClass) { try { Offline.notesSet(list); } catch (e) {} var fn = openFileName(); if (fn) { CACHE[fn] = { at: Date.now(), notes: liveNotes() }; persistCache(); } }
+    else { GEN = list; persistGen(); }
+    clearTimeout(saveT); hideAsk(); cur = null; ui.view = 'list'; badges(); resyncSoon(); render();
+  }
+  function openClassThen(file, opt) {
+    commit(); cur = null; ui.view = 'list';
+    var api = window.UG_LIBAPI; if (!api || !api.openFile) return;
+    $('notes-overlay').style.display = 'none'; ui.open = false;
+    api.openFile(file).then(function (ok) {
+      if (ok) {
+        ui.mode = 'class'; ui.q = ''; ui.open = true; $('notes-overlay').style.display = 'flex'; render();
+        if (opt && opt.id) editById(opt.id, 'class'); else if (opt && opt.isNew) newNote('class');
+      } else { ui.mode = 'home'; ui.open = true; $('notes-overlay').style.display = 'flex'; say('Could not open that class. Check that its file is still available.'); render(); }
+    }).catch(function (e) { ui.mode = 'home'; ui.open = true; $('notes-overlay').style.display = 'flex'; say((e && e.message) || 'Could not open that class.'); render(); });
+  }
+  async function readAll(userTap) {
+    var t = curTerm(); if (!t || ui.reading) return;
+    var cls = classesFor(t), fail = 0, ok = 0;
+    ui.reading = true; if (ui.open && ui.view === 'list') render(true);
+    for (var i = 0; i < cls.length; i++) {
+      var c = cls[i];
+      if (c.name === openFileName()) { CACHE[c.name] = { at: Date.now(), notes: liveNotes() }; ok++; continue; }
+      var res = null;
+      try { res = await Offline.peekNotes(c.f.handle, !!userTap); } catch (e) { res = null; }
+      if (res) { CACHE[c.name] = { at: Date.now(), notes: res }; ok++; } else fail++;
+    }
+    ui.reading = false; persistCache(); badges(); resyncSoon();
+    if (userTap && fail) say(fail + ' class file' + (fail > 1 ? 's' : '') + ' could not be read. Allow access when asked, or open that class once.');
+    else if (userTap) say('Class notes are up to date.');
+    if (ui.open && ui.view === 'list') render(true);
+  }
+
+  function onClick(e) {
+    var fb = e.target.closest('[data-fmt]'); if (fb) { fmt(fb.getAttribute('data-fmt')); return; }
+    var b = e.target.closest('[data-nt]'); if (!b) return;
+    var a = b.getAttribute('data-nt'), file = b.getAttribute('data-file') || '';
+    if (a === 'close') close();
+    else if (a === 'back') requestLeave();
+    else if (a === 'save' || a === 'ask-save') saveAndClose();
+    else if (a === 'ask-discard') discardAndClose();
+    else if (a === 'ask-keep') hideAsk();
+    else if (a === 'del') deleteCur();
+    else if (a === 'new-gen') newNote('general');
+    else if (a === 'new-class') { if (file === openFileName()) newNote('class'); else openClassThen(file, { isNew: true }); }
+    else if (a === 'open-class') openClassThen(file, {});
+    else if (a === 'open') {
+      var sc = b.getAttribute('data-scope'), id = b.getAttribute('data-id');
+      if (sc === 'class' && file !== openFileName()) openClassThen(file, { id: id }); else editById(id, sc);
+    }
+    else if (a === 'folder') { ui.folders[file] = !ui.folders[file]; render(true); }
+    else if (a === 'refresh') readAll(true);
+    else if (a === 'rem-toggle') {
+      syncFields();
+      if (cur.rd) { cur.rd = ''; cur.rt = ''; render(true); }
+      else {
+        var def = '08:00'; try { if (cal().morning) def = cal().morning(); } catch (er) {}
+        cal().pickDate('Reminder date', cal().todayISO(), function (d) { cur.rd = d; cur.rt = cur.rt || def; render(true); });
+      }
+    }
+    else if (a === 'rem-date') { syncFields(); cal().pickDate('Reminder date', cur.rd, function (d) { cur.rd = d; render(true); }); }
+  }
+  function onInput(e) {
+    var id = e.target.id;
+    if (id === 'nt-x') { if (/^(<br>|<div><br><\/div>)?$/.test(e.target.innerHTML)) e.target.innerHTML = ''; }
+    else if (id === 'nt-q') { ui.q = e.target.value; var l = $('nt-list'); if (l) l.innerHTML = listHtml(); }
+  }
+  function onChange(e) {
+    var id = e.target.id;
+    if (id === 'nt-sess' || id === 'nt-rt') { syncFields(); }
+    else if (id === 'nt-term') { ui.term = e.target.value; badges(); render(); readAll(false); }
+  }
+
+  /* ---------- open / close ---------- */
+  function open(mode) {
+    load().then(function () {
+      if (mode === 'class' && !openFileName()) mode = 'home';
+      ui.mode = mode; ui.view = 'list'; ui.q = ''; ui.msg = ''; cur = null; ui.open = true;
+      $('notes-overlay').style.display = 'flex'; render();
+      if (mode === 'home') readAll(false);
+    });
+  }
+  function close() { commit(); cur = null; ui.view = 'list'; ui.open = false; var o = $('notes-overlay'); if (o) o.style.display = 'none'; badges(); }
+  function handleBack() {
+    if (!ui.open) return false;
+    if (ui.ask) { hideAsk(); return true; }
+    if (ui.view === 'edit') { requestLeave(); return true; }
+    close(); return true;
+  }
+
+  /* ---------- the bridge used by the rest of the app ---------- */
+  function reminders() {
+    var out = [], open = openFileName();
+    function add(n, where) {
+      if (!n || !n.rd) return;
+      var p = parts(n), body = where + (n.s ? ' · Session ' + n.s : '') + (p.snip ? ' · ' + p.snip.replace(/\s+/g, ' ').slice(0, 70) : '');
+      out.push({ key: 'n|' + n.id, at: atMs(n.rd, n.rt), title: 'Note: ' + p.title, body: body });
+    }
+    GEN.forEach(function (n) { add(n, 'General note'); });
+    if (open) liveNotes().forEach(function (n) { add(n, pretty(open)); });
+    Object.keys(CACHE).forEach(function (f) { if (f === open || !inLibrary(f)) return; ((CACHE[f] && CACHE[f].notes) || []).forEach(function (n) { add(n, pretty(f)); }); });
+    return out;
+  }
+  function fileLoaded(name, notes) {
+    CACHE[name] = { at: Date.now(), notes: notes || [] };
+    persistCache(); badges(); resyncSoon();
+    if (ui.open) { if (ui.view === 'edit' && ui.scope === 'class') { cur = null; ui.view = 'list'; } render(true); }
+  }
+
+  window.UGNotes = { open: open, close: close, handleBack: handleBack, reminders: reminders, fileLoaded: fileLoaded, badges: badges };
+
+  function init() {
+    var ov = $('notes-overlay'); if (!ov) return;
+    ov.addEventListener('click', onClick);
+    ov.addEventListener('input', onInput);
+    ov.addEventListener('change', onChange);
+    var a = $('start-notes-btn'), b = $('file-notes-btn');
+    if (a) a.addEventListener('click', function () { open('home'); });
+    if (b) b.addEventListener('click', function () { open('class'); });
+    try { document.execCommand('defaultParagraphSeparator', false, 'div'); } catch (e) {}
+    document.addEventListener('selectionchange', function () { if (ui.open && ui.view === 'edit') updateTools(); });
+    ov.addEventListener('pointerdown', function (e) { if (e.target.closest('#nt-tools button')) e.preventDefault(); });     // keep the cursor in the note while formatting
+    ov.addEventListener('paste', function (e) {                                                                       // paste as plain text only
+      if (!e.target.closest || !e.target.closest('#nt-x')) return;
+      e.preventDefault(); var t = (e.clipboardData || window.clipboardData).getData('text/plain');
+      try { document.execCommand('insertText', false, t); } catch (er) {}
+    });
+    load();
+    setTimeout(badges, 2500); setTimeout(badges, 6000);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+})();
+</script>
+
 <script>
   // ============================================================================
   //  BACK GESTURE GUARD
@@ -7449,6 +8218,7 @@ const Offline = (function () {
     // Closes whatever is on top, one step at a time. Returns true if it closed something.
     function stepBack() {
       if (window.UGCal && UGCal.handleBack()) return true;
+      if (window.UGNotes && UGNotes.handleBack()) return true;
       if (typeof NumPad !== 'undefined' && NumPad.isOpen()) { NumPad.close(); return true; }                 // keypad: close, nothing saved
       const modal = document.getElementById('keypad-modal');
       if (modal && getComputedStyle(modal).display !== 'none') { closeModal(); return true; }
@@ -7902,7 +8672,12 @@ window.UG_TEMPLATES = {
       g += '<polygon points="' + used.map(function (a, i) { return pt(i, Rr * (cls[a.key] || 0) / 100).join(','); }).join(' ') + '" fill="none" stroke="#475569" stroke-width="2.5" stroke-dasharray="6 5"/>';
       g += '<polygon points="' + used.map(function (a, i) { return pt(i, Rr * (vals[a.key] || 0) / 100).join(','); }).join(' ') + '" fill="' + accent + '" fill-opacity=".45" stroke="#0f172a" stroke-width="3" stroke-linejoin="round"/>';
       used.forEach(function (a, i) { var v = vals[a.key]; if (v == null) return; var q = pt(i, Rr * v / 100); g += '<circle cx="' + q[0] + '" cy="' + q[1] + '" r="5" fill="' + a.color + '" stroke="#0f172a" stroke-width="2.5"/>'; });
-      used.forEach(function (a, i) { var q = pt(i, Rr + 24), c = Math.cos(-Math.PI / 2 + 2 * Math.PI * i / n); g += '<text x="' + q[0] + '" y="' + (q[1] + 4) + '" text-anchor="' + (Math.abs(c) < .25 ? 'middle' : c > 0 ? 'start' : 'end') + '">' + esc(a.short || a.label) + '</text>'; });
+      used.forEach(function (a, i) {
+        var c = Math.cos(-Math.PI / 2 + 2 * Math.PI * i / n), side = Math.abs(c) >= .25, q = pt(i, Rr + (side ? 12 : 24));
+        var anc = !side ? 'middle' : c > 0 ? 'start' : 'end', txt = String(a.short || a.label), fs = 12;
+        if (side) { var room = anc === 'start' ? 336 - q[0] : q[0] - 4, w = txt.length * fs * 0.66; if (w > room) fs = Math.max(8, Math.floor(fs * room / w * 10) / 10); }   // only shrinks a name that would not fit
+        g += '<text x="' + q[0] + '" y="' + (q[1] + 4) + '" text-anchor="' + anc + '" style="font-size:' + fs + 'px">' + esc(txt) + '</text>';
+      });
       [50, 100].forEach(function (p) { g += '<text x="' + (cx + 4) + '" y="' + (cy - Rr * p / 100 + 11) + '" style="font-size:9px;fill:#64748b">' + p + '</text>'; });
       return '<svg class="ov-radar" viewBox="0 0 340 310" role="img" aria-label="Radar chart of the student\'s level in each area">' + g + '</svg>';
     }
